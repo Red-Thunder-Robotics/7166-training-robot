@@ -24,6 +24,6 @@ public interface GroundIntakeIO {
     
     public default void setActuatorPosition(double position) {}
     public default void rollerDutyCycle(double output) {}
-    public default void rollerRPM(double rpm) {} // FIXME: code this
+    public default void rollerRPS(double velocity) {}
     public default void rollerStop() {}
 }

@@ -11,6 +11,7 @@ public final class GroundIntakeIOSim implements GroundIntakeIO {
     private double m_actuatorPosition = m_targetActuatorPosition;
 
     private double m_rollerOutput = 0d;
+    private double m_rollerVelocityRPS = 0d;
 
     private final PIDController m_actuatorPositionPID = new PIDController(0.5d, 0d, 0d);
 
@@ -32,7 +33,7 @@ public final class GroundIntakeIOSim implements GroundIntakeIO {
         inputs.actuatorPositionDegrees = mechanismPositionToAngle(position).in(Degrees);
 
         inputs.rollerMotorDutyCycle = m_rollerOutput;
-        inputs.rollerMotorVelocityRPS = 0d;
+        inputs.rollerMotorVelocityRPS = m_rollerVelocityRPS;
         inputs.rollerMotorCurrentAmps = 0d;
     }
 
@@ -44,9 +45,16 @@ public final class GroundIntakeIOSim implements GroundIntakeIO {
     @Override
     public void rollerDutyCycle(double output) {
         m_rollerOutput = output;
+        m_rollerVelocityRPS = 0d;
+    }
+    @Override
+    public void rollerRPS(double velocity) {
+        m_rollerOutput = 0d;
+        m_rollerVelocityRPS = velocity;
     }
     @Override
     public void rollerStop() {
         m_rollerOutput = 0d;
+        m_rollerVelocityRPS = 0d;
     }
 }

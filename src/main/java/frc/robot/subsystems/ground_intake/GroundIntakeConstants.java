@@ -11,8 +11,13 @@ public final class GroundIntakeConstants {
     public static final int rollerCurrentLimit = 40;
     public static final NeutralModeValue rollerNeutralMode = NeutralModeValue.Brake;
     public static final InvertedValue rollerInverted = InvertedValue.Clockwise_Positive;
+    public static final boolean rollerUseDutyCycle = false;
     public static final double rollerOutput = 0.85d;
     public static final double rollerOutputReverse = -rollerOutput;
+    public static final double rollerOutputVelocityRPS = 60d / 60d;
+    public static final double rollerOutputVelocityReverseRPS = -rollerOutputVelocityRPS;
+
+    public static final double rollerPidP = 100d;
 
     public static final int actuatorMotorId = -1;
     public static final int actuatorCurrentLimit = 40;

@@ -8,6 +8,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -32,6 +33,8 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
     private final MotionMagicVoltage m_actuatorPositionRequest = new MotionMagicVoltage(m_actuatorTargetPosition);
     private final DutyCycleOut m_rollerDutyCycleRequest = new DutyCycleOut(0d);
+    private final MotionMagicVelocityVoltage m_rollerVelocityRequest = new MotionMagicVelocityVoltage(0d)
+        .withEnableFOC(true);
 
     public GroundIntakeIOReal() {
         var rollerConfig = new TalonFXConfiguration();
@@ -40,6 +43,8 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
         // rollerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         // rollerConfig.CurrentLimits.SupplyCurrentLimit = rollerCurrentLimit;
+
+        rollerConfig.Slot0.kP = rollerPidP;
 
         var actuatorConfig = new TalonFXConfiguration();
         actuatorConfig.MotorOutput.NeutralMode = actuatorNeutralMode;
@@ -93,6 +98,10 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
     @Override
     public void rollerDutyCycle(double output) {
         m_rollerMotor.setControl(m_rollerDutyCycleRequest.withOutput(output));
+    }
+    @Override
+    public void rollerRPS(double velocity) {
+        m_rollerMotor.setControl(m_rollerVelocityRequest.withVelocity(velocity));
     }
     @Override
     public void rollerStop() {

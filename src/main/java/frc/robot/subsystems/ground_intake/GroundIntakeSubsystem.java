@@ -12,11 +12,22 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
 
     private final GroundIntakeIO m_io;
     private final GroundIntakeIOInputsAutoLogged m_inputs = new GroundIntakeIOInputsAutoLogged();
+
+    private final Runnable m_startRoller;
+    private final Runnable m_reverseRoller;
     
     public GroundIntakeSubsystem(GroundIntakeIO io) {
         instance = this;
 
         m_io = io;
+
+        if (rollerUseDutyCycle) {
+            m_startRoller = this::startRollerDutyCycle;
+            m_reverseRoller = this::reverseRollerDutyCycle;
+        } else {
+            m_startRoller = this::startRollerVelocity;
+            m_reverseRoller = this::reverseRollerVelocity;
+        }
 
         retract();
         stopRoller();
@@ -40,11 +51,11 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
                 deploy();
                 break;
             case DeployedOn:
-                startRoller();
+                m_startRoller.run();
                 deploy();
                 break;
             case DeployedReverse:
-                reverseRoller();
+                m_reverseRoller.run();
                 deploy();
                 break;
         }
@@ -54,11 +65,17 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
         m_io.idle();
     }
 
-    private void startRoller() {
+    private void startRollerDutyCycle() {
         m_io.rollerDutyCycle(rollerOutput);
     }
-    private void reverseRoller() {
+    private void reverseRollerDutyCycle() {
         m_io.rollerDutyCycle(rollerOutputReverse);
+    }
+    private void startRollerVelocity() {
+        m_io.rollerRPS(rollerOutputVelocityRPS);
+    }
+    private void reverseRollerVelocity() {
+        m_io.rollerRPS(rollerOutputVelocityReverseRPS);
     }
     public void stopRoller() {
         m_io.rollerStop();
