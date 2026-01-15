@@ -1,0 +1,81 @@
+package frc.robot.subsystems.turret;
+
+import static edu.wpi.first.units.Units.Degrees;
+import static frc.robot.subsystems.turret.TurretConstants.*;
+import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
+
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import frc.robot.Constants;
+import frc.robot.util.PhoenixUtil;
+
+public final class TurretIOReal implements TurretIO {
+    private final TalonFX m_motor = new TalonFX(motorId, Constants.CANBUS);
+
+    private double m_targetPosition = positionHome;
+
+    private final StatusSignal<Angle> m_positionSignal = m_motor.getPosition();
+    private final StatusSignal<AngularVelocity> m_velocitySignal = m_motor.getVelocity();
+    private final StatusSignal<Current> m_currentSignal = m_motor.getSupplyCurrent();
+
+    private final MotionMagicVoltage m_positionRequest = new MotionMagicVoltage(m_targetPosition);
+
+    public TurretIOReal() {
+        var config = new TalonFXConfiguration();
+        config.MotorOutput.NeutralMode = neutralMode;
+        config.MotorOutput.Inverted = inverted;
+
+        config.Feedback.SensorToMechanismRatio = motorReduction;
+
+        config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
+        config.Slot0.kP = pidP;
+
+        config.MotionMagic.MotionMagicAcceleration = targetAcceleration;
+        config.MotionMagic.MotionMagicCruiseVelocity = maxVelocity;
+
+        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = positionMax;
+        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = positionMin;
+
+        PhoenixUtil.tryUntilOk(5, () -> m_motor.getConfigurator().apply(config));
+
+        BaseStatusSignal.setUpdateFrequencyForAll(50d, m_positionSignal, m_velocitySignal, m_currentSignal);
+
+        m_motor.setPosition(m_targetPosition);
+    }
+
+    @Override
+    public void updateInputs(TurretIOInputs inputs) {
+        final double targetPosition = m_targetPosition;
+
+        inputs.targetPositionRotations = targetPosition;
+        inputs.targetPositionDegrees = mechanismPositionToAngle(targetPosition).in(Degrees);
+
+        final double positionRotations = m_positionSignal.getValueAsDouble();
+        inputs.positionRotations = positionRotations;
+        inputs.positionDegrees = mechanismPositionToAngle(positionRotations).in(Degrees);
+
+        inputs.velocityRPS = m_velocitySignal.getValueAsDouble();
+        inputs.currentAmps = m_currentSignal.getValueAsDouble();
+    }
+
+    @Override
+    public void idle() {
+        m_motor.disable();
+    }
+
+    @Override
+    public void setPosition(double position) {
+        m_targetPosition = position;
+        m_motor.setControl(m_positionRequest.withPosition(position));
+    }
+}
