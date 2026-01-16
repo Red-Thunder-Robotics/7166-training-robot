@@ -22,6 +22,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -32,6 +33,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -89,7 +91,7 @@ public class Robot extends LoggedRobot {
     private ShooterSubsystem m_shooterSubsystem = null;
     private ClimberSubsystem m_climberSubsystem = null;
 
-    private final LoggedDashboardChooser<Command> autoChooser;
+    private final LoggedDashboardChooser<Command> m_autoChooser;
 
     public Robot() {
         SignalLogger.setPath("/U/logs");
@@ -172,15 +174,19 @@ public class Robot extends LoggedRobot {
         // Start AdvantageKit logger
         Logger.start();
 
+        DriverStation.silenceJoystickConnectionWarning(true);
+        m_commandScheduler.setPeriod(0.04d);
+
         StateMachine.updateState(null);
 
-        autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+        m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
         StateMachine.updateState(this);
 
         resetGyro(Rotation2d.kZero);
         configureButtons();
-        CommandScheduler.getInstance().onCommandInterrupt((Command command, Optional<Command> interruptor) -> {
+        setupNamedCommands();
+        m_commandScheduler.onCommandInterrupt((Command command, Optional<Command> interruptor) -> {
             System.out.println(command.getName() + " was interrupted by " + (interruptor.isPresent() ? interruptor.get().getName() : "null"));
         });
     }
@@ -199,12 +205,10 @@ public class Robot extends LoggedRobot {
         Controls.retractIntakeButton.onTrue(RobotCommands.retractIntake());
 
         Controls.shootButton.onTrue(
-            RobotCommands.setTurretHubTracking()
-                .alongWith(RobotCommands.setShooterShooting())
+            RobotCommands.engageShooterHub()
         );
         Controls.shootButton.onFalse(
-            RobotCommands.setTurretIdle()
-                .alongWith(RobotCommands.setShooterIdle())
+            RobotCommands.disengageShooter()
         );
         if (Robot.isSimulation()) {
             // this is nonfunctional; ignore
@@ -213,9 +217,10 @@ public class Robot extends LoggedRobot {
                     () -> new Pose3d(Drive.instance.getPose())
                         .plus(new Transform3d(0, 0, Units.feetToMeters(1.5d), Rotation3d.kZero)),
                     () -> {
-                        final Rotation3d fieldRotation = m_turretSubsystem.getFieldRotation();
-                        final Translation2d robotPose = m_driveSubsystem.getPose().minus(m_turretSubsystem.getDebugPose().toPose2d()).getTranslation();//.rotateBy(new Rotation2d(fieldRotation.getZ()));
-                        return new Twist3d(robotPose.getX(), robotPose.getY(), 6d, 0d, 0d, 0d);
+                        // final Rotation3d fieldRotation = m_turretSubsystem.getFieldRotation();
+                        // final Translation2d robotPose = m_driveSubsystem.getPose().minus(m_turretSubsystem.getDebugPose().toPose2d()).getTranslation();//.rotateBy(new Rotation2d(fieldRotation.getZ()));
+                        // return new Twist3d(robotPose.getX(), robotPose.getY(), 6d, 0d, 0d, 0d);
+                        return new Twist3d(0, 0, 6d, 0d, 0d, 0d);
                     }
                 ),
                 Commands.waitSeconds(0.002d)
@@ -238,10 +243,18 @@ public class Robot extends LoggedRobot {
         dbgController.rightStick().onTrue(m_turretSubsystem.toggleManualModeCommand());
 
         m_turretSubsystem.setManualSupplier(() -> {
-            if (Math.abs(dbgController.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.6)
+            if (Math.abs(dbgController.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.15)
                 return dbgController.getRightX() * 2.5;
             return 0d;
         });
+    }
+
+    private void setupNamedCommands() {
+        NamedCommands.registerCommand("EngageShooterHub", RobotCommands.engageShooterHub());
+        NamedCommands.registerCommand("StopShooting", RobotCommands.disengageShooter());
+
+        NamedCommands.registerCommand("ClimbStepNext", RobotCommands.climbStateIncrease());
+        NamedCommands.registerCommand("ClimbStepPrevious", RobotCommands.climbStateDecrease());
     }
 
     public void resetGyro(Rotation2d offset) {
@@ -277,7 +290,10 @@ public class Robot extends LoggedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
+        // ensure flywheel is spinning if we want it to be
         StateMachine.setShooterState(StateMachine.getShooterState());
+
+        m_autoCommand = m_autoChooser.get();
 
         if (m_autoCommand != null)
             m_commandScheduler.schedule(m_autoCommand);

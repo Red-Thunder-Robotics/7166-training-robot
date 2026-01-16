@@ -50,7 +50,7 @@ public final class SimulationCommands {
             final double ypos = m_initialPose.getY() + m_initialVelocity.dy * t;
             final double zpos = m_initialPose.getZ()
                     + m_initialVelocity.dz * t
-                    - 0.5 * (9.81) * t * t;
+                    - 0.5d * (9.81d) * t * t;
 
             m_pose = new Pose3d(new Translation3d(xpos, ypos, zpos), Rotation3d.kZero);
             

@@ -20,4 +20,6 @@ public final class TurretConstants {
     public static final double pidP = 0d;
     public static final double targetAcceleration = 0d;
     public static final double maxVelocity = 0d;
+
+    public static final double canStartShootingThresholdDegrees = 5d;
 }

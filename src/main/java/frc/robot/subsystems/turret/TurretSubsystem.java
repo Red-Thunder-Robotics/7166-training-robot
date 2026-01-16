@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
+import static frc.robot.subsystems.turret.TurretConstants.*;
 
 import java.util.function.DoubleSupplier;
 
@@ -48,6 +49,10 @@ public final class TurretSubsystem extends SubsystemBase {
         return m_debugPose.getRotation();
     }
 
+    public boolean canStartShooting() {
+        return Math.abs(m_inputs.targetPositionDegrees - m_inputs.positionDegrees) <= canStartShootingThresholdDegrees;
+    }
+
     @AutoLogOutput(key="TurretDebugTargetFieldPose")
     private final Pose3d m_debugTargetFieldPose = new Pose3d(
         Units.inchesToMeters(182.11d),
@@ -75,43 +80,7 @@ public final class TurretSubsystem extends SubsystemBase {
         } else {
             switch (StateMachine.getTurretState()) {
                 case HubTracking:
-                    Pose2d robotPose = Drive.instance.getPose();
-                    final ChassisSpeeds robotSpeeds = Drive.instance.getChassisSpeeds();
-
-                    // t1
-                    // robotPose = robotPose.exp(new Twist2d(
-                    //     robotSpeeds.vxMetersPerSecond * lookAheadTime,
-                    //     robotSpeeds.vyMetersPerSecond * lookAheadTime,
-                    //     robotSpeeds.omegaRadiansPerSecond * lookAheadTime
-                    // ));
-
-                    // t0
-                    // Translation2d robotTranslation = robotPose.getTranslation();
-                    // Translation2d targetTranslation = m_debugTargetFieldPose.getTranslation().toTranslation2d();
-
-                    // Rotation2d targetRotation = targetTranslation.minus(robotTranslation).getAngle();
-                    // Rotation2d currentRotation = robotPose.getRotation();
-
-                    // Rotation2d rotationError = targetRotation.minus(currentRotation);
-
-                    // final double targetangle = rotationError.getRadians();
-
-                    // setAngle(Radians.of(targetangle));
-
-                    Translation2d robotTranslation = robotPose.getTranslation();
-                    Translation2d targetTranslation = m_debugTargetFieldPose.getTranslation().toTranslation2d();
-
-                    Translation2d yawTranslation = targetTranslation.minus(robotTranslation);
-                    yawTranslation = yawTranslation.minus(new Translation2d(robotSpeeds.vxMetersPerSecond, robotSpeeds.vyMetersPerSecond));
-
-                    Rotation2d currentRotation = robotPose.getRotation().plus(Rotation2d.k180deg);
-
-                    Rotation2d rotationError = yawTranslation.getAngle().minus(currentRotation);
-                    rotationError = rotationError.plus(Rotation2d.k180deg);
-
-                    final double targetangle = rotationError.getRadians();
-                    setAngle(Radians.of(targetangle));
-
+                    target3dPose(m_debugTargetFieldPose);
                     break;
                 default:
                     break;
@@ -158,5 +127,44 @@ public final class TurretSubsystem extends SubsystemBase {
             case AllianceFeed:
                 break;
         }
+    }
+
+    private void target3dPose(Pose3d targetPose) {
+        Pose2d robotPose = Drive.instance.getPose();
+        final ChassisSpeeds robotSpeeds = Drive.instance.getChassisSpeeds();
+
+        // t1
+        // robotPose = robotPose.exp(new Twist2d(
+        //     robotSpeeds.vxMetersPerSecond * lookAheadTime,
+        //     robotSpeeds.vyMetersPerSecond * lookAheadTime,
+        //     robotSpeeds.omegaRadiansPerSecond * lookAheadTime
+        // ));
+
+        // t0
+        // Translation2d robotTranslation = robotPose.getTranslation();
+        // Translation2d targetTranslation = targetPose.getTranslation().toTranslation2d();
+
+        // Rotation2d targetRotation = targetTranslation.minus(robotTranslation).getAngle();
+        // Rotation2d currentRotation = robotPose.getRotation();
+
+        // Rotation2d rotationError = targetRotation.minus(currentRotation);
+
+        // final double targetangle = rotationError.getRadians();
+
+        // setAngle(Radians.of(targetangle));
+
+        final Translation2d robotTranslation = robotPose.getTranslation();
+        final Translation2d targetTranslation = targetPose.getTranslation().toTranslation2d();
+
+        Translation2d yawTranslation = targetTranslation.minus(robotTranslation);
+        // Translation2d yawTranslation = robotTranslation.minus(targetTranslation);
+        yawTranslation = yawTranslation.minus(new Translation2d(robotSpeeds.vxMetersPerSecond, robotSpeeds.vyMetersPerSecond));
+
+        final Rotation2d currentRotation = robotPose.getRotation();
+        final Rotation2d rotationError = yawTranslation.getAngle().minus(currentRotation);
+
+        final double targetangle = rotationError.getRadians();
+
+        setAngle(Radians.of(targetangle));
     }
 }

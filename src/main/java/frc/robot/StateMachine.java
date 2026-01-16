@@ -207,6 +207,18 @@ public class StateMachine {
             return setShooterState(ShooterState.Shooting);
         }
 
+        public static Command engageShooterHub() {
+            return setTurretHubTracking()
+                .andThen(
+                    Commands.waitUntil(() -> TurretSubsystem.instance.canStartShooting())
+                        .andThen(setShooterShooting())
+                );
+        }
+        public static Command disengageShooter() {
+            return setTurretIdle()
+                .alongWith(setShooterIdle());
+        }
+
         public static Command setClimberState(ClimberState climberState) {
             return ClimberSubsystem.instance.runOnce(
                 () -> StateMachine.setClimberState(climberState)
@@ -252,7 +264,7 @@ public class StateMachine {
 
             // AprilTagConstants.update(ALLIANCE);
 
-            if (ALLIANCE == Alliance.Red)
+            if (ALLIANCE == Alliance.Blue)
                 initialSwerveRotation = Rotation2d.kZero;
             else
                 initialSwerveRotation = Rotation2d.kPi;

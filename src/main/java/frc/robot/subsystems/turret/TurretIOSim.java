@@ -35,6 +35,11 @@ public final class TurretIOSim implements TurretIO {
 
     @Override
     public void setPosition(double position) {
+        if (position < positionMin)
+            position = positionMin;
+        else if (position > positionMax)
+            position = positionMax;
+
         m_targetPosition = position;
         m_pid.setSetpoint(position);
     }
