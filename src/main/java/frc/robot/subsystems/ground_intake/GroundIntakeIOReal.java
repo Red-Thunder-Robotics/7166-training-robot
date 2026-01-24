@@ -100,7 +100,7 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
         m_rollerMotor.setControl(m_rollerDutyCycleRequest.withOutput(output));
     }
     @Override
-    public void rollerRPS(double velocity) {
+    public void rollerVelocity(AngularVelocity velocity) {
         m_rollerMotor.setControl(m_rollerVelocityRequest.withVelocity(velocity));
     }
     @Override

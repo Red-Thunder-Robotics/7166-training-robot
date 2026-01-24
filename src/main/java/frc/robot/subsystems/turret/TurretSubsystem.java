@@ -1,6 +1,7 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static frc.robot.subsystems.turret.TurretConstants.*;
 
@@ -18,11 +19,12 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.StateMachine;
-import frc.robot.StateMachine.TurretState;
+import frc.robot.state_machine.StateMachine;
+import frc.robot.state_machine.TurretState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.ConversionUtil;
 
@@ -49,8 +51,8 @@ public final class TurretSubsystem extends SubsystemBase {
         return m_debugPose.getRotation();
     }
 
-    public boolean canStartShooting() {
-        return Math.abs(m_inputs.targetPositionDegrees - m_inputs.positionDegrees) <= canStartShootingThresholdDegrees;
+    public boolean shouldIndex() {
+        return Math.abs(m_inputs.targetPositionDegrees - m_inputs.positionDegrees) <= shouldIndexThresholdDegrees;
     }
 
     @AutoLogOutput(key="TurretDebugTargetFieldPose")
@@ -59,6 +61,15 @@ public final class TurretSubsystem extends SubsystemBase {
         Units.inchesToMeters(158.84d),
         Units.feetToMeters(6d),
         new Rotation3d());
+
+    private Pose3d m_targetPose = null;
+
+    public boolean hasTarget() {
+        return m_targetPose != null;
+    }
+    public Pose3d getTargetPose() {
+        return m_targetPose;
+    }
 
     @AutoLogOutput(key="TurretManualEnabled")
     private boolean m_manualEnabled = false;
@@ -74,18 +85,22 @@ public final class TurretSubsystem extends SubsystemBase {
 
         Logger.processInputs("Turret", m_inputs);
 
+        Pose3d targetPose = null;
         if (m_manualEnabled) {
             m_manualTarget = m_manualTarget.plus(Degrees.of(m_manualSupplier.getAsDouble()));
             setAngle(m_manualTarget);
         } else {
             switch (StateMachine.getTurretState()) {
                 case HubTracking:
+                    targetPose = m_debugTargetFieldPose;
                     target3dPose(m_debugTargetFieldPose);
                     break;
                 default:
                     break;
             }
         }
+
+        m_targetPose = targetPose;
 
         m_debugPose = new Pose3d(
             0,

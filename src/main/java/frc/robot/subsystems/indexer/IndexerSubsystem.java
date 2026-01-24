@@ -5,8 +5,10 @@ import static frc.robot.subsystems.indexer.IndexerConstants.*;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.StateMachine;
-import frc.robot.StateMachine.IntakeState;
+import frc.robot.state_machine.ShooterState;
+import frc.robot.state_machine.StateMachine;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.turret.TurretSubsystem;
 
 public final class IndexerSubsystem extends SubsystemBase {
     public static IndexerSubsystem instance = null;
@@ -25,25 +27,23 @@ public final class IndexerSubsystem extends SubsystemBase {
         m_io.updateInputs(m_inputs);
 
         Logger.processInputs("Indexer", m_inputs);
-    }
 
-    public void stateUpdate(boolean indexerEnabled) {
-        if (indexerEnabled) {
-            m_io.generalFeedDutyCycle(generalFeedOutput);
-            m_io.shooterFeedDutyCycle(shooterFeedOutput);
-        } else {
-            m_io.generalFeedStop();
-            m_io.shooterFeedStop();
+        switch (StateMachine.getShooterState()) {
+            case Idle:
+                setIdle();
+                break;
+            case Shooting:
+                if (TurretSubsystem.instance.shouldIndex() && ShooterSubsystem.instance.shouldIndex()) {
+                    m_io.generalFeedDutyCycle(generalFeedOutput);
+                    m_io.shooterFeedDutyCycle(shooterFeedOutput);
+                } else
+                    setIdle();
+                break;
         }
     }
 
-    public void intakeStateUpdate(IntakeState intakeState) {
-        // FIXME: do we want to automatically reverse indexer on intake reverse? if so comment back in
-        // if (intakeState.areRollersReversed()) {
-        //     StateMachine.setIndexerEnabled(false);
-        //     m_io.generalFeedDutyCycle(generalFeedOutputReverse);
-        //     m_io.shooterFeedDutyCycle(shooterFeedOutputReverse);
-        // } else
-            StateMachine.setIndexerEnabled(!intakeState.areRollersPowered());
+    public void setIdle() {
+        m_io.generalFeedStop();
+        m_io.shooterFeedStop();
     }
 }

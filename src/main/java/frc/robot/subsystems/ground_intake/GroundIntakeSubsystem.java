@@ -5,7 +5,7 @@ import static frc.robot.subsystems.ground_intake.GroundIntakeConstants.*;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.StateMachine.IntakeState;
+import frc.robot.state_machine.IntakeState;
 
 public final class GroundIntakeSubsystem extends SubsystemBase {
     public static GroundIntakeSubsystem instance = null;
@@ -72,10 +72,10 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
         m_io.rollerDutyCycle(rollerOutputReverse);
     }
     private void startRollerVelocity() {
-        m_io.rollerRPS(rollerOutputVelocityRPS);
+        m_io.rollerVelocity(rollerOutputVelocity);
     }
     private void reverseRollerVelocity() {
-        m_io.rollerRPS(rollerOutputVelocityReverseRPS);
+        m_io.rollerVelocity(rollerOutputVelocityReverse);
     }
     public void stopRoller() {
         m_io.rollerStop();

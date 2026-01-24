@@ -1,10 +1,12 @@
 package frc.robot.subsystems.ground_intake;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static frc.robot.subsystems.ground_intake.GroundIntakeConstants.*;
 import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.units.measure.AngularVelocity;
 
 public final class GroundIntakeIOSim implements GroundIntakeIO {
     private double m_targetActuatorPosition = actuatorPositionHome;
@@ -48,9 +50,9 @@ public final class GroundIntakeIOSim implements GroundIntakeIO {
         m_rollerVelocityRPS = 0d;
     }
     @Override
-    public void rollerRPS(double velocity) {
+    public void rollerVelocity(AngularVelocity velocity) {
         m_rollerOutput = 0d;
-        m_rollerVelocityRPS = velocity;
+        m_rollerVelocityRPS = velocity.in(RotationsPerSecond);
     }
     @Override
     public void rollerStop() {

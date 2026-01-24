@@ -7,6 +7,10 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public final class ShooterConstants {
+    // public static final long spinUpDurationMilliseconds = 800L;
+    public static final double shouldIndexVelocityThresholdRPS = (4500d / 60d);
+    public static final double latencyCompensationSeconds = 0.150d;
+    
     public static final int flywheelMotorId = -1;
     public static final int flywheelCurrentLimit = 40;
     public static final NeutralModeValue flywheelNeutralMode = NeutralModeValue.Coast;

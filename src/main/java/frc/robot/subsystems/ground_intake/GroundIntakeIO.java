@@ -2,6 +2,8 @@ package frc.robot.subsystems.ground_intake;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.units.measure.AngularVelocity;
+
 public interface GroundIntakeIO {
     @AutoLog
     public static class GroundIntakeIOInputs {
@@ -24,6 +26,6 @@ public interface GroundIntakeIO {
     
     public default void setActuatorPosition(double position) {}
     public default void rollerDutyCycle(double output) {}
-    public default void rollerRPS(double velocity) {}
+    public default void rollerVelocity(AngularVelocity velocity) {}
     public default void rollerStop() {}
 }

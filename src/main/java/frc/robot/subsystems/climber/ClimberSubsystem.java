@@ -5,7 +5,7 @@ import static frc.robot.subsystems.climber.ClimberConstants.*;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.StateMachine.ClimberState;
+import frc.robot.state_machine.ClimberState;
 
 public final class ClimberSubsystem extends SubsystemBase {
     public static ClimberSubsystem instance = null;

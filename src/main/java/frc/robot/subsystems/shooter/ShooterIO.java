@@ -2,6 +2,8 @@ package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.units.measure.AngularVelocity;
+
 public interface ShooterIO {
     @AutoLog
     public static class ShooterIOInputs {
@@ -9,6 +11,8 @@ public interface ShooterIO {
         double flywheelMotorDutyCycle;
         double flywheelMotorVelocityRPS;
         double flywheelMotorCurrentAmps;
+
+        double flywheelTargetVelocityRPS;
 
         // hood
         double hoodTargetPositionRotations;
@@ -32,6 +36,7 @@ public interface ShooterIO {
     public default void idle() {}
 
     public default void flywheelDutyCycle(double output) {}
+    public default void flywheelVelocity(AngularVelocity velocity) {}
     public default void flywheelStop() {}
 
     public default void setHoodPosition(double position) {}

@@ -7,13 +7,16 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Inches;
+
 import com.ctre.phoenix6.CANBus;
 
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public final class Constants {
-    public static final Mode simMode = Mode.SIM;
-    public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+    public static final Mode SIM_MODE = Mode.SIM;
+    public static final Mode CURRENT_MODE = RobotBase.isReal() ? Mode.REAL : SIM_MODE;
 
     public static enum Mode {
         REAL,
@@ -24,4 +27,9 @@ public final class Constants {
     public static final int CONTROLLER = 0;
 
     public static final CANBus CANBUS = new CANBus("HighVoltageCANivore", "./logs/canivore.hoot");
+
+    public static final class FieldConstants {
+        public static final Distance FUNNEL_RADIUS = Inches.of(24d);
+        public static final Distance FUNNEL_HEIGHT = Inches.of(72d - 56.4d);
+    }
 }

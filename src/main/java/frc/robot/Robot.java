@@ -29,10 +29,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.XboxController;
@@ -40,12 +38,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.StateMachine.RobotCommands;
-import frc.robot.StateMachine.TurretState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.SimulationCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.state_machine.IntakeState;
+import frc.robot.state_machine.StateMachine;
+import frc.robot.state_machine.StateMachine.RobotCommands;
 import frc.robot.subsystems.climber.ClimberIO;
 import frc.robot.subsystems.climber.ClimberIOReal;
 import frc.robot.subsystems.climber.ClimberIOSim;
@@ -72,6 +70,9 @@ import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOReal;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretSubsystem;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionSubsystem;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -90,6 +91,7 @@ public class Robot extends LoggedRobot {
     private IndexerSubsystem m_indexerSubsystem = null;
     private ShooterSubsystem m_shooterSubsystem = null;
     private ClimberSubsystem m_climberSubsystem = null;
+    private VisionSubsystem m_visionSubsystem = null;
 
     private final LoggedDashboardChooser<Command> m_autoChooser;
 
@@ -114,7 +116,7 @@ public class Robot extends LoggedRobot {
               });
 
         // Set up data receivers & replay source
-        switch (Constants.currentMode) {
+        switch (Constants.CURRENT_MODE) {
             case REAL:
                 // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(new WPILOGWriter());
@@ -131,6 +133,7 @@ public class Robot extends LoggedRobot {
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIOReal());
                 m_shooterSubsystem = new ShooterSubsystem(new ShooterIOReal());
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
+                m_visionSubsystem = new VisionSubsystem(new VisionIOLimelight());
                 break;
 
             case SIM:
@@ -148,6 +151,7 @@ public class Robot extends LoggedRobot {
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIOSim());
                 m_shooterSubsystem = new ShooterSubsystem(new ShooterIOSim());
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOSim());
+                m_visionSubsystem = new VisionSubsystem(new VisionIO() {});
                 break;
 
             case REPLAY:
@@ -168,6 +172,7 @@ public class Robot extends LoggedRobot {
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIO() {});
                 m_shooterSubsystem = new ShooterSubsystem(new ShooterIO() {});
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIO() {});
+                m_visionSubsystem = new VisionSubsystem(new VisionIO() {});
                 break;
         }
 
@@ -228,12 +233,12 @@ public class Robot extends LoggedRobot {
         }
 
         Controls.climbForward.onTrue(Commands.either(
-            RobotCommands.climbStateIncrease(),
+            RobotCommands.climberStateIncrease(),
             Commands.none(),
             Controls.climbSafetyButton
         ));
         Controls.climbBackward.onTrue(Commands.either(
-            RobotCommands.climbStateDecrease(),
+            RobotCommands.climberStateDecrease(),
             Commands.none(),
             Controls.climbSafetyButton
         ));
@@ -253,8 +258,11 @@ public class Robot extends LoggedRobot {
         NamedCommands.registerCommand("EngageShooterHub", RobotCommands.engageShooterHub());
         NamedCommands.registerCommand("StopShooting", RobotCommands.disengageShooter());
 
-        NamedCommands.registerCommand("ClimbStepNext", RobotCommands.climbStateIncrease());
-        NamedCommands.registerCommand("ClimbStepPrevious", RobotCommands.climbStateDecrease());
+        NamedCommands.registerCommand("IntakeDeployOn", RobotCommands.setIntakeState(IntakeState.DeployedOn));
+        NamedCommands.registerCommand("IntakeHomeOff", RobotCommands.setIntakeState(IntakeState.HomeOff));
+
+        NamedCommands.registerCommand("ClimberStepNext", RobotCommands.climberStateIncrease());
+        NamedCommands.registerCommand("ClimberStepPrevious", RobotCommands.climberStateDecrease());
     }
 
     public void resetGyro(Rotation2d offset) {
@@ -292,6 +300,7 @@ public class Robot extends LoggedRobot {
     public void autonomousInit() {
         // ensure flywheel is spinning if we want it to be
         StateMachine.setShooterState(StateMachine.getShooterState());
+        StateMachine.setIntakeState(IntakeState.DeployedOn);
 
         m_autoCommand = m_autoChooser.get();
 
