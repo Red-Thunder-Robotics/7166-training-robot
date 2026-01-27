@@ -1,9 +1,12 @@
 package frc.robot.commands;
 
+import java.util.ArrayList;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -13,24 +16,43 @@ import edu.wpi.first.wpilibj2.command.Command;
 
 public final class SimulationCommands {
     public static class SimFuelCommand extends Command {
-        private static int globalId = 0;
-        private int m_id = ++globalId;
+        private static ArrayList<Pair<Supplier<Pose3d>, Timer>> poseList = new ArrayList<>();
+        public static void step() {
+            Logger.recordOutput("SimFuel", poseList
+                .stream()
+                .map(v -> v.getFirst().get())
+                .collect(Collectors.toList()).toArray(Pose3d[]::new));
+
+            boolean removedAny = true;
+            while (removedAny) {
+                removedAny = false;
+                for (var pair : poseList)
+                    if (pair.getSecond().hasElapsed(5d)) {
+                        poseList.remove(pair);
+                        removedAny = true;
+                        break;
+                    }
+            }
+            // below seems more efficient but it gave a concurrentmodification exception
+            // var iterator = poseList.stream().filter(v -> v.getSecond().hasElapsed(5d)).iterator();
+            // while (iterator.hasNext())
+            //     poseList.remove(iterator.next());
+        }
 
         private final Timer m_timer = new Timer();
 
-        private String m_name;
         private Pose3d m_initialPose = new Pose3d();
         private Pose3d m_pose = m_initialPose;
-        private Twist3d m_initialVelocity;
+        private Translation3d m_initialVelocity;
 
         private Supplier<Pose3d> m_initialPoseSupplier;
-        private Supplier<Twist3d> m_initialVelocitySupplier;
+        private Supplier<Translation3d> m_initialVelocitySupplier;
 
-        public SimFuelCommand(Supplier<Pose3d> startPoseSupplier, Supplier<Twist3d> initialVelocitySupplier) {
+        public SimFuelCommand(Supplier<Pose3d> startPoseSupplier, Supplier<Translation3d> initialVelocitySupplier) {
             m_initialPoseSupplier = startPoseSupplier;
             m_initialVelocitySupplier = initialVelocitySupplier;
 
-            m_name = "SimFuel" + m_id;
+            poseList.add(new Pair<>(() -> m_pose, m_timer));
         }
 
         @Override
@@ -46,21 +68,18 @@ public final class SimulationCommands {
         public void execute() {
             final double t = m_timer.get();
 
-            final double xpos = m_initialPose.getX() + m_initialVelocity.dx * t;
-            final double ypos = m_initialPose.getY() + m_initialVelocity.dy * t;
+            final double xpos = m_initialPose.getX() + m_initialVelocity.getX() * t;
+            final double ypos = m_initialPose.getY() + m_initialVelocity.getY() * t;
             final double zpos = m_initialPose.getZ()
-                    + m_initialVelocity.dz * t
+                    + m_initialVelocity.getZ() * t
                     - 0.5d * (9.81d) * t * t;
 
             m_pose = new Pose3d(new Translation3d(xpos, ypos, zpos), Rotation3d.kZero);
-            
-            Logger.recordOutput(m_name, m_pose);
         }
 
         @Override
         public boolean isFinished() {
             return m_pose.getZ() < 0d;
-            // return m_timer.hasElapsed(3d);
         }
     }
 }

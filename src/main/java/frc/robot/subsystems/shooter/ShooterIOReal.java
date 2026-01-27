@@ -3,12 +3,14 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.Degrees;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 import static frc.robot.subsystems.turret.TurretConstants.maxVelocity;
+import static frc.robot.util.ConversionUtil.angleToMechanismPosition;
 import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -37,6 +39,8 @@ public final class ShooterIOReal implements ShooterIO {
     private final StatusSignal<Current> m_kickerCurrentSignal = m_kickerMotor.getSupplyCurrent();
 
     private final DutyCycleOut m_flywheelDutyCycleRequest = new DutyCycleOut(0d);
+    private final MotionMagicVelocityVoltage m_flywheelVelocityRequest = new MotionMagicVelocityVoltage(0d)
+        .withEnableFOC(true);
     private final MotionMagicVoltage m_hoodPositionRequest = new MotionMagicVoltage(m_hoodTargetPosition);
     private final DutyCycleOut m_kickerDutyCycleRequest = new DutyCycleOut(0d);
 
@@ -47,6 +51,8 @@ public final class ShooterIOReal implements ShooterIO {
 
         // flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         // flywheelConfig.CurrentLimits.SupplyCurrentLimit = flywheelCurrentLimit;
+
+        flywheelConfig.Slot0.kP = flywheelPidP;
 
         var hoodConfig = new TalonFXConfiguration();
         hoodConfig.MotorOutput.NeutralMode = hoodNeutralMode;
@@ -82,6 +88,8 @@ public final class ShooterIOReal implements ShooterIO {
         inputs.flywheelMotorVelocityRPS = m_flywheelVelocitySignal.getValueAsDouble();
         inputs.flywheelMotorCurrentAmps = m_flywheelCurrentSignal.getValueAsDouble();
 
+        inputs.flywheelTargetVelocityRPS = PhoenixUtil.getRequestVelocity(m_flywheelMotor.getAppliedControl());
+
         final double hoodTargetPosition = m_hoodTargetPosition;
         inputs.hoodTargetPositionRotations = hoodTargetPosition;
         inputs.hoodTargetPositionDegrees = mechanismPositionToAngle(hoodTargetPosition).in(Degrees);
@@ -110,14 +118,18 @@ public final class ShooterIOReal implements ShooterIO {
         m_flywheelMotor.setControl(m_flywheelDutyCycleRequest.withOutput(output));
     }
     @Override
+    public void flywheelVelocity(AngularVelocity velocity) {
+        m_flywheelMotor.setControl(m_flywheelVelocityRequest.withVelocity(velocity));
+    }
+    @Override
     public void flywheelStop() {
         m_flywheelMotor.disable();
     }
 
     @Override
-    public void setHoodPosition(double position) {
-        m_hoodTargetPosition = position;
-        m_hoodMotor.setControl(m_hoodPositionRequest.withPosition(position));
+    public void setHoodPosition(Angle angle) {
+        m_hoodTargetPosition = angleToMechanismPosition(angle);
+        m_hoodMotor.setControl(m_hoodPositionRequest.withPosition(m_hoodTargetPosition));
     }
 
     @Override

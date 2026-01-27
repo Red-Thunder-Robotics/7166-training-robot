@@ -137,6 +137,11 @@ public class StateMachine {
                 Set.of(ClimberSubsystem.instance)
             );
         }
+
+        // FIXME: auto climb command
+        public static Command autoClimb() {
+            return Commands.none();
+        }
     }
 
     private static Rotation2d swerveRotationOffset = new Rotation2d();

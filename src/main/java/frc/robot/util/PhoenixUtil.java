@@ -16,6 +16,7 @@ package frc.robot.util;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 
 import java.util.function.Supplier;
 
@@ -31,6 +32,13 @@ public class PhoenixUtil {
   public static double getRequestDutyCycle(ControlRequest request) {
     if (request instanceof DutyCycleOut) {
       return ((DutyCycleOut)request).Output;
+    }
+
+    return 0d;
+  }
+  public static double getRequestVelocity(ControlRequest request) {
+    if (request instanceof MotionMagicVelocityVoltage) {
+      return ((MotionMagicVelocityVoltage)request).Velocity;
     }
 
     return 0d;

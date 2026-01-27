@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 public interface ShooterIO {
@@ -39,7 +40,7 @@ public interface ShooterIO {
     public default void flywheelVelocity(AngularVelocity velocity) {}
     public default void flywheelStop() {}
 
-    public default void setHoodPosition(double position) {}
+    public default void setHoodPosition(Angle angle) {}
 
     public default void kickerDutyCycle(double output) {}
     public default void kickerStop() {}
