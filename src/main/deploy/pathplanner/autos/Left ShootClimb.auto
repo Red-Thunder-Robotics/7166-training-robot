@@ -7,19 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightStartToOutPost"
+            "pathName": "Left StartToShoot"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightOutPostToShootPos"
+            "name": "EngageShooterHub"
           }
         },
         {
@@ -31,7 +25,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightShootPosToClimb"
+            "pathName": "LeftShootToClimb"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeHomeOff"
           }
         },
         {
@@ -44,6 +44,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Right",
+  "folder": "Left",
   "choreoAuto": false
 }

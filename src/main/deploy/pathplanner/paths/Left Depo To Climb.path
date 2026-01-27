@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 0.4907307692307705,
+        "y": 6.0
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 0.9784700849980796,
+        "y": 5.2668275164117935
+      },
+      "isLocked": false,
+      "linkedName": "EndDepoPos."
+    },
+    {
+      "anchor": {
+        "x": 1.3279615384615397,
+        "y": 4.755948717948717
+      },
+      "prevControl": {
+        "x": 0.8910720752217309,
+        "y": 5.404468811631974
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LeftClimbPos."
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.2,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "Left",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}
