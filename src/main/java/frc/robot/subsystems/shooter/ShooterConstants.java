@@ -45,28 +45,28 @@ public final class ShooterConstants {
     public static final double kickerOutput = 1d;
 
     // https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
-    public static record ShooterParams(double rpm, double degrees) { };
+    public static record InterpolationShooterParams(double rpm, double degrees) { };
 
-    public static enum ParamMap {
+    public static enum InterpolationParamMap {
         Normal,
         Low;
 
-        public final InterpolatingTreeMap<Double, ShooterParams> map =
-            new InterpolatingTreeMap<Double, ShooterParams>(
+        public final InterpolatingTreeMap<Double, InterpolationShooterParams> map =
+            new InterpolatingTreeMap<Double, InterpolationShooterParams>(
                 InverseInterpolator.forDouble(),
-                (ShooterParams start, ShooterParams end, double q) ->
-                    new ShooterParams(
+                (InterpolationShooterParams start, InterpolationShooterParams end, double q) ->
+                    new InterpolationShooterParams(
                         MathUtil.interpolate(start.rpm, end.rpm, q),
                         MathUtil.interpolate(end.degrees, end.degrees, q)
                     )
             );
 
         static {
-            Normal.map.put(1d, new ShooterParams(1500d, 60d));
-            Normal.map.put(2d, new ShooterParams(1800d, 60d));
+            Normal.map.put(1d, new InterpolationShooterParams(1500d, 60d));
+            Normal.map.put(2d, new InterpolationShooterParams(1800d, 60d));
 
             // TODO: low map, if we want to use it
         }
     }
-    public static final ParamMap paramMap = ParamMap.Normal;
+    public static final InterpolationParamMap paramMap = InterpolationParamMap.Normal;
 }

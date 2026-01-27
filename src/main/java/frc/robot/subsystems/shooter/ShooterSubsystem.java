@@ -36,7 +36,7 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.state_machine.ShooterState;
 import frc.robot.state_machine.StateMachine;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.shooter.ShooterConstants.ShooterParams;
+import frc.robot.subsystems.shooter.ShooterConstants.InterpolationShooterParams;
 import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.util.ConversionUtil;
 
@@ -59,7 +59,7 @@ public final class ShooterSubsystem extends SubsystemBase {
         Logger.processInputs("Shooter", m_inputs);
 
         if (StateMachine.getShooterState() == ShooterState.Shooting && TurretSubsystem.instance.hasTarget()) {
-            final ShooterParams params = calculateParams(TurretSubsystem.instance.getTargetPose().getTranslation());
+            final InterpolationShooterParams params = calculateParams(TurretSubsystem.instance.getTargetPose().getTranslation());
             m_io.setHoodPosition(Degrees.of(params.degrees()));
             m_io.flywheelVelocity(RPM.of(params.rpm()));
         }
@@ -105,7 +105,7 @@ public final class ShooterSubsystem extends SubsystemBase {
     }
 
     // https://github.com/hammerheads5000/2026Rebuilt/blob/6ecae474f5ed81970d8727d2fe6b17e945a1f08f/src/main/java/frc/robot/subsystems/turret/TurretCalculator.java#L100C1-L127C1
-    public static record ShotData(LinearVelocity velocity, Angle angle, Translation3d target) {};
+    public static record PhysicsShotData(LinearVelocity velocity, Angle angle, Translation3d target) {};
     public static Distance getDistanceToTarget(Pose2d robot, Translation3d target) {
         return Meters.of(robot.getTranslation().getDistance(target.toTranslation2d()));
     }
@@ -116,7 +116,7 @@ public final class ShooterSubsystem extends SubsystemBase {
 
         return new Translation3d(predictedX, predictedY, target.getZ());
     }
-    public static ShotData calculateShotFromFunnelClearance(
+    public static PhysicsShotData calculateShotFromFunnelClearance(
         Pose2d robot, Translation3d actualTarget, Translation3d predictedTarget)
     {
         double x_dist = getDistanceToTarget(robot, predictedTarget).in(Inches);
@@ -142,11 +142,11 @@ public final class ShooterSubsystem extends SubsystemBase {
         double b = (D1 - A1 * a) / B1;
         double theta = Math.atan(b);
         double v0 = Math.sqrt(-g / (2 * a * (Math.cos(theta)) * (Math.cos(theta))));
-        return new ShotData(InchesPerSecond.of(v0), Radians.of(theta), predictedTarget);
+        return new PhysicsShotData(InchesPerSecond.of(v0), Radians.of(theta), predictedTarget);
     }
 
 
-    public ShooterParams calculateParams(Translation3d target) {
+    public InterpolationShooterParams calculateParams(Translation3d target) {
         final var robotPose = Drive.instance.getPose();
         final var fieldSpeeds = Drive.instance.getChassisSpeeds();
         
@@ -192,7 +192,7 @@ public final class ShooterSubsystem extends SubsystemBase {
         // https://github.com/hammerheads5000/2026Rebuilt/blob/9a94e647443d8a5651b044449cc5ebb8195efc52/src/main/java/frc/robot/subsystems/turret/TurretCalculator.java#L129
         final int iterations = 3;
 
-        ShotData shot = calculateShotFromFunnelClearance(robotPose, target, target);
+        PhysicsShotData shot = calculateShotFromFunnelClearance(robotPose, target, target);
         Distance distance = getDistanceToTarget(robotPose, target);
         Time timeOfFlight = calculateTimeOfFlight(shot.velocity, shot.angle, distance);
         Translation3d predictedTarget = target;
@@ -206,7 +206,7 @@ public final class ShooterSubsystem extends SubsystemBase {
 
         m_exitVelocity = shot.velocity;
 
-        return new ShooterParams(
+        return new InterpolationShooterParams(
             RadiansPerSecond.of(m_exitVelocity.in(MetersPerSecond) / flywheelRadius.in(Meters)).in(RotationsPerSecond),
             shot.angle.in(Degrees)
         );
