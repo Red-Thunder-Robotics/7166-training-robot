@@ -8,6 +8,8 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 
 import java.util.Optional;
 import java.util.Set;
@@ -29,8 +31,12 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.XboxController;
@@ -40,6 +46,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.SimulationCommands;
+import frc.robot.commands.SimulationCommands.SimFuelCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.state_machine.IntakeState;
 import frc.robot.state_machine.StateMachine;
@@ -73,6 +80,7 @@ import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.util.ConversionUtil;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -87,10 +95,15 @@ public class Robot extends LoggedRobot {
     // subsystems
     private Drive m_driveSubsystem = null;
     private TurretSubsystem m_turretSubsystem = null;
+    @SuppressWarnings("unused")
     private GroundIntakeSubsystem m_intakeSubsystem = null;
+    @SuppressWarnings("unused")
     private IndexerSubsystem m_indexerSubsystem = null;
+    @SuppressWarnings("unused")
     private ShooterSubsystem m_shooterSubsystem = null;
+    @SuppressWarnings("unused")
     private ClimberSubsystem m_climberSubsystem = null;
+    @SuppressWarnings("unused")
     private VisionSubsystem m_visionSubsystem = null;
 
     private final LoggedDashboardChooser<Command> m_autoChooser;
@@ -182,15 +195,13 @@ public class Robot extends LoggedRobot {
         DriverStation.silenceJoystickConnectionWarning(true);
         m_commandScheduler.setPeriod(0.04d);
 
-        StateMachine.updateState(null);
-
-        m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
         StateMachine.updateState(this);
+        setupNamedCommands();
+        
+        m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
         resetGyro(Rotation2d.kZero);
         configureButtons();
-        setupNamedCommands();
         m_commandScheduler.onCommandInterrupt((Command command, Optional<Command> interruptor) -> {
             System.out.println(command.getName() + " was interrupted by " + (interruptor.isPresent() ? interruptor.get().getName() : "null"));
         });
@@ -215,19 +226,39 @@ public class Robot extends LoggedRobot {
         Controls.shootButton.onFalse(
             RobotCommands.disengageShooter()
         );
+
         if (Robot.isSimulation()) {
             // this is nonfunctional; ignore
             Controls.shootButton.whileTrue(Commands.repeatingSequence(
-                new SimulationCommands.SimFuelCommand(
+                Commands.runOnce(() -> m_commandScheduler.schedule(new SimulationCommands.SimFuelCommand(
                     () -> new Pose3d(Drive.instance.getPose())
                         .plus(new Transform3d(0, 0, Units.feetToMeters(1.5d), Rotation3d.kZero)),
                     () -> {
-                        // final Rotation3d fieldRotation = m_turretSubsystem.getFieldRotation();
-                        // final Translation2d robotPose = m_driveSubsystem.getPose().minus(m_turretSubsystem.getDebugPose().toPose2d()).getTranslation();//.rotateBy(new Rotation2d(fieldRotation.getZ()));
-                        // return new Twist3d(robotPose.getX(), robotPose.getY(), 6d, 0d, 0d, 0d);
-                        return new Twist3d(0, 0, 6d, 0d, 0d, 0d);
+                        Pose2d robot = m_driveSubsystem.getPose();
+                        LinearVelocity vel = m_shooterSubsystem.getExitVelocity();
+
+                        Rotation2d fieldYaw = robot.getRotation().plus(new Rotation2d(m_turretSubsystem.getAngle().in(Radians)));
+                        double pitchRad = m_shooterSubsystem.getHoodAngle().in(Radians);
+
+                        Translation3d localDirection = new Translation3d(
+                            Math.cos(pitchRad),
+                            0d,
+                            Math.sin(pitchRad)
+                        );
+                        Rotation3d fieldRotation = new Rotation3d(
+                            0d,
+                            0d,
+                            fieldYaw.getRadians()
+                        );
+
+                        // is this maliciously ensuring "works in sim"??? idk
+                        Translation3d fieldDirection = localDirection.rotateBy(fieldRotation);
+                        fieldDirection = fieldDirection.times(vel.in(MetersPerSecond));
+                        fieldDirection = fieldDirection.plus(ConversionUtil.chassisSpeedsToTranslation3d(m_driveSubsystem.getChassisSpeeds()));
+
+                        return fieldDirection;
                     }
-                ),
+                ))),
                 Commands.waitSeconds(0.002d)
             ));
         }
@@ -261,8 +292,11 @@ public class Robot extends LoggedRobot {
         NamedCommands.registerCommand("IntakeDeployOn", RobotCommands.setIntakeState(IntakeState.DeployedOn));
         NamedCommands.registerCommand("IntakeHomeOff", RobotCommands.setIntakeState(IntakeState.HomeOff));
 
-        NamedCommands.registerCommand("ClimberStepNext", RobotCommands.climberStateIncrease());
-        NamedCommands.registerCommand("ClimberStepPrevious", RobotCommands.climberStateDecrease());
+        // FIXME: waitForEmptyHopper command using vision
+        Command waitForEmptyHopper = Commands.waitSeconds(3d);
+        NamedCommands.registerCommand("AfterShoot", waitForEmptyHopper.andThen(RobotCommands.disengageShooter()));
+
+        NamedCommands.registerCommand("Climb", RobotCommands.autoClimb());
     }
 
     public void resetGyro(Rotation2d offset) {
@@ -339,5 +373,7 @@ public class Robot extends LoggedRobot {
 
     /** This function is called periodically whilst in simulation. */
     @Override
-    public void simulationPeriodic() {}
+    public void simulationPeriodic() {
+        SimFuelCommand.step();
+    }
 }

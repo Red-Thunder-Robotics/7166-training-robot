@@ -51,6 +51,7 @@ public final class TurretSubsystem extends SubsystemBase {
         return m_debugPose.getRotation();
     }
 
+    @AutoLogOutput(key="TurretShouldIndex")
     public boolean shouldIndex() {
         return Math.abs(m_inputs.targetPositionDegrees - m_inputs.positionDegrees) <= shouldIndexThresholdDegrees;
     }
