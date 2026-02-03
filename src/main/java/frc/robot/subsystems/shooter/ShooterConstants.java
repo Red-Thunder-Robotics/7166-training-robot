@@ -17,7 +17,8 @@ public final class ShooterConstants {
     public static final double shouldIndexVelocityThresholdRPS = 5d;
     public static final double latencyCompensationSeconds = 0.150d;
     
-    public static final int flywheelMotorId = -1;
+    public static final int flywheelMotorId1 = -1;
+    public static final int flywheelMotorId2 = -1;
     public static final int flywheelCurrentLimit = 40;
     public static final NeutralModeValue flywheelNeutralMode = NeutralModeValue.Coast;
     public static final InvertedValue flywheelInverted = InvertedValue.Clockwise_Positive;
@@ -26,7 +27,8 @@ public final class ShooterConstants {
     public static final double flywheelPidP = 100d;
     public static final Distance flywheelRadius = Inches.of(2d);
 
-    public static final int hoodMotorId = -1;
+    public static final int hoodMotorId1 = -1;
+    public static final int hoodMotorId2 = -1;
     public static final double hoodCurrentLimit = 40;
     public static final double hoodMotorReduction = 1d;
     public static final NeutralModeValue hoodNeutralMode = NeutralModeValue.Brake;

@@ -8,11 +8,13 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 
 import com.ctre.phoenix6.CANBus;
 
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.ApriltagUtil;
 
 public final class Constants {
     public static final Mode SIM_MODE = Mode.SIM;
@@ -28,8 +30,14 @@ public final class Constants {
 
     public static final CANBus CANBUS = new CANBus("HighVoltageCANivore", "./logs/canivore.hoot");
 
+    public static final boolean USE_TURRET = false;
+    public static final boolean TWO_SHOOTER_MECHANISMS = !USE_TURRET;
+
     public static final class FieldConstants {
         public static final Distance FUNNEL_RADIUS = Inches.of(24d);
         public static final Distance FUNNEL_HEIGHT = Inches.of(72d - 56.4d);
+
+        public static final Distance FIELD_LENGTH = Meters.of(ApriltagUtil.fieldLayout.getFieldLength());
+        public static final Distance FIELD_WIDTH = Meters.of(ApriltagUtil.fieldLayout.getFieldWidth());
     }
 }

@@ -12,7 +12,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 
 import java.util.Optional;
-import java.util.Set;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -25,6 +25,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -32,8 +33,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.geometry.Twist3d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -69,6 +68,7 @@ import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOReal;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
 import frc.robot.subsystems.shooter.ShooterIOSim;
@@ -130,7 +130,7 @@ public class Robot extends LoggedRobot {
 
         // Set up data receivers & replay source
         switch (Constants.CURRENT_MODE) {
-            case REAL:
+            case REAL: {
                 // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(new WPILOGWriter());
                 Logger.addDataReceiver(new NT4Publisher());
@@ -141,15 +141,24 @@ public class Robot extends LoggedRobot {
                         new ModuleIOTalonFX(TunerConstants.FrontRight),
                         new ModuleIOTalonFX(TunerConstants.BackLeft),
                         new ModuleIOTalonFX(TunerConstants.BackRight));
-                m_turretSubsystem = new TurretSubsystem(new TurretIOReal());
+                if (Constants.USE_TURRET)
+                    m_turretSubsystem = new TurretSubsystem(new TurretIOReal());
                 m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIOReal());
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIOReal());
-                m_shooterSubsystem = new ShooterSubsystem(new ShooterIOReal());
+
+                var shooterIO1 = new ShooterIOReal(ShooterConstants.flywheelMotorId1, ShooterConstants.hoodMotorId1, ShooterConstants.kickerMotorId);
+                m_shooterSubsystem = new ShooterSubsystem(Constants.TWO_SHOOTER_MECHANISMS ? new ShooterIO[] {
+                    shooterIO1,
+                    new ShooterIOReal(ShooterConstants.flywheelMotorId2, ShooterConstants.hoodMotorId2, -2),
+                } : new ShooterIO[] {
+                    shooterIO1
+                });
+
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
                 m_visionSubsystem = new VisionSubsystem(new VisionIOLimelight());
                 break;
-
-            case SIM:
+            }
+            case SIM: {
                 // Running a physics simulator, log to NT
                 Logger.addDataReceiver(new NT4Publisher());
 
@@ -159,14 +168,23 @@ public class Robot extends LoggedRobot {
                         new ModuleIOSim(TunerConstants.FrontRight),
                         new ModuleIOSim(TunerConstants.BackLeft),
                         new ModuleIOSim(TunerConstants.BackRight));
-                m_turretSubsystem = new TurretSubsystem(new TurretIOSim());
+                if (Constants.USE_TURRET)
+                    m_turretSubsystem = new TurretSubsystem(new TurretIOSim());
                 m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIOSim());
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIOSim());
-                m_shooterSubsystem = new ShooterSubsystem(new ShooterIOSim());
+
+                var shooterIO1 = new ShooterIOSim();
+                m_shooterSubsystem = new ShooterSubsystem(Constants.TWO_SHOOTER_MECHANISMS ? new ShooterIO[] {
+                    shooterIO1,
+                    new ShooterIOSim()
+                } : new ShooterIO[] {
+                    shooterIO1
+                });
+
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOSim());
                 m_visionSubsystem = new VisionSubsystem(new VisionIO() {});
                 break;
-
+            }
             case REPLAY:
                 // Replaying a log, set up replay source
                 setUseTiming(false); // Run as fast as possible
@@ -180,10 +198,11 @@ public class Robot extends LoggedRobot {
                         new ModuleIO() {},
                         new ModuleIO() {},
                         new ModuleIO() {});
-                m_turretSubsystem = new TurretSubsystem(new TurretIO() {});
+                if (Constants.USE_TURRET)
+                    m_turretSubsystem = new TurretSubsystem(new TurretIO() {});
                 m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIO() {});
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIO() {});
-                m_shooterSubsystem = new ShooterSubsystem(new ShooterIO() {});
+                m_shooterSubsystem = new ShooterSubsystem(new ShooterIO[]{ new ShooterIO() {} });
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIO() {});
                 m_visionSubsystem = new VisionSubsystem(new VisionIO() {});
                 break;
@@ -195,7 +214,7 @@ public class Robot extends LoggedRobot {
         DriverStation.silenceJoystickConnectionWarning(true);
         m_commandScheduler.setPeriod(0.04d);
 
-        StateMachine.updateState(this);
+        StateMachine.periodic(this);
         setupNamedCommands();
         
         m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -213,7 +232,8 @@ public class Robot extends LoggedRobot {
                 m_driveSubsystem,
                 () -> -Controls.controller.getLeftY(),
                 () -> -Controls.controller.getLeftX(),
-                () -> -Controls.controller.getRightX()));
+                () -> -Controls.controller.getRightX(),
+                getShooterRotationalGoalSupplier()));
         
         Controls.resetGyroButton.onTrue(Commands.runOnce(this::resetGyro));
 
@@ -228,16 +248,16 @@ public class Robot extends LoggedRobot {
         );
 
         if (Robot.isSimulation()) {
-            // this is nonfunctional; ignore
             Controls.shootButton.whileTrue(Commands.repeatingSequence(
-                Commands.runOnce(() -> m_commandScheduler.schedule(new SimulationCommands.SimFuelCommand(
+                Commands.either(Commands.runOnce(() -> m_commandScheduler.schedule(new SimulationCommands.SimFuelCommand(
                     () -> new Pose3d(Drive.instance.getPose())
                         .plus(new Transform3d(0, 0, Units.feetToMeters(1.5d), Rotation3d.kZero)),
                     () -> {
                         Pose2d robot = m_driveSubsystem.getPose();
                         LinearVelocity vel = m_shooterSubsystem.getExitVelocity();
 
-                        Rotation2d fieldYaw = robot.getRotation().plus(new Rotation2d(m_turretSubsystem.getAngle().in(Radians)));
+                        Angle turretAngle = Constants.USE_TURRET ? m_turretSubsystem.getAngle() : Degrees.of(0d);
+                        Rotation2d fieldYaw = robot.getRotation().plus(new Rotation2d(turretAngle.in(Radians)));
                         double pitchRad = m_shooterSubsystem.getHoodAngle().in(Radians);
 
                         Translation3d localDirection = new Translation3d(
@@ -258,7 +278,7 @@ public class Robot extends LoggedRobot {
 
                         return fieldDirection;
                     }
-                ))),
+                ))), Commands.none(), StateMachine::shouldIndex),
                 Commands.waitSeconds(0.002d)
             ));
         }
@@ -276,13 +296,15 @@ public class Robot extends LoggedRobot {
 
         // debug
         var dbgController = new CommandXboxController(1);
-        dbgController.rightStick().onTrue(m_turretSubsystem.toggleManualModeCommand());
+        if (Constants.USE_TURRET) {
+            dbgController.rightStick().onTrue(m_turretSubsystem.toggleManualModeCommand());
 
-        m_turretSubsystem.setManualSupplier(() -> {
-            if (Math.abs(dbgController.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.15)
-                return dbgController.getRightX() * 2.5;
-            return 0d;
-        });
+            m_turretSubsystem.setManualSupplier(() -> {
+                if (Math.abs(dbgController.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.15)
+                    return dbgController.getRightX() * 2.5;
+                return 0d;
+            });
+        }
     }
 
     private void setupNamedCommands() {
@@ -297,6 +319,17 @@ public class Robot extends LoggedRobot {
         NamedCommands.registerCommand("AfterShoot", waitForEmptyHopper.andThen(RobotCommands.disengageShooter()));
 
         NamedCommands.registerCommand("Climb", RobotCommands.autoClimb());
+    }
+
+    private Supplier<Optional<Rotation2d>> getShooterRotationalGoalSupplier() {
+        return Constants.USE_TURRET ? () -> Optional.empty() : () -> {
+            var targetPose = StateMachine.getShooterTargetPose();
+            if (targetPose.isEmpty())
+                return Optional.empty();
+
+            var rotation = m_driveSubsystem.getRotation();
+            return Optional.of(rotation.plus(new Rotation2d(StateMachine.getRobotRotationalGoal(targetPose.get()))));
+        };
     }
 
     public void resetGyro(Rotation2d offset) {
@@ -318,7 +351,7 @@ public class Robot extends LoggedRobot {
 
         Threads.setCurrentThreadPriority(true, 10);
 
-        StateMachine.updateState(this);
+        StateMachine.periodic(this);
     }
 
     /** This function is called once when the robot is disabled. */
@@ -329,12 +362,16 @@ public class Robot extends LoggedRobot {
     @Override
     public void disabledPeriodic() {}
 
+    private Supplier<Optional<Rotation2d>> m_autonomousRotationSupplier;
+
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
         // ensure flywheel is spinning if we want it to be
         StateMachine.setShooterState(StateMachine.getShooterState());
         StateMachine.setIntakeState(IntakeState.DeployedOn);
+
+        m_autonomousRotationSupplier = getShooterRotationalGoalSupplier();
 
         m_autoCommand = m_autoChooser.get();
 
@@ -344,7 +381,33 @@ public class Robot extends LoggedRobot {
 
     /** This function is called periodically during autonomous. */
     @Override
-    public void autonomousPeriodic() {}
+    public void autonomousPeriodic() {
+        var rotation = m_autonomousRotationSupplier.get();
+        if (rotation.isPresent()) {
+            final double output = DriveCommands.calculateOmega(m_driveSubsystem, rotation.get()/*.plus(Rotation2d.kCW_90deg)*/);
+            PPHolonomicDriveController.overrideRotationFeedback(() -> output);
+        } else
+            PPHolonomicDriveController.clearRotationFeedbackOverride();
+
+        // var rotation = m_autonomousRotationSupplier.get();
+        // if (rotation.isPresent()) {
+        //     final double output = DriveCommands.calculateOmega(m_driveSubsystem, rotation.get().plus(Rotation2d.kCW_90deg));
+        //     ChassisSpeeds speeds =
+        //         new ChassisSpeeds(
+        //             0d,
+        //             0d,
+        //             output);
+        //     boolean isFlipped =
+        //         DriverStation.getAlliance().isPresent()
+        //         && DriverStation.getAlliance().get() == Alliance.Red;
+        //     m_driveSubsystem.runVelocity(
+        //         ChassisSpeeds.fromFieldRelativeSpeeds(
+        //             speeds,
+        //             isFlipped
+        //             ? m_driveSubsystem.getRotation().plus(new Rotation2d(Math.PI))
+        //             : m_driveSubsystem.getRotation()));
+        // }
+    }
 
     /** This function is called once when teleop is enabled. */
     @Override

@@ -28,25 +28,29 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.state_machine.StateMachine;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.turret.TurretConstants;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class DriveCommands {
-  private static final double DEADBAND = 0.1;
-  private static final double ANGLE_KP = 5.0;
-  private static final double ANGLE_KD = 0.4;
-  private static final double ANGLE_MAX_VELOCITY = 8.0;
-  private static final double ANGLE_MAX_ACCELERATION = 20.0;
-  private static final double FF_START_DELAY = 2.0; // Secs
-  // private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
-  private static final double FF_RAMP_RATE = 3; // Volts/Sec
-  private static final double WHEEL_RADIUS_MAX_VELOCITY = 6; // Rad/Sec
-  private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+  private static final double DEADBAND = 0.1d;
+  private static final double ANGLE_KP = 5d;
+  private static final double ANGLE_KD = 0.4d;
+  private static final double ANGLE_MAX_VELOCITY = 8d;
+  private static final double ANGLE_MAX_ACCELERATION = 20d;
+  private static final double FF_START_DELAY = 2d; // Secs
+  // private static final double FF_RAMP_RATE = 0d; // Volts/Sec
+  private static final double FF_RAMP_RATE = 3d; // Volts/Sec
+  private static final double WHEEL_RADIUS_MAX_VELOCITY = 6d; // Rad/Sec
+  private static final double WHEEL_RADIUS_RAMP_RATE = 0.05d; // Rad/Sec^2
 
   private DriveCommands() {}
 
@@ -64,6 +68,23 @@ public class DriveCommands {
         .getTranslation();
   }
 
+  // Create PID controller
+  private static ProfiledPIDController angleController =
+      new ProfiledPIDController(
+          ANGLE_KP,
+          0d,
+          ANGLE_KD,
+          new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+  static { angleController.enableContinuousInput(-Math.PI, Math.PI); }
+
+  public static double calculateOmega(Drive drive, Rotation2d rotation) {
+    final double output = angleController.calculate(
+      drive.getRotation().getRadians(), rotation.getRadians());
+    StateMachine.setWithinJoystickRotationErrorThreshold(Math.abs(angleController.getPositionError()) <= Units.degreesToRadians(TurretConstants.shouldIndexThresholdDegrees));
+
+    return output;
+  }
+
   /**
    * Field relative drive command using two joysticks (controlling linear and angular velocities).
    */
@@ -71,7 +92,8 @@ public class DriveCommands {
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      DoubleSupplier omegaSupplier) {
+      DoubleSupplier omegaSupplier,
+      Supplier<Optional<Rotation2d>> rotationSupplier) {
     return Commands.run(
         () -> {
           // Get linear velocity
@@ -83,6 +105,11 @@ public class DriveCommands {
 
           // Square rotation value for more precise control
           omega = Math.copySign(omega * omega, omega);
+
+          var rotation = rotationSupplier.get();
+          if (rotation.isPresent()) {
+            omega += calculateOmega(drive, rotation.get());
+          }
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds =
@@ -113,15 +140,6 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier) {
-
-    // Create PID controller
-    ProfiledPIDController angleController =
-        new ProfiledPIDController(
-            ANGLE_KP,
-            0.0,
-            ANGLE_KD,
-            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
     return Commands.run(

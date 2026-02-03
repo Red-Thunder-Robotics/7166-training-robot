@@ -13,7 +13,6 @@ import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 import static frc.robot.subsystems.turret.TurretConstants.distanceAboveFunnel;
 import static frc.robot.subsystems.turret.TurretConstants.robotToTurretTransform;
-import static frc.robot.subsystems.turret.TurretConstants.shouldIndexThresholdDegrees;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -43,35 +42,46 @@ import frc.robot.util.ConversionUtil;
 public final class ShooterSubsystem extends SubsystemBase {
     public static ShooterSubsystem instance = null;
 
-    private final ShooterIO m_io;
-    private final ShooterIOInputsAutoLogged m_inputs = new ShooterIOInputsAutoLogged();
+    private final ShooterIO[] m_io;
+    private final ShooterIOInputsAutoLogged[] m_inputs;
 
-    public ShooterSubsystem(ShooterIO io) {
+    public ShooterSubsystem(ShooterIO[] io) {
         instance = this;
 
         m_io = io;
+        m_inputs = new ShooterIOInputsAutoLogged[io.length];
+
+        for (int i = 0; i < io.length; i++)
+            m_inputs[i] = new ShooterIOInputsAutoLogged();
     }
 
     @Override
     public void periodic() {
-        m_io.updateInputs(m_inputs);
+        for (int i = 0; i < m_io.length; i++) {
+            var inputs = m_inputs[i];
+            m_io[i].updateInputs(inputs);
+            Logger.processInputs("Shooter/Inst" + i, inputs);
+        }
 
-        Logger.processInputs("Shooter", m_inputs);
 
-        if (StateMachine.getShooterState() == ShooterState.Shooting && TurretSubsystem.instance.hasTarget()) {
-            final InterpolationShooterParams params = calculateParams(TurretSubsystem.instance.getTargetPose().getTranslation());
-            m_io.setHoodPosition(Degrees.of(params.degrees()));
-            m_io.flywheelVelocity(RPM.of(params.rpm()));
+        var targetPose = StateMachine.getShooterTargetPose();
+        if (StateMachine.getShooterState() == ShooterState.Shooting && targetPose.isPresent()) {
+            final InterpolationShooterParams params = calculateParams(targetPose.get().getTranslation());
+            for (int i = 0; i < m_io.length; i++) {
+                var io = m_io[i];
+                io.setHoodPosition(Degrees.of(params.degrees()));
+                io.flywheelVelocity(RPM.of(params.rpm()));
+            }
         }
     }
 
     public Angle getHoodAngle() {
-        return Degrees.of(m_inputs.hoodPositionDegrees);
+        return Degrees.of(m_inputs[0].hoodPositionDegrees);
     }
 
     @AutoLogOutput(key="ShooterShouldIndex")
     public boolean shouldIndex() {
-        return Math.abs(m_inputs.flywheelTargetVelocityRPS - m_inputs.flywheelMotorVelocityRPS) <= shouldIndexVelocityThresholdRPS;
+        return Math.abs(m_inputs[0].flywheelTargetVelocityRPS - m_inputs[0].flywheelMotorVelocityRPS) <= shouldIndexVelocityThresholdRPS;
     }
 
     private LinearVelocity m_exitVelocity = MetersPerSecond.of(0d);
@@ -85,13 +95,19 @@ public final class ShooterSubsystem extends SubsystemBase {
     public void stateUpdate(ShooterState shooterState) {
         switch (shooterState) {
             case Idle:
-                // m_io.flywheelDutyCycle(flywheelOutput);
-                m_io.flywheelStop();
-                m_io.kickerStop();
+                for (int i = 0; i < m_io.length; i++) {
+                    var io = m_io[i];
+                    // io.flywheelDutyCycle(flywheelOutput);
+                    io.flywheelStop();
+                    io.kickerStop();
+                }
                 break;
             case Shooting:
-                // m_io.flywheelDutyCycle(flywheelOutput);
-                m_io.kickerDutyCycle(kickerOutput);
+                for (int i = 0; i < m_io.length; i++) {
+                    var io = m_io[i];
+                    // io.flywheelDutyCycle(flywheelOutput);
+                    io.kickerDutyCycle(kickerOutput);
+                }
                 break;
         }
     }

@@ -22,21 +22,22 @@ import frc.robot.Constants;
 import frc.robot.util.PhoenixUtil;
 
 public final class ShooterIOReal implements ShooterIO {
-    private final TalonFX m_flywheelMotor = new TalonFX(flywheelMotorId, Constants.CANBUS);
-    private final TalonFX m_hoodMotor = new TalonFX(hoodMotorId, Constants.CANBUS);
-    private final TalonFX m_kickerMotor = new TalonFX(kickerMotorId, Constants.CANBUS);
-
+    private final TalonFX m_flywheelMotor;
+    private final TalonFX m_hoodMotor;
+    private final TalonFX m_kickerMotor;
+    private final boolean m_hasKicker;
+    
     private double m_hoodTargetPosition = hoodPositionHome;
 
-    private final StatusSignal<AngularVelocity> m_flywheelVelocitySignal = m_flywheelMotor.getVelocity();
-    private final StatusSignal<Current> m_flywheelCurrentSignal = m_flywheelMotor.getSupplyCurrent();
+    private final StatusSignal<AngularVelocity> m_flywheelVelocitySignal;
+    private final StatusSignal<Current> m_flywheelCurrentSignal;
 
-    private final StatusSignal<Angle> m_hoodPositionSignal = m_hoodMotor.getPosition();
-    private final StatusSignal<AngularVelocity> m_hoodVelocitySignal = m_hoodMotor.getVelocity();
-    private final StatusSignal<Current> m_hoodCurrentSignal = m_hoodMotor.getSupplyCurrent();
+    private final StatusSignal<Angle> m_hoodPositionSignal;
+    private final StatusSignal<AngularVelocity> m_hoodVelocitySignal;
+    private final StatusSignal<Current> m_hoodCurrentSignal;
 
-    private final StatusSignal<AngularVelocity> m_kickerVelocitySignal = m_kickerMotor.getVelocity();
-    private final StatusSignal<Current> m_kickerCurrentSignal = m_kickerMotor.getSupplyCurrent();
+    private final StatusSignal<AngularVelocity> m_kickerVelocitySignal;
+    private final StatusSignal<Current> m_kickerCurrentSignal;
 
     private final DutyCycleOut m_flywheelDutyCycleRequest = new DutyCycleOut(0d);
     private final MotionMagicVelocityVoltage m_flywheelVelocityRequest = new MotionMagicVelocityVoltage(0d)
@@ -44,7 +45,30 @@ public final class ShooterIOReal implements ShooterIO {
     private final MotionMagicVoltage m_hoodPositionRequest = new MotionMagicVoltage(m_hoodTargetPosition);
     private final DutyCycleOut m_kickerDutyCycleRequest = new DutyCycleOut(0d);
 
-    public ShooterIOReal() {
+    public ShooterIOReal(int flywheelMotorId, int hoodMotorId, int kickerMotorId) {
+        m_flywheelMotor = new TalonFX(flywheelMotorId, Constants.CANBUS);
+        m_hoodMotor = new TalonFX(hoodMotorId, Constants.CANBUS);
+        m_hasKicker = kickerMotorId != -2;
+        if (m_hasKicker)
+            m_kickerMotor = new TalonFX(kickerMotorId, Constants.CANBUS);
+        else
+            m_kickerMotor = null;
+
+        m_flywheelVelocitySignal = m_flywheelMotor.getVelocity();
+        m_flywheelCurrentSignal = m_flywheelMotor.getSupplyCurrent();
+
+        m_hoodPositionSignal = m_hoodMotor.getPosition();
+        m_hoodVelocitySignal = m_hoodMotor.getVelocity();
+        m_hoodCurrentSignal = m_hoodMotor.getSupplyCurrent();
+
+        if (m_hasKicker) {
+            m_kickerVelocitySignal = m_kickerMotor.getVelocity();
+            m_kickerCurrentSignal = m_kickerMotor.getSupplyCurrent();
+        } else {
+            m_kickerVelocitySignal = null;
+            m_kickerCurrentSignal = null;
+        }
+
         var flywheelConfig = new TalonFXConfiguration();
         flywheelConfig.MotorOutput.NeutralMode = flywheelNeutralMode;
         flywheelConfig.MotorOutput.Inverted = flywheelInverted;
@@ -66,18 +90,22 @@ public final class ShooterIOReal implements ShooterIO {
         hoodConfig.MotionMagic.MotionMagicAcceleration = hoodTargetAcceleration;
         hoodConfig.MotionMagic.MotionMagicCruiseVelocity = maxVelocity;
 
-        var kickerConfig = new TalonFXConfiguration();
-        kickerConfig.MotorOutput.NeutralMode = kickerNeutralMode;
-        kickerConfig.MotorOutput.Inverted = kickerInverted;
-
-        // kickerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        // kickerConfig.CurrentLimits.SupplyCurrentLimit = kickerCurrentLimit;
-
         PhoenixUtil.tryUntilOk(5, () -> m_flywheelMotor.getConfigurator().apply(flywheelConfig));
         PhoenixUtil.tryUntilOk(5, () -> m_hoodMotor.getConfigurator().apply(hoodConfig));
-        PhoenixUtil.tryUntilOk(5, () -> m_kickerMotor.getConfigurator().apply(kickerConfig));
 
-        BaseStatusSignal.setUpdateFrequencyForAll(50d, m_flywheelVelocitySignal, m_flywheelCurrentSignal, m_hoodPositionSignal, m_hoodVelocitySignal, m_hoodCurrentSignal, m_kickerVelocitySignal, m_kickerCurrentSignal);
+        BaseStatusSignal.setUpdateFrequencyForAll(50d, m_flywheelVelocitySignal, m_flywheelCurrentSignal, m_hoodPositionSignal, m_hoodVelocitySignal, m_hoodCurrentSignal);
+
+        if (m_hasKicker) {
+            var kickerConfig = new TalonFXConfiguration();
+            kickerConfig.MotorOutput.NeutralMode = kickerNeutralMode;
+            kickerConfig.MotorOutput.Inverted = kickerInverted;
+
+            // kickerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+            // kickerConfig.CurrentLimits.SupplyCurrentLimit = kickerCurrentLimit;
+
+            PhoenixUtil.tryUntilOk(5, () -> m_kickerMotor.getConfigurator().apply(kickerConfig));
+            BaseStatusSignal.setUpdateFrequencyForAll(50d, m_kickerVelocitySignal, m_kickerCurrentSignal);
+        }
 
         m_hoodMotor.setPosition(m_hoodTargetPosition);
     }
@@ -102,15 +130,18 @@ public final class ShooterIOReal implements ShooterIO {
         inputs.hoodMotorVelocityRPS = m_hoodVelocitySignal.getValueAsDouble();
         inputs.hoodMotorCurrentAmps = m_hoodCurrentSignal.getValueAsDouble();
 
-        inputs.kickerMotorDutyCycle = PhoenixUtil.getRequestDutyCycle(m_kickerMotor.getAppliedControl());
-        inputs.kickerMotorVelocityRPS = m_kickerVelocitySignal.getValueAsDouble();
-        inputs.kickerMotorCurrentAmps = m_kickerCurrentSignal.getValueAsDouble();
+        if (m_hasKicker) {
+            inputs.kickerMotorDutyCycle = PhoenixUtil.getRequestDutyCycle(m_kickerMotor.getAppliedControl());
+            inputs.kickerMotorVelocityRPS = m_kickerVelocitySignal.getValueAsDouble();
+            inputs.kickerMotorCurrentAmps = m_kickerCurrentSignal.getValueAsDouble();
+        }
     }
 
     @Override
     public void idle() {
         m_flywheelMotor.disable();
-        m_kickerMotor.disable();
+        if (m_hasKicker)
+            m_kickerMotor.disable();
     }
 
     @Override
@@ -134,10 +165,14 @@ public final class ShooterIOReal implements ShooterIO {
 
     @Override
     public void kickerDutyCycle(double output) {
+        if (!m_hasKicker)
+            return;
         m_kickerMotor.setControl(m_kickerDutyCycleRequest.withOutput(output));
     }
     @Override
     public void kickerStop() {
+        if (!m_hasKicker)
+            return;
         m_kickerMotor.disable();
     }
 }

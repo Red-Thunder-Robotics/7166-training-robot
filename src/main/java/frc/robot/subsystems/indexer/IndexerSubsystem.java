@@ -33,7 +33,7 @@ public final class IndexerSubsystem extends SubsystemBase {
                 setIdle();
                 break;
             case Shooting:
-                if (TurretSubsystem.instance.shouldIndex() && ShooterSubsystem.instance.shouldIndex()) {
+                if (StateMachine.shouldIndex()) {
                     m_io.generalFeedDutyCycle(generalFeedOutput);
                     m_io.shooterFeedDutyCycle(shooterFeedOutput);
                 } else
