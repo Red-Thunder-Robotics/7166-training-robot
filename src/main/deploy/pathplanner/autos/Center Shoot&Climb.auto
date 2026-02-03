@@ -9,6 +9,24 @@
           "data": {
             "pathName": "Center Shoot&Climb"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "EngageShooterHub"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AfterShoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Climb"
+          }
         }
       ]
     }

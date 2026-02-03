@@ -7,19 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "ShootToNeutral"
+            "pathName": "RightShootToNeutral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeDeployOn"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickUpInNeutral"
+            "pathName": "RightPickUpInNeutral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeHomeOff"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickedNeutralToShootPos"
+            "pathName": "RightPickedNeutralToShootPos"
           }
         },
         {
