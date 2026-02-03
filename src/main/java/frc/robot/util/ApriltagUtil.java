@@ -11,6 +11,8 @@ public final class ApriltagUtil {
     public static final HashMap<Integer, AprilTag> aprilTagMap = new HashMap<>();
     public static AprilTagFieldLayout fieldLayout = null;
     public static boolean aprilTagFieldLayoutSuccess = false;
+    public static double fieldLength = 0d;
+    public static double fieldWidth = 0d;
 
     static {
         try {
@@ -18,6 +20,9 @@ public final class ApriltagUtil {
             for (var tag : fieldLayout.getTags())
                 aprilTagMap.put(tag.ID, tag);
             aprilTagFieldLayoutSuccess = true;
+
+            fieldLength = fieldLayout.getFieldLength();
+            fieldWidth = fieldLayout.getFieldWidth();
         } catch (Exception e) {
             DriverStation.reportError("Failed to load AprilTagFieldLayout: " + e.getMessage(), false);
         }

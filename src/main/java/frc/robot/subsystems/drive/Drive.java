@@ -46,14 +46,18 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.generated.TunerConstants;
+import frc.robot.state_machine.OdometryAndVision;
+import frc.robot.state_machine.StateMachine;
 import frc.robot.util.LocalADStarAK;
 
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -62,7 +66,6 @@ import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
   public static Drive instance = null;
-
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY =
       new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
@@ -199,7 +202,8 @@ public class Drive extends SubsystemBase {
     }
 
     // Update odometry
-    double[] sampleTimestamps =
+    double[] sampleTimestamps = Constants.CURRENT_MODE == Mode.SIM
+            ? new double[] {Timer.getTimestamp()} :
         modules[0].getOdometryTimestamps(); // All signals are sampled together
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
@@ -215,6 +219,13 @@ public class Drive extends SubsystemBase {
                 modulePositions[moduleIndex].angle);
         lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
       }
+
+      StateMachine.odometryAndVision.addOdometryObservation(new OdometryAndVision.OdometryObservation(
+        modulePositions,
+        Optional.ofNullable(
+          gyroInputs.connected ? gyroInputs.odometryYawPositions[i] : null),
+        sampleTimestamps[i]
+      ));
 
       // Update gyro angle
       if (gyroInputs.connected) {

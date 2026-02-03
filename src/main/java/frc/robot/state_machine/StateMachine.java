@@ -1,5 +1,7 @@
 package frc.robot.state_machine;
 
+import static edu.wpi.first.units.Units.Feet;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Radians;
 
 import java.util.Optional;
@@ -14,7 +16,6 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -264,11 +265,13 @@ public class StateMachine {
     }
 
     private static final Pose3d hubPoseBlue = new Pose3d(
-        Units.inchesToMeters(182.11d),
-        Units.inchesToMeters(158.84d),
-        Units.feetToMeters(6d),
+        Inches.of(182.11d),
+        Inches.of(158.84d),
+        Feet.of(6d),
         new Rotation3d());
     private static Pose3d hubPose = new Pose3d();
+
+    public static final OdometryAndVision odometryAndVision = new OdometryAndVision();
 
     private static boolean needsToUpdateRobot = true;
     @SuppressWarnings("unused") // for useTurret

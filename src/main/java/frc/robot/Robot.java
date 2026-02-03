@@ -43,6 +43,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.Mode;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.SimulationCommands;
 import frc.robot.commands.SimulationCommands.SimFuelCommand;
@@ -79,8 +80,11 @@ import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIONorthstar;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.util.ApriltagUtil;
 import frc.robot.util.ConversionUtil;
+import frc.robot.util.SystemTimeValidReader;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -155,7 +159,6 @@ public class Robot extends LoggedRobot {
                 });
 
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
-                m_visionSubsystem = new VisionSubsystem(new VisionIOLimelight());
                 break;
             }
             case SIM: {
@@ -182,7 +185,6 @@ public class Robot extends LoggedRobot {
                 });
 
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOSim());
-                m_visionSubsystem = new VisionSubsystem(new VisionIO() {});
                 break;
             }
             case REPLAY:
@@ -204,8 +206,29 @@ public class Robot extends LoggedRobot {
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIO() {});
                 m_shooterSubsystem = new ShooterSubsystem(new ShooterIO[]{ new ShooterIO() {} });
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIO() {});
-                m_visionSubsystem = new VisionSubsystem(new VisionIO() {});
                 break;
+        }
+
+        // TODO: vision sim?
+        if (Constants.CURRENT_MODE == Mode.REAL || Constants.CURRENT_MODE == Mode.SIM) {
+            if (Constants.USE_NORTHSTAR)
+                m_visionSubsystem = new VisionSubsystem(
+                    ApriltagUtil.fieldLayout,
+                    new VisionIONorthstar(ApriltagUtil.fieldLayout, 0),
+                    new VisionIONorthstar(ApriltagUtil.fieldLayout, 1)
+                );
+            else
+                m_visionSubsystem = new VisionSubsystem(new VisionIOLimelight());
+        } else {
+            if (Constants.USE_NORTHSTAR)
+                m_visionSubsystem = new VisionSubsystem(
+                    ApriltagUtil.fieldLayout,
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {});
+            else
+                m_visionSubsystem = new VisionSubsystem(new VisionIO() {});
         }
 
         // Start AdvantageKit logger
@@ -213,6 +236,8 @@ public class Robot extends LoggedRobot {
 
         DriverStation.silenceJoystickConnectionWarning(true);
         m_commandScheduler.setPeriod(0.04d);
+
+        SystemTimeValidReader.start();
 
         StateMachine.periodic(this);
         setupNamedCommands();
