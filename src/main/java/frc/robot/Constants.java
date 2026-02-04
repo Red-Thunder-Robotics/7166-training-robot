@@ -32,7 +32,7 @@ public final class Constants {
 
     public static final boolean USE_TURRET = false;
     public static final boolean TWO_SHOOTER_MECHANISMS = !USE_TURRET;
-    public static final boolean USE_NORTHSTAR = true;
+    public static final boolean USE_MACKINAC = true;
 
     public static final class FieldConstants {
         public static final Distance APRIL_TAG_WIDTH = Inches.of(6.5d);

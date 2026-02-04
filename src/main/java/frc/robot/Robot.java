@@ -83,7 +83,7 @@ import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.subsystems.vision.VisionIONorthstar;
+import frc.robot.subsystems.vision.VisionIOMackinac;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.ApriltagUtil;
 import frc.robot.util.ConversionUtil;
@@ -217,16 +217,16 @@ public class Robot extends LoggedRobot {
 
         // TODO: vision sim?
         if (Constants.CURRENT_MODE == Mode.REAL || Constants.CURRENT_MODE == Mode.SIM) {
-            if (Constants.USE_NORTHSTAR)
+            if (Constants.USE_MACKINAC)
                 m_visionSubsystem = new VisionSubsystem(
                     ApriltagUtil.fieldLayout,
-                    new VisionIONorthstar(ApriltagUtil.fieldLayout, 0),
-                    new VisionIONorthstar(ApriltagUtil.fieldLayout, 1)
+                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 0),
+                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 1)
                 );
             else
                 m_visionSubsystem = new VisionSubsystem(new VisionIOLimelight());
         } else {
-            if (Constants.USE_NORTHSTAR)
+            if (Constants.USE_MACKINAC)
                 m_visionSubsystem = new VisionSubsystem(
                     ApriltagUtil.fieldLayout,
                         new VisionIO() {},

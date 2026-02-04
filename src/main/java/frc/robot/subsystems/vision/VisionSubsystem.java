@@ -60,7 +60,7 @@ public final class VisionSubsystem extends SubsystemBase {
         m_aprilTagInputs = null;
         m_objDetectInputs = null;
     }
-    // multi (northstar)
+    // multi (mackinac)
     public VisionSubsystem(AprilTagFieldLayout fieldLayout, VisionIO... io) {
         instance = this;
         m_fieldLayout = fieldLayout;

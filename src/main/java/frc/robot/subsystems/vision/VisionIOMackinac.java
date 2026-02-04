@@ -20,7 +20,7 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class VisionIONorthstar implements VisionIO {
+public class VisionIOMackinac implements VisionIO {
     private final AprilTagFieldLayout m_fieldLayout;
 
     private final String m_deviceId;
@@ -37,7 +37,7 @@ public class VisionIONorthstar implements VisionIO {
 
     private final Timer m_slowPeriodicTimer = new Timer();
 
-    public VisionIONorthstar(AprilTagFieldLayout fieldLayout, int index) {
+    public VisionIOMackinac(AprilTagFieldLayout fieldLayout, int index) {
         m_fieldLayout = fieldLayout;
         m_deviceId = "northstar_" + index;
         var northstarTable = NetworkTableInstance.getDefault().getTable(m_deviceId);
@@ -89,7 +89,7 @@ public class VisionIONorthstar implements VisionIO {
             layoutString = new ObjectMapper().writeValueAsString(m_fieldLayout);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(
-                "Failed to serialize AprilTag layout JSON " + toString() + "for Northstar");
+                "Failed to serialize AprilTag layout JSON " + toString() + "for mackinac");
         }
 
         m_tagLayoutPublisher.set(layoutString);
