@@ -11,14 +11,14 @@ import com.ctre.phoenix6.signals.StripTypeValue;
 import frc.robot.Constants;
 import frc.robot.util.PhoenixUtil;
 
-public final class LightEmittingDiodesReal implements LightEmittingDiodesIO {
+public final class LightEmittingDiodesIOReal implements LightEmittingDiodesIO {
     private final CANdle m_candle = new CANdle(candleID, Constants.CANBUS);
 
     private final SolidColor m_solidColorRequest = new SolidColor(0, ledCount);
     private final StrobeAnimation m_strobeRequest = new StrobeAnimation(0, ledCount)
         .withFrameRate(animationSpeed);
 
-    public LightEmittingDiodesReal() {
+    public LightEmittingDiodesIOReal() {
         var config = new CANdleConfiguration();
 
         config.LED.BrightnessScalar = brightness;

@@ -70,7 +70,7 @@ import frc.robot.subsystems.indexer.IndexerIOReal;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesIO;
-import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesReal;
+import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesIOReal;
 import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesSubsystem;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
@@ -162,7 +162,7 @@ public class Robot extends LoggedRobot {
                 });
 
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
-                m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesReal());
+                m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIOReal());
                 break;
             }
             case SIM: {
