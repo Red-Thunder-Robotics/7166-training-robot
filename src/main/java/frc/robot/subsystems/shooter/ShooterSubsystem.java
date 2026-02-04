@@ -66,7 +66,7 @@ public final class ShooterSubsystem extends SubsystemBase {
 
         var targetPose = StateMachine.getShooterTargetPose();
         if (StateMachine.getShooterState() == ShooterState.Shooting && targetPose.isPresent()) {
-            final InterpolationShooterParams params = calculateParams(targetPose.get().getTranslation());
+            final InterpolationShooterParams params = calculateParams(targetPose.get());
             for (int i = 0; i < m_io.length; i++) {
                 var io = m_io[i];
                 io.setHoodPosition(Degrees.of(params.degrees()));
@@ -158,6 +158,10 @@ public final class ShooterSubsystem extends SubsystemBase {
         double b = (D1 - A1 * a) / B1;
         double theta = Math.atan(b);
         double v0 = Math.sqrt(-g / (2 * a * (Math.cos(theta)) * (Math.cos(theta))));
+        if (Double.isNaN(v0) || Double.isNaN(theta)) {
+            v0 = 0;
+            theta = 0;
+        }
         return new PhysicsShotData(InchesPerSecond.of(v0), Radians.of(theta), predictedTarget);
     }
 

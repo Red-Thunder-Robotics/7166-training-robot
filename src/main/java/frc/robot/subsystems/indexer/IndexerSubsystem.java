@@ -2,19 +2,19 @@ package frc.robot.subsystems.indexer;
 
 import static frc.robot.subsystems.indexer.IndexerConstants.*;
 
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.state_machine.ShooterState;
 import frc.robot.state_machine.StateMachine;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.turret.TurretSubsystem;
 
 public final class IndexerSubsystem extends SubsystemBase {
     public static IndexerSubsystem instance = null;
 
     private final IndexerIO m_io;
     private final IndexerIOInputsAutoLogged m_inputs = new IndexerIOInputsAutoLogged();
+
+    private boolean m_isFeeding;
 
     public IndexerSubsystem(IndexerIO io) {
         instance = this;
@@ -28,18 +28,28 @@ public final class IndexerSubsystem extends SubsystemBase {
 
         Logger.processInputs("Indexer", m_inputs);
 
+        boolean isFeeding = false;
+
         switch (StateMachine.getShooterState()) {
             case Idle:
                 setIdle();
                 break;
             case Shooting:
                 if (StateMachine.shouldIndex()) {
+                    isFeeding = true;
                     m_io.generalFeedDutyCycle(generalFeedOutput);
                     m_io.shooterFeedDutyCycle(shooterFeedOutput);
                 } else
                     setIdle();
                 break;
         }
+
+        m_isFeeding = isFeeding;
+    }
+
+    @AutoLogOutput(key="IndexerIsFeeding")
+    public boolean getIsFeeding() {
+        return m_isFeeding;
     }
 
     public void setIdle() {

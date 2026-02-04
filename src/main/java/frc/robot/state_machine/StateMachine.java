@@ -71,8 +71,14 @@ public class StateMachine {
         return new Pose3d(allianceFlip(pose.getTranslation()), allianceFlip(pose.getRotation()));
     }
 
-    private static Optional<Pose3d> shooterTargetPose = Optional.empty();
-    public static Optional<Pose3d> getShooterTargetPose() {
+    private static GeneralRobotState generalRobotState = GeneralRobotState.Idle;
+    
+    public static GeneralRobotState getGeneralRobotState() {
+        return generalRobotState;
+    }
+
+    private static Optional<Translation3d> shooterTargetPose = Optional.empty();
+    public static Optional<Translation3d> getShooterTargetPose() {
         return shooterTargetPose;
     }
 
@@ -186,6 +192,11 @@ public class StateMachine {
                 .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
                 .andThen(setShooterShooting());
         }
+        public static Command engageShooterAllianceFeed() {
+            return setShooterTargetAllianceFeed()
+                .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
+                .andThen(setShooterShooting());
+        }
         public static Command disengageShooter() {
             return setShooterTargetIdle()
                 .alongWith(setShooterIdle());
@@ -225,7 +236,7 @@ public class StateMachine {
 
     public static Rotation2d initialSwerveRotation = null;
 
-    public static Angle getRobotRotationalGoal(Pose3d targetPose) {
+    public static Angle getRobotRotationalGoal(Translation3d targetPose) {
         Pose2d robotPose = Drive.instance.getPose();
         final ChassisSpeeds robotSpeeds = Drive.instance.getChassisSpeeds();
 
@@ -250,7 +261,7 @@ public class StateMachine {
         // return Radians.of(targetangle);
 
         final Translation2d robotTranslation = robotPose.getTranslation();
-        final Translation2d targetTranslation = targetPose.getTranslation().toTranslation2d();
+        final Translation2d targetTranslation = targetPose.toTranslation2d();
 
         Translation2d yawTranslation = targetTranslation.minus(robotTranslation);
         // Translation2d yawTranslation = robotTranslation.minus(targetTranslation);
@@ -264,14 +275,32 @@ public class StateMachine {
         return Radians.of(targetangle);
     }
 
-    private static final Pose3d hubPoseBlue = new Pose3d(
+    private static final Translation3d hubPoseBlue = new Translation3d(
         Inches.of(182.11d),
         Inches.of(158.84d),
-        Feet.of(6d),
-        new Rotation3d());
-    private static Pose3d hubPose = new Pose3d();
+        Feet.of(6d));
+    private static Translation3d hubPose = new Translation3d();
+
+    // https://github.com/hammerheads5000/2026Rebuilt/blob/b32c384e337b1a89d3d651c05696c9366a105504/src/main/java/frc/robot/Constants.java#L398
+    public static final Translation3d allianceFeedLeft = new Translation3d(
+        Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
+    public static final Translation3d allianceFeedCenter =
+        new Translation3d(Inches.of(90), FieldConstants.FIELD_WIDTH.div(2), Inches.zero());
+    public static final Translation3d allianceFeedRight = new Translation3d(
+        Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).minus(Inches.of(85)), Inches.zero());
 
     public static final OdometryAndVision odometryAndVision = new OdometryAndVision();
+
+    private static boolean isRobotOnAllianceLeft() {
+        final var y = Drive.instance.getPose()
+                .getMeasureY();
+        final var threshold = FieldConstants.FIELD_WIDTH.div(2d);
+
+        if (ALLIANCE == Alliance.Red)
+            return y.lte(threshold);
+        else
+            return y.gt(threshold);
+    }
 
     private static boolean needsToUpdateRobot = true;
     @SuppressWarnings("unused") // for useTurret
@@ -320,13 +349,38 @@ public class StateMachine {
                 case HubTracking:
                     shooterTargetPose = Optional.of(hubPose);
                     break;
+                case AllianceFeed:
+                    shooterTargetPose = Optional.of(isRobotOnAllianceLeft() ? allianceFeedLeft : allianceFeedRight);
+                    break;
                 default:
                     shooterTargetPose = Optional.empty();
                     break;
             }
         }
 
-        Logger.recordOutput("StateMachine/ShooterTargetPose", shooterTargetPose.orElse(new Pose3d()));
+        {
+            GeneralRobotState newGeneralRobotState = GeneralRobotState.Idle;
+            final boolean isFiring = IndexerSubsystem.instance.getIsFeeding();
+
+            switch (shooterTargetState) {
+                case HubTracking:
+                    newGeneralRobotState = isFiring ? GeneralRobotState.HubTrackingFiring : GeneralRobotState.HubTracking;
+                    break;
+                case AllianceFeed:
+                    newGeneralRobotState = isFiring ? GeneralRobotState.AllianceFeedFiring : GeneralRobotState.AllianceFeed;
+                    break;
+                default:
+                    break;
+            }
+
+            generalRobotState = newGeneralRobotState;
+
+            Logger.recordOutput("StateMachine/GeneralRobotState", generalRobotState);
+        }
+
+        Logger.recordOutput("StateMachine/ShooterTargetPose", new Pose3d(shooterTargetPose.orElse(new Translation3d()), new Rotation3d()));
+
+        Logger.recordOutput("StateMachine/TurretShouldIndex", turretShouldIndex());
 
         HubActiveState.periodic();
 

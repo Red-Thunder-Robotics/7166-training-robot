@@ -69,6 +69,9 @@ import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOReal;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesIO;
+import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesReal;
+import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesSubsystem;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -101,14 +104,14 @@ public class Robot extends LoggedRobot {
     private TurretSubsystem m_turretSubsystem = null;
     @SuppressWarnings("unused")
     private GroundIntakeSubsystem m_intakeSubsystem = null;
-    @SuppressWarnings("unused")
     private IndexerSubsystem m_indexerSubsystem = null;
-    @SuppressWarnings("unused")
     private ShooterSubsystem m_shooterSubsystem = null;
     @SuppressWarnings("unused")
     private ClimberSubsystem m_climberSubsystem = null;
     @SuppressWarnings("unused")
     private VisionSubsystem m_visionSubsystem = null;
+    @SuppressWarnings("unused")
+    private LightEmittingDiodesSubsystem m_lightEmittingDiodesSubsystem = null;
 
     private final LoggedDashboardChooser<Command> m_autoChooser;
 
@@ -159,6 +162,7 @@ public class Robot extends LoggedRobot {
                 });
 
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
+                m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesReal());
                 break;
             }
             case SIM: {
@@ -185,6 +189,7 @@ public class Robot extends LoggedRobot {
                 });
 
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOSim());
+                m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIO() {});
                 break;
             }
             case REPLAY:
@@ -206,6 +211,7 @@ public class Robot extends LoggedRobot {
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIO() {});
                 m_shooterSubsystem = new ShooterSubsystem(new ShooterIO[]{ new ShooterIO() {} });
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIO() {});
+                m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIO() {});
                 break;
         }
 
@@ -269,44 +275,26 @@ public class Robot extends LoggedRobot {
             RobotCommands.engageShooterHub()
         );
         Controls.shootButton.onFalse(
-            RobotCommands.disengageShooter()
+            Commands.either(
+                RobotCommands.engageShooterAllianceFeed(),
+                RobotCommands.disengageShooter(),
+                Controls.allianceFeedButton::getAsBoolean)
         );
 
-        if (Robot.isSimulation()) {
-            Controls.shootButton.whileTrue(Commands.repeatingSequence(
-                Commands.either(Commands.runOnce(() -> m_commandScheduler.schedule(new SimulationCommands.SimFuelCommand(
-                    () -> new Pose3d(Drive.instance.getPose())
-                        .plus(new Transform3d(0, 0, Units.feetToMeters(1.5d), Rotation3d.kZero)),
-                    () -> {
-                        Pose2d robot = m_driveSubsystem.getPose();
-                        LinearVelocity vel = m_shooterSubsystem.getExitVelocity();
+        Controls.allianceFeedButton.onTrue(
+            RobotCommands.engageShooterAllianceFeed()
+        );
+        Controls.allianceFeedButton.onFalse(
+            Commands.either(
+                RobotCommands.engageShooterHub(),
+                RobotCommands.disengageShooter(),
+                Controls.shootButton::getAsBoolean)
+        );
 
-                        Angle turretAngle = Constants.USE_TURRET ? m_turretSubsystem.getAngle() : Degrees.of(0d);
-                        Rotation2d fieldYaw = robot.getRotation().plus(new Rotation2d(turretAngle.in(Radians)));
-                        double pitchRad = m_shooterSubsystem.getHoodAngle().in(Radians);
-
-                        Translation3d localDirection = new Translation3d(
-                            Math.cos(pitchRad),
-                            0d,
-                            Math.sin(pitchRad)
-                        );
-                        Rotation3d fieldRotation = new Rotation3d(
-                            0d,
-                            0d,
-                            fieldYaw.getRadians()
-                        );
-
-                        // is this maliciously ensuring "works in sim"??? idk
-                        Translation3d fieldDirection = localDirection.rotateBy(fieldRotation);
-                        fieldDirection = fieldDirection.times(vel.in(MetersPerSecond));
-                        fieldDirection = fieldDirection.plus(ConversionUtil.chassisSpeedsToTranslation3d(m_driveSubsystem.getChassisSpeeds()));
-
-                        return fieldDirection;
-                    }
-                ))), Commands.none(), StateMachine::shouldIndex),
-                Commands.waitSeconds(0.002d)
-            ));
-        }
+        if (Robot.isSimulation())
+            Controls.shootButton
+                .or(Controls.allianceFeedButton)
+                .whileTrue(repeatingSimFuelCommand());
 
         Controls.climbForward.onTrue(Commands.either(
             RobotCommands.climberStateIncrease(),
@@ -333,7 +321,10 @@ public class Robot extends LoggedRobot {
     }
 
     private void setupNamedCommands() {
-        NamedCommands.registerCommand("EngageShooterHub", RobotCommands.engageShooterHub());
+        var engageShooterHub = RobotCommands.engageShooterHub();
+        if (Robot.isSimulation())
+            engageShooterHub = engageShooterHub.alongWith(repeatingSimFuelCommand());
+        NamedCommands.registerCommand("EngageShooterHub", engageShooterHub);
         NamedCommands.registerCommand("StopShooting", RobotCommands.disengageShooter());
 
         NamedCommands.registerCommand("IntakeDeployOn", RobotCommands.setIntakeState(IntakeState.DeployedOn));
@@ -344,27 +335,6 @@ public class Robot extends LoggedRobot {
         NamedCommands.registerCommand("AfterShoot", waitForEmptyHopper.andThen(RobotCommands.disengageShooter()));
 
         NamedCommands.registerCommand("Climb", RobotCommands.autoClimb());
-    }
-
-    private Supplier<Optional<Rotation2d>> getShooterRotationalGoalSupplier() {
-        return Constants.USE_TURRET ? () -> Optional.empty() : () -> {
-            var targetPose = StateMachine.getShooterTargetPose();
-            if (targetPose.isEmpty())
-                return Optional.empty();
-
-            var rotation = m_driveSubsystem.getRotation();
-            return Optional.of(rotation.plus(new Rotation2d(StateMachine.getRobotRotationalGoal(targetPose.get()))));
-        };
-    }
-
-    public void resetGyro(Rotation2d offset) {
-        if (StateMachine.initialSwerveRotation != null) {
-            final Pose2d pose = new Pose2d(m_driveSubsystem.getPose().getTranslation(), StateMachine.initialSwerveRotation.plus(offset));
-            m_driveSubsystem.setPose(pose);
-        }
-    }
-    public void resetGyro() {
-        resetGyro(Rotation2d.kPi);
     }
 
     /** This function is called periodically during all modes. */
@@ -463,5 +433,63 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationPeriodic() {
         SimFuelCommand.step();
+    }
+
+    
+    private Supplier<Optional<Rotation2d>> getShooterRotationalGoalSupplier() {
+        return Constants.USE_TURRET ? () -> Optional.empty() : () -> {
+            var targetPose = StateMachine.getShooterTargetPose();
+            if (targetPose.isEmpty())
+                return Optional.empty();
+
+            var rotation = m_driveSubsystem.getRotation();
+            return Optional.of(rotation.plus(new Rotation2d(StateMachine.getRobotRotationalGoal(targetPose.get()))));
+        };
+    }
+
+    public void resetGyro(Rotation2d offset) {
+        if (StateMachine.initialSwerveRotation != null) {
+            final Pose2d pose = new Pose2d(m_driveSubsystem.getPose().getTranslation(), StateMachine.initialSwerveRotation.plus(offset));
+            m_driveSubsystem.setPose(pose);
+        }
+    }
+    public void resetGyro() {
+        resetGyro(Rotation2d.kPi);
+    }
+
+    private Command repeatingSimFuelCommand() {
+        return Commands.repeatingSequence(
+            Commands.either(Commands.runOnce(() -> m_commandScheduler.schedule(new SimulationCommands.SimFuelCommand(
+                () -> new Pose3d(Drive.instance.getPose())
+                    .plus(new Transform3d(0, 0, Units.feetToMeters(1.5d), Rotation3d.kZero)),
+                () -> {
+                    Pose2d robot = m_driveSubsystem.getPose();
+                    LinearVelocity vel = m_shooterSubsystem.getExitVelocity();
+
+                    Angle turretAngle = Constants.USE_TURRET ? m_turretSubsystem.getAngle() : Degrees.of(0d);
+                    Rotation2d fieldYaw = robot.getRotation().plus(new Rotation2d(turretAngle.in(Radians)));
+                    double pitchRad = m_shooterSubsystem.getHoodAngle().in(Radians);
+
+                    Translation3d localDirection = new Translation3d(
+                        Math.cos(pitchRad),
+                        0d,
+                        Math.sin(pitchRad)
+                    );
+                    Rotation3d fieldRotation = new Rotation3d(
+                        0d,
+                        0d,
+                        fieldYaw.getRadians()
+                    );
+
+                    // is this maliciously ensuring "works in sim"??? idk
+                    Translation3d fieldDirection = localDirection.rotateBy(fieldRotation);
+                    fieldDirection = fieldDirection.times(vel.in(MetersPerSecond));
+                    fieldDirection = fieldDirection.plus(ConversionUtil.chassisSpeedsToTranslation3d(m_driveSubsystem.getChassisSpeeds()));
+
+                    return fieldDirection;
+                }
+            ))), Commands.none(), m_indexerSubsystem::getIsFeeding),
+            Commands.waitSeconds(0.002d)
+        );
     }
 }
