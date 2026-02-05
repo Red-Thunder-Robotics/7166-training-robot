@@ -39,9 +39,9 @@ public class VisionIOMackinac implements VisionIO {
 
     public VisionIOMackinac(AprilTagFieldLayout fieldLayout, int index) {
         m_fieldLayout = fieldLayout;
-        m_deviceId = "northstar_" + index;
-        var northstarTable = NetworkTableInstance.getDefault().getTable(m_deviceId);
-        var configTable = northstarTable.getSubTable("config");
+        m_deviceId = "mackinac_" + index;
+        var mackinacTable = NetworkTableInstance.getDefault().getTable(m_deviceId);
+        var configTable = mackinacTable.getSubTable("config");
         var camera = cameras[index];
         
         configTable.getStringTopic("camera_id").publish().set(camera.id());
@@ -60,7 +60,7 @@ public class VisionIOMackinac implements VisionIO {
         m_matchTypePublisher = configTable.getIntegerTopic("match_type").publish();
         m_matchNumberPublisher = configTable.getIntegerTopic("match_number").publish();
 
-        var outputTable = northstarTable.getSubTable("output");
+        var outputTable = mackinacTable.getSubTable("output");
         m_observationSubscriber =
             outputTable
                 .getDoubleArrayTopic("observations")
@@ -153,5 +153,10 @@ public class VisionIOMackinac implements VisionIO {
         if (slowPeriodic) {
             objDetectInputs.fps = m_fpsObjDetectSubscriber.get();
         }
+    }
+
+    @Override
+    public void setRecording(boolean shouldRecord) {
+        m_isRecordingPublisher.set(shouldRecord);
     }
 }

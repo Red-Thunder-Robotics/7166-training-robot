@@ -221,7 +221,9 @@ public class Robot extends LoggedRobot {
                 m_visionSubsystem = new VisionSubsystem(
                     ApriltagUtil.fieldLayout,
                     new VisionIOMackinac(ApriltagUtil.fieldLayout, 0),
-                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 1)
+                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 1),
+                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 2),
+                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 3)
                 );
             else
                 m_visionSubsystem = new VisionSubsystem(new VisionIOLimelight());

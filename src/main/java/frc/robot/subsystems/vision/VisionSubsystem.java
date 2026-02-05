@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.VecBuilder;
@@ -20,6 +21,7 @@ import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.state_machine.StateMachine;
@@ -40,6 +42,9 @@ public final class VisionSubsystem extends SubsystemBase {
     private final VisionIOInputsAutoLogged[] m_inputs;
     private final AprilTagVisionIOInputsAutoLogged[] m_aprilTagInputs;
     private final ObjDetectVisionIOInputsAutoLogged[] m_objDetectInputs;
+    
+    private final LoggedNetworkBoolean m_recordingRequest =
+      new LoggedNetworkBoolean("/SmartDashboard/Enable Recording", false);
 
     private final Map<Integer, Double> lastFrameTimes = new HashMap<>();
     private final Map<Integer, Double> lastTagDetectionTimes = new HashMap<>();
@@ -96,6 +101,12 @@ public final class VisionSubsystem extends SubsystemBase {
                 Logger.processInputs("AprilTagVision/Inst" + i, m_aprilTagInputs[i]);
                 Logger.processInputs("ObjDetectVision/Inst" + i, m_objDetectInputs[i]);
             }
+
+            if (!m_recordingRequest.get() && DriverStation.isFMSAttached())
+                m_recordingRequest.set(true);
+            final boolean shouldRecord = m_recordingRequest.get();
+            for (var io : m_multi_io)
+                io.setRecording(shouldRecord);
 
             allTxTyObservations.clear();
             allFuelTxTyObservations.clear();

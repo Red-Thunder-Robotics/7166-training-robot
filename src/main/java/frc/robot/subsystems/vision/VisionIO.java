@@ -24,4 +24,6 @@ public interface VisionIO {
 
     public default void updateInputs(VisionIOInputs inputs) {}
     public default void updateInputs(VisionIOInputs inputs, AprilTagVisionIOInputs aprilTagInputs, ObjDetectVisionIOInputs objDetectInputs) {}
+
+    public default void setRecording(boolean shouldRecord) {}
 }
