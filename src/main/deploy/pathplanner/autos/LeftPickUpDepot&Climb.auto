@@ -5,21 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "EngageShooterHub"
-          }
-        },
-        {
           "type": "path",
           "data": {
-            "pathName": "Center depo OutPost"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "DisengageShooter"
+            "pathName": "LeftStartToDepot"
           }
         },
         {
@@ -31,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "PickUpDepo"
+            "pathName": "PickUpDepot"
           }
         },
         {
@@ -41,33 +29,21 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Center Depo To OutPost"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "EngageShooterHub"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "AfterShoot"
+            "pathName": "LeftDepotToClimb"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Center OutPost To ClimbPos."
+            "name": "AfterShoot"
           }
         },
         {
@@ -80,6 +56,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Center",
+  "folder": "Left",
   "choreoAuto": false
 }

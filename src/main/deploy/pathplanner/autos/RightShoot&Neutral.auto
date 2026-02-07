@@ -41,6 +41,12 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "RightPickedNeutralStop"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "AfterShoot"

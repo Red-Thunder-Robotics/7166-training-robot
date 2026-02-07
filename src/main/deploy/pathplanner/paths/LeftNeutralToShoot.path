@@ -55,7 +55,7 @@
   "eventMarkers": [
     {
       "name": "EngageShooterHub",
-      "waypointRelativePos": 1.111849390919154,
+      "waypointRelativePos": 1.210796915167095,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -75,12 +75,12 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -45.0
   },
   "reversed": false,
   "folder": "Left",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 3.0,
     "rotation": -90.0
   },
   "useDefaultConstraints": true
