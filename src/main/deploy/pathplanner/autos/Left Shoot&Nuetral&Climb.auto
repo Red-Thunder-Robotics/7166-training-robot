@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DisengageShooter"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "LeftStartPosToNeutral"

@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DEBUG_swing"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AfterShoot"
+            "pathName": "Test facing at the goal"
           }
         }
       ]

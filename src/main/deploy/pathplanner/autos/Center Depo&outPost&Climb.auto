@@ -19,6 +19,12 @@
         {
           "type": "named",
           "data": {
+            "name": "DisengageShooter"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "IntakeDeployOn"
           }
         },
@@ -47,15 +53,21 @@
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Center OutPost To ClimbPos."
+            "name": "EngageShooterHub"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "AfterShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Center OutPost To ClimbPos."
           }
         },
         {

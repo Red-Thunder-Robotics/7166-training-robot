@@ -5,15 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "Left StartToShoot"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "EngageShooterHub"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left StartToShoot"
           }
         },
         {

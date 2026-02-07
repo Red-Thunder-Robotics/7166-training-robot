@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DisengageShooter"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Left Start To Depo"
@@ -29,6 +35,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "EngageShooterHub"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Left Depo To Climb"
@@ -38,12 +50,6 @@
           "type": "named",
           "data": {
             "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "IntakeHomeOff"
           }
         },
         {

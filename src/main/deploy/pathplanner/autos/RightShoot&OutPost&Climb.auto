@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DisengageShooter"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "RightStartToOutPost"
@@ -14,6 +20,12 @@
           "type": "wait",
           "data": {
             "waitTime": 2.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "EngageShooterHub"
           }
         },
         {
