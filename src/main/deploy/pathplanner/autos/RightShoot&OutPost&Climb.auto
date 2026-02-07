@@ -23,12 +23,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "EngageShooterHub"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "RightOutPostToShootPos"

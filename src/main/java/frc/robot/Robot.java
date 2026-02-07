@@ -27,18 +27,21 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -263,9 +266,9 @@ public class Robot extends LoggedRobot {
         m_driveSubsystem.setDefaultCommand(
             DriveCommands.joystickDrive(
                 m_driveSubsystem,
-                () -> -Controls.controller.getLeftY(),
-                () -> -Controls.controller.getLeftX(),
-                () -> -Controls.controller.getRightX(),
+                () -> -Controls.driveController.getLeftY(),
+                () -> -Controls.driveController.getLeftX(),
+                () -> -Controls.driveController.getRightX(),
                 getShooterRotationalGoalSupplier()));
         
         Controls.resetGyroButton.onTrue(Commands.runOnce(this::resetGyro));
@@ -273,10 +276,10 @@ public class Robot extends LoggedRobot {
         Controls.deployIntakeButton.onTrue(RobotCommands.deployIntake());
         Controls.retractIntakeButton.onTrue(RobotCommands.retractIntake());
 
-        Controls.shootButton.onTrue(
+        Controls.hubButton.onTrue(
             RobotCommands.engageShooterHub()
         );
-        Controls.shootButton.onFalse(
+        Controls.hubButton.onFalse(
             Commands.either(
                 RobotCommands.engageShooterAllianceFeed(),
                 RobotCommands.disengageShooter(),
@@ -290,11 +293,11 @@ public class Robot extends LoggedRobot {
             Commands.either(
                 RobotCommands.engageShooterHub(),
                 RobotCommands.disengageShooter(),
-                Controls.shootButton::getAsBoolean)
+                Controls.hubButton::getAsBoolean)
         );
 
         if (Robot.isSimulation())
-            Controls.shootButton
+            Controls.hubButton
                 .or(Controls.allianceFeedButton)
                 .whileTrue(repeatingSimFuelCommand());
 
@@ -310,13 +313,12 @@ public class Robot extends LoggedRobot {
         ));
 
         // debug
-        var dbgController = new CommandXboxController(1);
         if (Constants.USE_TURRET) {
-            dbgController.rightStick().onTrue(m_turretSubsystem.toggleManualModeCommand());
+            Controls.operatorController.rightStick().onTrue(m_turretSubsystem.toggleManualModeCommand());
 
             m_turretSubsystem.setManualSupplier(() -> {
-                if (Math.abs(dbgController.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.15)
-                    return dbgController.getRightX() * 2.5;
+                if (Math.abs(Controls.operatorController.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.15)
+                    return Controls.operatorController.getRightX() * 2.5;
                 return 0d;
             });
         }
@@ -324,8 +326,6 @@ public class Robot extends LoggedRobot {
 
     private void setupNamedCommands() {
         var engageShooterHub = RobotCommands.engageShooterHub();
-        if (Robot.isSimulation())
-            engageShooterHub = engageShooterHub.alongWith(repeatingSimFuelCommand());
         NamedCommands.registerCommand("EngageShooterHub", engageShooterHub);
         NamedCommands.registerCommand("DisengageShooter", RobotCommands.disengageShooter());
 
@@ -360,6 +360,7 @@ public class Robot extends LoggedRobot {
     public void disabledPeriodic() {}
 
     private Supplier<Optional<Rotation2d>> m_autonomousRotationSupplier;
+    private Command m_autoSimFuelCommand;
 
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
@@ -368,43 +369,54 @@ public class Robot extends LoggedRobot {
         StateMachine.setShooterState(StateMachine.getShooterState());
         StateMachine.setIntakeState(IntakeState.DeployedOn);
 
-        m_autonomousRotationSupplier = getShooterRotationalGoalSupplier();
+        if (m_autonomousRotationSupplier == null)
+            m_autonomousRotationSupplier = getShooterRotationalGoalSupplier();
 
         m_autoCommand = m_autoChooser.get();
 
         if (m_autoCommand != null)
             m_commandScheduler.schedule(m_autoCommand);
+
+        if (m_autoSimFuelCommand == null)
+            m_autoSimFuelCommand = repeatingSimFuelCommand();
+
+        m_commandScheduler.schedule(m_autoSimFuelCommand);
     }
 
     /** This function is called periodically during autonomous. */
+    private double m_pathplannerFeedbackTimestamp = MathSharedStore.getTimestamp();
+
     @Override
     public void autonomousPeriodic() {
+        final double timestamp = MathSharedStore.getTimestamp();
+
         var rotation = m_autonomousRotationSupplier.get();
         // TODO: set overrideRotationFeedback once when rotation is present and inside it it will get a new rotation and if it's empty then clear?
         if (rotation.isPresent()) {
             final double output = DriveCommands.calculateOmega(m_driveSubsystem, rotation.get()/*.plus(Rotation2d.kCW_90deg)*/);
-            PPHolonomicDriveController.overrideRotationFeedback(() -> output);
+            PPHolonomicDriveController.overrideRotationFeedback(() -> {
+                m_pathplannerFeedbackTimestamp = timestamp;
+                return output;
+            });
         } else
             PPHolonomicDriveController.clearRotationFeedbackOverride();
 
-        // var rotation = m_autonomousRotationSupplier.get();
-        // if (rotation.isPresent()) {
-        //     final double output = DriveCommands.calculateOmega(m_driveSubsystem, rotation.get().plus(Rotation2d.kCW_90deg));
-        //     ChassisSpeeds speeds =
-        //         new ChassisSpeeds(
-        //             0d,
-        //             0d,
-        //             output);
-        //     boolean isFlipped =
-        //         DriverStation.getAlliance().isPresent()
-        //         && DriverStation.getAlliance().get() == Alliance.Red;
-        //     m_driveSubsystem.runVelocity(
-        //         ChassisSpeeds.fromFieldRelativeSpeeds(
-        //             speeds,
-        //             isFlipped
-        //             ? m_driveSubsystem.getRotation().plus(new Rotation2d(Math.PI))
-        //             : m_driveSubsystem.getRotation()));
-        // }
+        if (rotation.isPresent() && (timestamp - m_pathplannerFeedbackTimestamp) > 0.05d) {
+            final double output = DriveCommands.calculateOmega(m_driveSubsystem, rotation.get());
+            ChassisSpeeds speeds =
+                new ChassisSpeeds(
+                    0d,
+                    0d,
+                    output);
+            boolean isFlipped =
+                StateMachine.ALLIANCE == Alliance.Red;
+            m_driveSubsystem.runVelocity(
+                ChassisSpeeds.fromFieldRelativeSpeeds(
+                    speeds,
+                    isFlipped
+                    ? m_driveSubsystem.getRotation().plus(new Rotation2d(Math.PI))
+                    : m_driveSubsystem.getRotation()));
+        }
     }
 
     /** This function is called once when teleop is enabled. */

@@ -26,9 +26,10 @@ public final class Constants {
         REPLAY
     }
 
-    public static final int CONTROLLER = 0;
+    public static final int DRIVER_CONTROLLER = 0;
+    public static final int OPERATOR_CONTROLLER = 1;
 
-    public static final CANBus CANBUS = new CANBus("HighVoltageCANivore", "./logs/canivore.hoot");
+    public static final CANBus CANBUS = new CANBus("HighVoltageCANivore");
 
     public static final boolean USE_TURRET = false;
     public static final boolean TWO_SHOOTER_MECHANISMS = !USE_TURRET;
