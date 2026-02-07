@@ -37,64 +37,98 @@ public final class VisionConstants {
         double stdDevFactor) {}
 
     public static CameraConfig[] cameras = new CameraConfig[] {
-        new CameraConfig( // logic 1
-            () -> new Pose3d(
-                0.2794,
-                0.2286,
-                0.21113,
-                new Rotation3d(
-                    Degrees.of(0d),
-                    Degrees.of(-25d),
-                    Degrees.of(0d))),
-            // "0x1110:0x46D:0x825",
-            "0x3140:0x46D:0x825",
-            1280,
-            720,
-            0,
-            600,
-            22,
-            1d,
-            1d
-        ),
-        // new CameraConfig( // arducam 1
+        // new CameraConfig( // logic 2
         //     () -> new Pose3d(
-        //         0.2794,
+        //         -0.2794,
         //         0.2286,
         //         0.21113,
         //         new Rotation3d(
-        //             0d,
+        //             Degrees.of(0d),
         //             // Units.degreesToRadians(-25d + pitchAdjustments[0].get()),
-        //             Units.degreesToRadians(-25d),
-        //             Units.degreesToRadians(-20d))),
-        //     "0x146000000c45636d:0xC45:0x636D",
+        //             Degrees.of(30d),
+        //             // Units.degreesToRadians(-20d))),
+        //             Degrees.of(180d))),
+        //     // "0x1120:0x46D:0x825",
+        //     "0x3120:0x46D:0x825",
         //     1280,
         //     720,
         //     0,
-        //     2200,
-        //     17.5d,
+        //     200,
+        //     30,
         //     1d,
         //     1d
         // )
-        new CameraConfig( // logic 2
+        new CameraConfig( // thriftycam0
             () -> new Pose3d(
                 -0.2794,
                 0.2286,
                 0.21113,
                 new Rotation3d(
                     Degrees.of(0d),
-                    // Units.degreesToRadians(-25d + pitchAdjustments[0].get()),
                     Degrees.of(30d),
-                    // Units.degreesToRadians(-20d))),
                     Degrees.of(180d))),
-            // "0x1120:0x46D:0x825",
-            "0x3120:0x46D:0x825",
+            "0x3220:0x5C8:0xA00",
             1280,
             720,
             0,
-            200,
-            30,
+            50,
+            10,
             1d,
             1d
-        )
+        ),
+        new CameraConfig( // thriftycam1
+            () -> new Pose3d(
+                -0.2794,
+                0.2286,
+                0.21113,
+                new Rotation3d(
+                    Degrees.of(0d),
+                    Degrees.of(30d),
+                    Degrees.of(180d))),
+            "0x3220:0x5C8:0xA00",
+            1280,
+            720,
+            0,
+            50,
+            10,
+            1d,
+            1d
+        ),
+        new CameraConfig( // thriftycam2
+            () -> new Pose3d(
+                -0.2794,
+                0.2286,
+                0.21113,
+                new Rotation3d(
+                    Degrees.of(0d),
+                    Degrees.of(30d),
+                    Degrees.of(180d))),
+            "0x3220:0x5C8:0xA00",
+            1280,
+            720,
+            0,
+            50,
+            10,
+            1d,
+            1d
+        ),
+        new CameraConfig( // thriftycam3
+            () -> new Pose3d(
+                -0.2794,
+                0.2286,
+                0.21113,
+                new Rotation3d(
+                    Degrees.of(0d),
+                    Degrees.of(30d),
+                    Degrees.of(180d))),
+            "0x3220:0x5C8:0xA00",
+            1280,
+            720,
+            0,
+            50,
+            10,
+            1d,
+            1d
+        ),
     };
 }

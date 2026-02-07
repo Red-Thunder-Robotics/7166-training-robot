@@ -221,7 +221,9 @@ public class Robot extends LoggedRobot {
                 m_visionSubsystem = new VisionSubsystem(
                     ApriltagUtil.fieldLayout,
                     new VisionIOMackinac(ApriltagUtil.fieldLayout, 0),
-                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 1)
+                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 1),
+                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 2),
+                    new VisionIOMackinac(ApriltagUtil.fieldLayout, 3)
                 );
             else
                 m_visionSubsystem = new VisionSubsystem(new VisionIOLimelight());
@@ -325,7 +327,7 @@ public class Robot extends LoggedRobot {
         if (Robot.isSimulation())
             engageShooterHub = engageShooterHub.alongWith(repeatingSimFuelCommand());
         NamedCommands.registerCommand("EngageShooterHub", engageShooterHub);
-        NamedCommands.registerCommand("StopShooting", RobotCommands.disengageShooter());
+        NamedCommands.registerCommand("DisengageShooter", RobotCommands.disengageShooter());
 
         NamedCommands.registerCommand("IntakeDeployOn", RobotCommands.setIntakeState(IntakeState.DeployedOn));
         NamedCommands.registerCommand("IntakeHomeOff", RobotCommands.setIntakeState(IntakeState.HomeOff));
@@ -378,6 +380,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void autonomousPeriodic() {
         var rotation = m_autonomousRotationSupplier.get();
+        // TODO: set overrideRotationFeedback once when rotation is present and inside it it will get a new rotation and if it's empty then clear?
         if (rotation.isPresent()) {
             final double output = DriveCommands.calculateOmega(m_driveSubsystem, rotation.get()/*.plus(Rotation2d.kCW_90deg)*/);
             PPHolonomicDriveController.overrideRotationFeedback(() -> output);
