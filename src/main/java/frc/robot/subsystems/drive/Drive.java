@@ -22,9 +22,7 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.controllers.PathFollowingController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
-import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
@@ -57,6 +55,8 @@ import frc.robot.state_machine.OdometryAndVision;
 import frc.robot.state_machine.StateMachine;
 import frc.robot.util.LocalADStarAK;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -79,23 +79,24 @@ public class Drive extends SubsystemBase {
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
   // PathPlanner config constants
-  private static final double ROBOT_MASS_KG = 62;
-  private static final double ROBOT_MOI = 6.883; // about 8.76612158
-  private static final double WHEEL_COF = 1.2;
-  private static final RobotConfig PP_CONFIG =
-      new RobotConfig(
-          ROBOT_MASS_KG,
-          ROBOT_MOI,
-          new ModuleConfig(
-              TunerConstants.FrontLeft.WheelRadius,
-              // TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
-              5.2d,
-              WHEEL_COF,
-              DCMotor.getKrakenX60(1)
-                  .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
-              TunerConstants.FrontLeft.SlipCurrent,
-              1),
-          getModuleTranslations());
+  // private static final double ROBOT_MASS_KG = 62;
+  // private static final double ROBOT_MOI = 6.883; // about 8.76612158
+  // private static final double WHEEL_COF = 1.2;
+  // private static final RobotConfig PP_CONFIG =
+  //     new RobotConfig(
+  //         ROBOT_MASS_KG,
+  //         ROBOT_MOI,
+  //         new ModuleConfig(
+  //             TunerConstants.FrontLeft.WheelRadius,
+  //             // TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+  //             5.2d,
+  //             WHEEL_COF,
+  //             DCMotor.getKrakenX60(1)
+  //                 .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
+  //             TunerConstants.FrontLeft.SlipCurrent,
+  //             1),
+  //         getModuleTranslations());
+  private RobotConfig PP_CONFIG;
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -125,6 +126,14 @@ public class Drive extends SubsystemBase {
       ModuleIO brModuleIO) {
     instance = this;
 
+    try {
+      PP_CONFIG = RobotConfig.fromGUISettings();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (org.json.simple.parser.ParseException e) {
+      e.printStackTrace();
+    }
+
     this.gyroIO = gyroIO;
     modules[0] = new Module(flModuleIO, 0, TunerConstants.FrontLeft);
     modules[1] = new Module(frModuleIO, 1, TunerConstants.FrontRight);
@@ -149,7 +158,7 @@ public class Drive extends SubsystemBase {
           // new PIDConstants(VisionConstants.GotoPoseConstants.translationP, VisionConstants.GotoPoseConstants.translationI, VisionConstants.GotoPoseConstants.translationD),
           // new PIDConstants(VisionConstants.GotoPoseConstants.rotationP, VisionConstants.GotoPoseConstants.rotationI, VisionConstants.GotoPoseConstants.rotationD)),
           // new PIDConstants(VisionConstants.GotoPoseConstants.rotationP, 0, 0)),
-          new PIDConstants(0, 0, 0)),
+          new PIDConstants(7d, 0d, 0d)),
       PP_CONFIG,
       () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
       this

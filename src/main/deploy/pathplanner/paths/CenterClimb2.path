@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5256923076923092,
-        "y": 3.8373205128205132
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 2.607128995083709,
-        "y": 3.7715682295789374
-      },
-      "isLocked": false,
-      "linkedName": "CenterStartPos"
-    },
-    {
-      "anchor": {
         "x": 2.4,
         "y": 3.685
       },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.65,
+        "y": 3.685
+      },
+      "isLocked": false,
+      "linkedName": "CenterClimbPos"
+    },
+    {
+      "anchor": {
+        "x": 1.566,
+        "y": 3.685
+      },
       "prevControl": {
-        "x": 2.9036945613515233,
-        "y": 3.718579785938795
+        "x": 1.816,
+        "y": 3.685
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "CenterClimbPos"
+      "linkedName": "CenterClimbPos2"
     }
   ],
   "rotationTargets": [],
@@ -33,13 +33,13 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "EngageShooterHub",
-      "waypointRelativePos": 0.09511568123393312,
+      "name": "ClimbMark1Home",
+      "waypointRelativePos": 1.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
         "data": {
-          "name": "EngageShooterHub"
+          "name": "ClimbMark1Home"
         }
       }
     }
@@ -54,7 +54,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": "Center",

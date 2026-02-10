@@ -61,9 +61,9 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
         }
     }
 
-    private void setIdle() {
-        m_io.idle();
-    }
+    // private void setIdle() {
+    //     m_io.idle();
+    // }
 
     private void startRollerDutyCycle() {
         m_io.rollerDutyCycle(rollerOutput);

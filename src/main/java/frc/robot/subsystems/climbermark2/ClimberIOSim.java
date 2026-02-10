@@ -1,8 +1,8 @@
-package frc.robot.subsystems.climber;
+package frc.robot.subsystems.climbermark2;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static frc.robot.subsystems.climber.ClimberConstants.actuatorPositionHome;
-import static frc.robot.subsystems.climber.ClimberConstants.grabPositionHome;
+import static frc.robot.subsystems.climbermark2.ClimberConstants.actuatorPositionHome;
+import static frc.robot.subsystems.climbermark2.ClimberConstants.grabPositionHome;
 import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
 
 import edu.wpi.first.math.controller.PIDController;

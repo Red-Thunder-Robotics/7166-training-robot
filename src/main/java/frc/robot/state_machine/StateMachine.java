@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Robot;
-import frc.robot.subsystems.climber.ClimberSubsystem;
+import frc.robot.subsystems.climbermark1.ClimberSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.ground_intake.GroundIntakeSubsystem;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
@@ -129,14 +129,24 @@ public class StateMachine {
         ShooterSubsystem.instance.stateUpdate(newShooterState);
     }
 
-    private static ClimberState climberState = ClimberState.Idle;
+    private static ClimberMark1State climberLeftState = ClimberMark1State.Idle;
 
-    public static ClimberState getClimberState() {
-        return climberState;
+    public static ClimberMark1State getClimberLeftState() {
+        return climberLeftState;
     }
-    public static void setClimberState(ClimberState newClimberState) {
-        climberState = newClimberState;
-        ClimberSubsystem.instance.stateUpdate(climberState);
+    public static void setClimberLeftState(ClimberMark1State newClimberState) {
+        climberLeftState = newClimberState;
+        ClimberSubsystem.instance.stateUpdateLeft(climberLeftState);
+    }
+
+    private static ClimberMark1State climberRightState = ClimberMark1State.Idle;
+
+    public static ClimberMark1State getClimberRightState() {
+        return climberRightState;
+    }
+    public static void setClimberRightState(ClimberMark1State newClimberState) {
+        climberRightState = newClimberState;
+        ClimberSubsystem.instance.stateUpdateRight(climberRightState);
     }
 
     public static final class RobotCommands {
@@ -202,29 +212,68 @@ public class StateMachine {
                 .alongWith(setShooterIdle());
         }
 
-        // climber
-        public static Command setClimberState(ClimberState climberState) {
+        // climber mark1
+        public static Command setClimberBothState(ClimberMark1State climberState) {
             return ClimberSubsystem.instance.runOnce(
-                () -> StateMachine.setClimberState(climberState)
+                () -> {
+                    StateMachine.setClimberLeftState(climberState);
+                    StateMachine.setClimberRightState(climberState);
+                }
+            );
+        }
+        public static Command setClimberLeftState(ClimberMark1State climberState) {
+            return ClimberSubsystem.instance.runOnce(
+                () -> StateMachine.setClimberLeftState(climberState)
+            );
+        }
+        public static Command setClimberRightState(ClimberMark1State climberState) {
+            return ClimberSubsystem.instance.runOnce(
+                () -> StateMachine.setClimberRightState(climberState)
             );
         }
 
-        public static Command climberStateIncrease() {
-            return Commands.defer(
-                () -> setClimberState(getClimberState().getNext()),
-                Set.of(ClimberSubsystem.instance)
-            );
+        public static Command climberLeftHome() {
+            return setClimberLeftState(ClimberMark1State.Home);
         }
-        public static Command climberStateDecrease() {
-            return Commands.defer(
-                () -> setClimberState(getClimberState().getPrevious()),
-                Set.of(ClimberSubsystem.instance)
-            );
+        public static Command climberLeftDeployed() {
+            return setClimberLeftState(ClimberMark1State.Deployed);
         }
 
-        // FIXME: auto climb command
+        public static Command climberRightHome() {
+            return setClimberRightState(ClimberMark1State.Home);
+        }
+        public static Command climberRightDeployed() {
+            return setClimberRightState(ClimberMark1State.Deployed);
+        }
+
+        // climber mark2
+        // public static Command setClimberState(ClimberMark2State climberState) {
+        //     return ClimberSubsystem.instance.runOnce(
+        //         () -> StateMachine.setClimberState(climberState)
+        //     );
+        // }
+
+        // public static Command climberStateIncrease() {
+        //     return Commands.defer(
+        //         () -> setClimberState(getClimberState().getNext()),
+        //         Set.of(ClimberSubsystem.instance)
+        //     );
+        // }
+        // public static Command climberStateDecrease() {
+        //     return Commands.defer(
+        //         () -> setClimberState(getClimberState().getPrevious()),
+        //         Set.of(ClimberSubsystem.instance)
+        //     );
+        // }
+
+        private static boolean hasAutoClimbRan = false;
+        public static boolean getHasAutoClimbRan() {
+            return hasAutoClimbRan;
+        }
+
+        // FIXME: auto climb behavior
         public static Command autoClimb() {
-            return Commands.none();
+            return Commands.runOnce(() -> hasAutoClimbRan = true);
         }
     }
 
@@ -308,7 +357,9 @@ public class StateMachine {
         Logger.recordOutput("StateMachine/IntakeState", intakeState);
         Logger.recordOutput("StateMachine/ShooterTargetState", shooterTargetState);
         Logger.recordOutput("StateMachine/ShooterState", shooterState);
-        Logger.recordOutput("StateMachine/ClimberState", climberState);
+        // Logger.recordOutput("StateMachine/ClimberState", climberState);
+        Logger.recordOutput("StateMachine/ClimberLeftState", climberLeftState);
+        Logger.recordOutput("StateMachine/ClimberRightState", climberRightState);
 
         var alliance = DriverStation.getAlliance();
         if (alliance.isPresent() && alliance.get() != ALLIANCE) {

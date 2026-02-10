@@ -10,7 +10,6 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.geometry.Twist3d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -72,7 +71,7 @@ public final class SimulationCommands {
             final double ypos = m_initialPose.getY() + m_initialVelocity.getY() * t;
             final double zpos = m_initialPose.getZ()
                     + m_initialVelocity.getZ() * t
-                    - 0.5d * (9.81d) * t * t;
+                    - 4.905d * t * t;
 
             m_pose = new Pose3d(new Translation3d(xpos, ypos, zpos), Rotation3d.kZero);
         }

@@ -98,7 +98,7 @@ public final class ShooterSubsystem extends SubsystemBase {
                 for (int i = 0; i < m_io.length; i++) {
                     var io = m_io[i];
                     // io.flywheelDutyCycle(flywheelOutput);
-                    io.flywheelStop();
+                    // io.flywheelStop();
                     io.kickerStop();
                 }
                 break;

@@ -1,11 +1,11 @@
-package frc.robot.subsystems.climber;
+package frc.robot.subsystems.climbermark2;
 
-import static frc.robot.subsystems.climber.ClimberConstants.*;
+import static frc.robot.subsystems.climbermark2.ClimberConstants.*;
 
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.state_machine.ClimberState;
+import frc.robot.state_machine.ClimberMark2State;
 
 public final class ClimberSubsystem extends SubsystemBase {
     public static ClimberSubsystem instance = null;
@@ -26,7 +26,7 @@ public final class ClimberSubsystem extends SubsystemBase {
         Logger.processInputs("Climber", m_inputs);
     }
 
-    public void stateUpdate(ClimberState climberState) {
+    public void stateUpdate(ClimberMark2State climberState) {
         switch (climberState) {
             case Idle:
                 m_io.idle();
