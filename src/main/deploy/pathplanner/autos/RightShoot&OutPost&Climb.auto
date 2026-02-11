@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "DisengageShooter"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "RightStartToOutPost"
@@ -43,7 +37,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Climb"
+            "name": "ClimbMark1Home"
           }
         }
       ]

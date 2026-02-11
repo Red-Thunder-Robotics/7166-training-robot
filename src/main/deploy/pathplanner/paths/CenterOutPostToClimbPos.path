@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.7582564102564113,
-        "y": 4.674551282051281
+        "x": 2.4043584905587707,
+        "y": 3.430507907656891
       },
       "isLocked": false,
       "linkedName": "OutPostPos"
     },
     {
       "anchor": {
-        "x": 1.3279615384615397,
-        "y": 4.755948717948717
+        "x": 2.4,
+        "y": 3.685
       },
       "prevControl": {
-        "x": 1.5762491895422588,
-        "y": 4.7851590298405675
+        "x": 2.2002119666140842,
+        "y": 3.5347177930831855
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftClimbPos."
+      "linkedName": "CenterClimbPos"
     }
   ],
   "rotationTargets": [],

@@ -35,6 +35,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "AfterShoot"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "LeftDepotToClimb"
@@ -43,13 +49,7 @@
         {
           "type": "named",
           "data": {
-            "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Climb"
+            "name": "ClimbMark1Home"
           }
         }
       ]

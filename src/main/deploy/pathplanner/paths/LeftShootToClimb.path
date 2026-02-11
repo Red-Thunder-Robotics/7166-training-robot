@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 1.2465641025641039,
-        "y": 4.767576923076923
+        "x": 1.1796148359486442,
+        "y": 4.753095577746078
       },
       "prevControl": {
-        "x": 1.2765612888955915,
-        "y": 5.015770736078364
+        "x": 1.2096120222801319,
+        "y": 5.001289390747519
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,7 +31,19 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "ClimbMark1Deploy",
+      "waypointRelativePos": 0.5320729237002055,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "ClimbMark1Deploy"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 5.2,
     "maxAcceleration": 3.0,
@@ -42,7 +54,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -0.18550650590653714
   },
   "reversed": false,
   "folder": "Left",

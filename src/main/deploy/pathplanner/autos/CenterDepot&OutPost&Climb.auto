@@ -73,7 +73,13 @@
         {
           "type": "named",
           "data": {
-            "name": "Climb"
+            "name": "ClimbMark1Deploy"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CenterClimb2"
           }
         }
       ]
