@@ -54,18 +54,39 @@ public class DriveCommands {
 
   private DriveCommands() {}
 
-  private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
+  public static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband
     double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
     Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
 
     // Square magnitude for more precise control
     linearMagnitude = linearMagnitude * linearMagnitude;
-// 
+
     // Return new linear velocity
     return new Pose2d(new Translation2d(), linearDirection)
         .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
         .getTranslation();
+  }
+  public static ChassisSpeeds getChassisSpeedsFromJoysticks(Drive drive, double driverX, double driverY, double driverOmega, Optional<Rotation2d> rotation) {
+    // Get linear velocity
+    Translation2d linearVelocity =
+        getLinearVelocityFromJoysticks(driverX, driverY);
+
+    // Apply rotation deadband
+    double omega = MathUtil.applyDeadband(driverOmega, DEADBAND);
+
+    // Square rotation value for more precise control
+    omega = Math.copySign(omega * omega, omega);
+
+    if (rotation.isPresent()) {
+      omega += calculateOmega(drive, rotation.get());
+    }
+
+    // Convert to field relative speeds
+    return new ChassisSpeeds(
+          linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+          linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+          omega * drive.getMaxAngularSpeedRadPerSec());
   }
 
   // Create PID controller
@@ -96,27 +117,7 @@ public class DriveCommands {
       Supplier<Optional<Rotation2d>> rotationSupplier) {
     return Commands.run(
         () -> {
-          // Get linear velocity
-          Translation2d linearVelocity =
-              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
-
-          // Apply rotation deadband
-          double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
-
-          // Square rotation value for more precise control
-          omega = Math.copySign(omega * omega, omega);
-
-          var rotation = rotationSupplier.get();
-          if (rotation.isPresent()) {
-            omega += calculateOmega(drive, rotation.get());
-          }
-
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega * drive.getMaxAngularSpeedRadPerSec());
+          ChassisSpeeds speeds = getChassisSpeedsFromJoysticks(drive, xSupplier.getAsDouble(), ySupplier.getAsDouble(), omegaSupplier.getAsDouble(), rotationSupplier.get());
           boolean isFlipped =
               DriverStation.getAlliance().isPresent()
                   && DriverStation.getAlliance().get() == Alliance.Red;

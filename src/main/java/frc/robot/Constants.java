@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
@@ -26,8 +27,10 @@ public final class Constants {
         REPLAY
     }
 
+    private static final boolean USE_TWO_CONTROLLERS_DESIRED = true;
+    public static final boolean USE_TWO_CONTROLLERS = !RobotBase.isSimulation() && USE_TWO_CONTROLLERS_DESIRED;
     public static final int DRIVER_CONTROLLER = 0;
-    public static final int OPERATOR_CONTROLLER = 1;
+    public static final int OPERATOR_CONTROLLER = USE_TWO_CONTROLLERS ? 1 : DRIVER_CONTROLLER;
 
     public static final CANBus CANBUS = new CANBus("HighVoltageCANivore");
 
@@ -43,5 +46,12 @@ public final class Constants {
 
         public static final Distance FIELD_LENGTH = Meters.of(ApriltagUtil.fieldLayout.getFieldLength());
         public static final Distance FIELD_WIDTH = Meters.of(ApriltagUtil.fieldLayout.getFieldWidth());
+
+        public static final Distance FUEL_DIAMETER = Centimeters.of(15d);
+    }
+
+    public static final class DriveConstants {
+        public static final Distance BUMPER_WIDTH = Meters.of(0.876808d);
+        public static final Distance BUMPER_LENGTH = BUMPER_WIDTH;
     }
 }

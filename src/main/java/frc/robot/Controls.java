@@ -8,10 +8,12 @@ public final class Controls {
     public static final CommandXboxController driveController = new CommandXboxController(DRIVER_CONTROLLER);
     public static final CommandXboxController operatorController = new CommandXboxController(OPERATOR_CONTROLLER);
 
+    // NOTE: do not have overlapping controls because of Constants.USE_TWO_CONTROLLERS
+
     public static final Trigger resetGyroButton = driveController.start();
 
-    public static final Trigger deployIntakeButton = operatorController.rightBumper();
-    public static final Trigger retractIntakeButton = operatorController.leftBumper();
+    public static final Trigger deployIntakeButton = driveController.rightBumper();
+    public static final Trigger retractIntakeButton = driveController.leftBumper();
 
     public static final Trigger hubButton = operatorController.rightTrigger();
     public static final Trigger allianceFeedButton = operatorController.x();

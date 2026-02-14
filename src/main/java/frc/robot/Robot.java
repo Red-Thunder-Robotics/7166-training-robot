@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.LogFileUtil;
@@ -48,6 +49,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Mode;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.SimulationCommands;
 import frc.robot.commands.SimulationCommands.SimFuelCommand;
 import frc.robot.generated.TunerConstants;
@@ -264,17 +266,23 @@ public class Robot extends LoggedRobot {
     }
 
     private void configureButtons() {
+        final DoubleSupplier driverX = () -> -Controls.driveController.getLeftY();
+        final DoubleSupplier driverY = () -> -Controls.driveController.getLeftX();
+        final DoubleSupplier driverOmega = () -> -Controls.driveController.getRightX();
+
         m_driveSubsystem.setDefaultCommand(
             DriveCommands.joystickDrive(
                 m_driveSubsystem,
-                () -> -Controls.driveController.getLeftY(),
-                () -> -Controls.driveController.getLeftX(),
-                () -> -Controls.driveController.getRightX(),
+                driverX,
+                driverY,
+                driverOmega,
                 getShooterRotationalGoalSupplier()));
         
         Controls.resetGyroButton.onTrue(Commands.runOnce(this::resetGyro));
 
         Controls.deployIntakeButton.onTrue(RobotCommands.deployIntake());
+        Controls.deployIntakeButton.debounce(0.5d).whileTrue(
+            IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
         Controls.retractIntakeButton.onTrue(RobotCommands.retractIntake());
 
         Controls.hubButton.onTrue(
@@ -392,7 +400,6 @@ public class Robot extends LoggedRobot {
     public void autonomousInit() {
         // ensure flywheel is spinning if we want it to be
         StateMachine.setShooterState(StateMachine.getShooterState());
-        StateMachine.setIntakeState(IntakeState.DeployedOn);
 
         if (m_autonomousRotationSupplier == null)
             m_autonomousRotationSupplier = getShooterRotationalGoalSupplier();
