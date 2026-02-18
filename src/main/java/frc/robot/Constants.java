@@ -32,10 +32,9 @@ public final class Constants {
     public static final int DRIVER_CONTROLLER = 0;
     public static final int OPERATOR_CONTROLLER = USE_TWO_CONTROLLERS ? 1 : DRIVER_CONTROLLER;
 
-    public static final CANBus CANBUS = new CANBus("HighVoltageCANivore");
+    public static final CANBus CANBUS = new CANBus("Canivore");
 
     public static final boolean USE_TURRET = false;
-    public static final boolean TWO_SHOOTER_MECHANISMS = !USE_TURRET;
     public static final boolean USE_MACKINAC = true;
 
     public static final class FieldConstants {
@@ -51,7 +50,7 @@ public final class Constants {
     }
 
     public static final class DriveConstants {
-        public static final Distance BUMPER_WIDTH = Meters.of(0.876808d);
+        public static final Distance BUMPER_WIDTH = Inches.of(31d);
         public static final Distance BUMPER_LENGTH = BUMPER_WIDTH;
     }
 }

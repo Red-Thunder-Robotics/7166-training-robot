@@ -331,6 +331,7 @@ public class StateMachine {
     private static Translation3d hubPose = new Translation3d();
 
     // https://github.com/hammerheads5000/2026Rebuilt/blob/b32c384e337b1a89d3d651c05696c9366a105504/src/main/java/frc/robot/Constants.java#L398
+    // see 5000-License.md
     public static final Translation3d allianceFeedLeft = new Translation3d(
         Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
     public static final Translation3d allianceFeedCenter =

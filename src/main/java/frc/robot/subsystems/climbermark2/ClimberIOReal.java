@@ -1,8 +1,8 @@
 package frc.robot.subsystems.climbermark2;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static frc.robot.subsystems.climbermark2.ClimberConstants.*;
-import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
+import static frc.robot.util.ConversionUtil.mechanismPositionToDistance;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -79,14 +79,16 @@ public final class ClimberIOReal implements ClimberIO {
 
     @Override
     public void updateInputs(ClimberIOInputs inputs) {
+        BaseStatusSignal.refreshAll(m_actuatorPositionSignal, m_actuatorVelocitySignal, m_actuatorCurrentSignal, m_grabLeaderPositionSignal, m_grabLeaderVelocitySignal, m_grabLeaderCurrentSignal, m_grabFollowerPositionSignal, m_grabFollowerVelocitySignal, m_grabFollowerCurrentSignal);
+        
         // actuator
         final double actuatorTargetPosition = m_actuatorTargetPosition;
         inputs.actuatorTargetPositionRotations = actuatorTargetPosition;
-        inputs.actuatorTargetPositionDegrees = mechanismPositionToAngle(actuatorTargetPosition).in(Degrees);
+        inputs.actuatorTargetPositionInches = mechanismPositionToDistance(actuatorTargetPosition, grabLeaderPitchCircumference).in(Inches);
 
         final double actuatorPositionRotations = m_actuatorPositionSignal.getValueAsDouble();
         inputs.actuatorPositionRotations = actuatorPositionRotations;
-        inputs.actuatorPositionDegrees = mechanismPositionToAngle(actuatorPositionRotations).in(Degrees);
+        inputs.actuatorPositionInches = mechanismPositionToDistance(actuatorPositionRotations, grabLeaderPitchCircumference).in(Inches);
 
         inputs.actuatorVelocityRPS = m_actuatorVelocitySignal.getValueAsDouble();
         inputs.actuatorCurrentAmps = m_actuatorCurrentSignal.getValueAsDouble();
@@ -94,12 +96,12 @@ public final class ClimberIOReal implements ClimberIO {
         // grab
         final double grabTargetPosition = m_grabTargetPosition;
         inputs.grabTargetPositionRotations = grabTargetPosition;
-        inputs.grabTargetPositionDegrees = mechanismPositionToAngle(grabTargetPosition).in(Degrees);
+        inputs.grabTargetPositionDegrees = mechanismPositionToDistance(grabTargetPosition, grabLeaderPitchCircumference).in(Inches);
 
         // grab leader
         final double grabLeaderPositionRotations = m_grabLeaderPositionSignal.getValueAsDouble();
         inputs.grabLeaderPositionRotations = grabLeaderPositionRotations;
-        inputs.grabLeaderPositionDegrees = mechanismPositionToAngle(grabLeaderPositionRotations).in(Degrees);
+        inputs.grabLeaderPositionInches = mechanismPositionToDistance(grabLeaderPositionRotations, grabLeaderPitchCircumference).in(Inches);
 
         inputs.grabLeaderVelocityRPS = m_grabLeaderVelocitySignal.getValueAsDouble();
         inputs.grabLeaderCurrentAmps = m_grabLeaderCurrentSignal.getValueAsDouble();
@@ -107,7 +109,7 @@ public final class ClimberIOReal implements ClimberIO {
         // grab follower
         final double grabFollowerPositionRotations = m_grabFollowerPositionSignal.getValueAsDouble();
         inputs.grabFollowerPositionRotations = grabFollowerPositionRotations;
-        inputs.grabFollowerPositionDegrees = mechanismPositionToAngle(grabFollowerPositionRotations).in(Degrees);
+        inputs.grabFollowerPositionInches = mechanismPositionToDistance(grabFollowerPositionRotations, grabLeaderPitchCircumference).in(Inches);
 
         inputs.grabFollowerVelocityRPS = m_grabFollowerVelocitySignal.getValueAsDouble();
         inputs.grabFollowerCurrentAmps = m_grabFollowerCurrentSignal.getValueAsDouble();

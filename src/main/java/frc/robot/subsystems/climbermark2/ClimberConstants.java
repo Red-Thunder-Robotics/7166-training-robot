@@ -1,13 +1,16 @@
 package frc.robot.subsystems.climbermark2;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Millimeters;
 import static frc.robot.util.ConversionUtil.angleToMechanismPosition;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.units.measure.Distance;
+
 public final class ClimberConstants {
-    public static final int actuatorMotorId = 1;
+    public static final int actuatorMotorId = -1;
     public static final double actuatorCurrentLimit = 40;
     public static final double actuatorMotorReduction = 1d;
     public static final NeutralModeValue actuatorNeutralMode = NeutralModeValue.Brake;
@@ -22,7 +25,8 @@ public final class ClimberConstants {
 
     public static final int grabLeaderId = -1;
     public static final double grabLeaderCurrentLimit = 40;
-    public static final double grabLeaderMotorReduction = 1d;
+    public static final double grabLeaderMotorReduction = 34.5d;
+    public static final Distance grabLeaderPitchCircumference = Millimeters.of(47.75d);
     public static final NeutralModeValue grabLeaderNeutralMode = NeutralModeValue.Brake;
     public static final InvertedValue grabLeaderInverted = InvertedValue.Clockwise_Positive;
 

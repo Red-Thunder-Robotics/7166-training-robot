@@ -1,6 +1,7 @@
 package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 
 import java.util.function.Supplier;
 
@@ -60,13 +61,13 @@ public final class VisionConstants {
         // )
         new CameraConfig( // thriftycam0
             () -> new Pose3d(
-                -0.2794,
-                0.2286,
-                0.21113,
+                Inches.of(-2.128d),
+                Inches.of(-10.52d),
+                Inches.of(17.467d),
                 new Rotation3d(
                     Degrees.of(0d),
-                    Degrees.of(30d),
-                    Degrees.of(180d))),
+                    Degrees.of(-27.5d),
+                    Degrees.of(25d))),
             "0x3220:0x5C8:0xA00",
             1280,
             720,
@@ -78,14 +79,14 @@ public final class VisionConstants {
         ),
         new CameraConfig( // thriftycam1
             () -> new Pose3d(
-                -0.2794,
-                0.2286,
-                0.21113,
+                Inches.of(-0.218d),
+                Inches.of(-10.52d),
+                Inches.of(17.467d),
                 new Rotation3d(
-                    Degrees.of(0d),
-                    Degrees.of(30d),
-                    Degrees.of(180d))),
-            "0x3220:0x5C8:0xA00",
+                    Degrees.of(-90d),
+                    Degrees.of(-27.5d),
+                    Degrees.of(25d))),
+            "0x3100:0x5C8:0xA00",
             1280,
             720,
             0,
@@ -96,13 +97,13 @@ public final class VisionConstants {
         ),
         new CameraConfig( // thriftycam2
             () -> new Pose3d(
-                -0.2794,
-                0.2286,
-                0.21113,
+                Inches.of(-2.128d),
+                Inches.of(-10.52d),
+                Inches.of(17.467d),
                 new Rotation3d(
                     Degrees.of(0d),
-                    Degrees.of(30d),
-                    Degrees.of(180d))),
+                    Degrees.of(-27.5d),
+                    Degrees.of(25d))),
             "0x3220:0x5C8:0xA00",
             1280,
             720,
@@ -114,13 +115,13 @@ public final class VisionConstants {
         ),
         new CameraConfig( // thriftycam3
             () -> new Pose3d(
-                -0.2794,
-                0.2286,
-                0.21113,
+                Inches.of(-2.128d),
+                Inches.of(10.52d),
+                Inches.of(17.467d),
                 new Rotation3d(
-                    Degrees.of(0d),
-                    Degrees.of(30d),
-                    Degrees.of(180d))),
+                    Degrees.of(-90d),
+                    Degrees.of(-27.5d),
+                    Degrees.of(-25d))),
             "0x3220:0x5C8:0xA00",
             1280,
             720,

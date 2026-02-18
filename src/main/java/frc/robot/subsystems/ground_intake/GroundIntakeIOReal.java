@@ -31,7 +31,8 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
     private final StatusSignal<Angle> m_actuatorPositionSignal = m_actuatorMotor.getPosition();
     private final StatusSignal<Current> m_actuatorCurrentSignal = m_actuatorMotor.getSupplyCurrent();
 
-    private final MotionMagicVoltage m_actuatorPositionRequest = new MotionMagicVoltage(m_actuatorTargetPosition);
+    private final MotionMagicVoltage m_actuatorPositionRequest = new MotionMagicVoltage(m_actuatorTargetPosition)
+        .withEnableFOC(true);
     private final DutyCycleOut m_rollerDutyCycleRequest = new DutyCycleOut(0d);
     private final MotionMagicVelocityVoltage m_rollerVelocityRequest = new MotionMagicVelocityVoltage(0d)
         .withEnableFOC(true);
@@ -63,11 +64,13 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(50d, m_rollerVelocitySignal, m_rollerCurrentSignal, m_actuatorPositionSignal, m_actuatorCurrentSignal);
 
-        m_actuatorMotor.setPosition(m_actuatorTargetPosition);
+        PhoenixUtil.tryUntilOk(5, () -> m_actuatorMotor.setPosition(m_actuatorTargetPosition));
     }
     
     @Override
     public void updateInputs(GroundIntakeIOInputs inputs) {
+        BaseStatusSignal.refreshAll(m_rollerVelocitySignal, m_rollerCurrentSignal, m_actuatorPositionSignal, m_actuatorCurrentSignal);
+
         final double actuatorTargetPosition = m_actuatorTargetPosition;
 
         inputs.isDeployed = actuatorTargetPosition == actuatorPositionDeployed;
@@ -92,6 +95,8 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
     @Override
     public void setActuatorPosition(double position) {
+        // if (Math.abs(position - m_actuatorTargetPosition) < 0.001d)
+        //     return;
         m_actuatorTargetPosition = position;
         m_actuatorMotor.setControl(m_actuatorPositionRequest.withPosition(position));
     }

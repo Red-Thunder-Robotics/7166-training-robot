@@ -62,6 +62,8 @@ public final class ClimberIOReal implements ClimberIO {
 
     @Override
     public void updateInputs(ClimberIOInputs inputs) {
+        BaseStatusSignal.refreshAll(m_leftPositionSignal, m_leftVelocitySignal, m_leftCurrentSignal, m_rightPositionSignal, m_rightVelocitySignal, m_rightCurrentSignal);
+
         // left
         final double leftTargetPosition = m_leftTargetPosition;
         inputs.leftTargetPositionRotations = leftTargetPosition;

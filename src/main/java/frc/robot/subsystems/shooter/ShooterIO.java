@@ -9,11 +9,23 @@ public interface ShooterIO {
     @AutoLog
     public static class ShooterIOInputs {
         // flywheel
-        double flywheelMotorDutyCycle;
-        double flywheelMotorVelocityRPS;
-        double flywheelMotorCurrentAmps;
-
         double flywheelTargetVelocityRPS;
+
+        double flywheelMotorLeftDutyCycle;
+        double flywheelMotorLeftVelocityRPS;
+        double flywheelMotorLeftCurrentAmps;
+
+        double flywheelMotorMiddleUpperDutyCycle;
+        double flywheelMotorMiddleUpperVelocityRPS;
+        double flywheelMotorMiddleUpperCurrentAmps;
+
+        double flywheelMotorMiddleLowerDutyCycle;
+        double flywheelMotorMiddleLowerVelocityRPS;
+        double flywheelMotorMiddleLowerCurrentAmps;
+
+        double flywheelMotorRightDutyCycle;
+        double flywheelMotorRightVelocityRPS;
+        double flywheelMotorRightCurrentAmps;
 
         // hood
         double hoodTargetPositionRotations;

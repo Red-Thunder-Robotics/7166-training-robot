@@ -154,21 +154,21 @@ public class Robot extends LoggedRobot {
                         new ModuleIOTalonFX(TunerConstants.FrontRight),
                         new ModuleIOTalonFX(TunerConstants.BackLeft),
                         new ModuleIOTalonFX(TunerConstants.BackRight));
-                if (Constants.USE_TURRET)
-                    m_turretSubsystem = new TurretSubsystem(new TurretIOReal());
+                // if (Constants.USE_TURRET)
+                //     m_turretSubsystem = new TurretSubsystem(new TurretIOReal());
                 m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIOReal());
-                m_indexerSubsystem = new IndexerSubsystem(new IndexerIOReal());
+                // m_indexerSubsystem = new IndexerSubsystem(new IndexerIOReal());
+                // m_shooterSubsystem = new ShooterSubsystem(new ShooterIOReal());
+                // m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
+                // m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIOReal());
+                if (Constants.USE_TURRET)
+                    m_turretSubsystem = new TurretSubsystem(new TurretIO() {});
+                // m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIO() {});
+                m_indexerSubsystem = new IndexerSubsystem(new IndexerIO() {});
+                m_shooterSubsystem = new ShooterSubsystem(new ShooterIO() {});
+                m_climberSubsystem = new ClimberSubsystem(new ClimberIO() {});
+                m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIO() {});
 
-                var shooterIO1 = new ShooterIOReal(ShooterConstants.flywheelMotorId1, ShooterConstants.hoodMotorId1, ShooterConstants.kickerMotorId);
-                m_shooterSubsystem = new ShooterSubsystem(Constants.TWO_SHOOTER_MECHANISMS ? new ShooterIO[] {
-                    shooterIO1,
-                    new ShooterIOReal(ShooterConstants.flywheelMotorId2, ShooterConstants.hoodMotorId2, -2),
-                } : new ShooterIO[] {
-                    shooterIO1
-                });
-
-                m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
-                m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIOReal());
                 break;
             }
             case SIM: {
@@ -185,15 +185,7 @@ public class Robot extends LoggedRobot {
                     m_turretSubsystem = new TurretSubsystem(new TurretIOSim());
                 m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIOSim());
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIOSim());
-
-                var shooterIO1 = new ShooterIOSim();
-                m_shooterSubsystem = new ShooterSubsystem(Constants.TWO_SHOOTER_MECHANISMS ? new ShooterIO[] {
-                    shooterIO1,
-                    new ShooterIOSim()
-                } : new ShooterIO[] {
-                    shooterIO1
-                });
-
+                m_shooterSubsystem = new ShooterSubsystem(new ShooterIOSim());
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIOSim());
                 m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIO() {});
                 break;
@@ -215,7 +207,7 @@ public class Robot extends LoggedRobot {
                     m_turretSubsystem = new TurretSubsystem(new TurretIO() {});
                 m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIO() {});
                 m_indexerSubsystem = new IndexerSubsystem(new IndexerIO() {});
-                m_shooterSubsystem = new ShooterSubsystem(new ShooterIO[]{ new ShooterIO() {} });
+                m_shooterSubsystem = new ShooterSubsystem(new ShooterIO() {});
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIO() {});
                 m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIO() {});
                 break;
@@ -255,6 +247,7 @@ public class Robot extends LoggedRobot {
 
         StateMachine.periodic(this);
         setupNamedCommands();
+        m_driveSubsystem.configurePathPlanner();
         
         m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -281,8 +274,8 @@ public class Robot extends LoggedRobot {
         Controls.resetGyroButton.onTrue(Commands.runOnce(this::resetGyro));
 
         Controls.deployIntakeButton.onTrue(RobotCommands.deployIntake());
-        Controls.deployIntakeButton.debounce(0.5d).whileTrue(
-            IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
+        // Controls.deployIntakeButton.debounce(0.5d).whileTrue(
+        //     IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
         Controls.retractIntakeButton.onTrue(RobotCommands.retractIntake());
 
         Controls.hubButton.onTrue(

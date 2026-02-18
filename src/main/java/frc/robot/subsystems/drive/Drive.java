@@ -146,6 +146,20 @@ public class Drive extends SubsystemBase {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
+    // Configure SysId
+    sysId =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                // (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
+                (state) -> SignalLogger.writeString("sysid-state", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+  }
+
+  public void configurePathPlanner() {
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configure(
       this::getPose,
@@ -173,18 +187,6 @@ public class Drive extends SubsystemBase {
         (targetPose) -> {
           Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
-
-    // Configure SysId
-    sysId =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,
-                null,
-                null,
-                // (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
-                (state) -> SignalLogger.writeString("sysid-state", state.toString())),
-            new SysIdRoutine.Mechanism(
-                (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
   }
 
   @Override

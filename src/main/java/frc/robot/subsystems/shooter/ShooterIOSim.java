@@ -31,7 +31,7 @@ public final class ShooterIOSim implements ShooterIO {
 
     @Override
     public void updateInputs(ShooterIOInputs inputs) {
-        inputs.flywheelMotorDutyCycle = m_flywheelOutput;
+        inputs.flywheelMotorLeftDutyCycle = m_flywheelOutput;
         inputs.kickerMotorDutyCycle = m_kickerOutput;
 
         if (!m_flywheelStopped) {
@@ -40,7 +40,7 @@ public final class ShooterIOSim implements ShooterIO {
         }
 
         inputs.flywheelTargetVelocityRPS = m_flywheelTargetVelocityRPS;
-        inputs.flywheelMotorVelocityRPS = m_flywheelVelocityRPS;
+        inputs.flywheelMotorLeftVelocityRPS = m_flywheelVelocityRPS;
 
         if (!m_hoodStopped) {
             final double hoodOutput = m_hoodPID.calculate(m_hoodPosition);

@@ -55,6 +55,8 @@ public final class TurretIOReal implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
+        BaseStatusSignal.refreshAll(m_positionSignal, m_velocitySignal, m_currentSignal);
+        
         final double targetPosition = m_targetPosition;
 
         inputs.targetPositionRotations = targetPosition;

@@ -1,9 +1,7 @@
 package frc.robot.subsystems.climbermark1;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Millimeters;
-import static frc.robot.util.ConversionUtil.angleToMechanismPosition;
 import static frc.robot.util.ConversionUtil.distanceToMechanismPosition;
 
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -20,8 +18,8 @@ public final class ClimberConstants {
     public static final double rightCurrentLimit = 40;
     public static final InvertedValue rightInverted = InvertedValue.Clockwise_Positive;
     
-    public static final double motorReduction = 1d;
-    public static final Distance pitchCircumference = Millimeters.of(0d);
+    public static final double motorReduction = 34.5d;
+    public static final Distance pitchCircumference = Millimeters.of(47.75d);
     public static final NeutralModeValue neutralMode = NeutralModeValue.Coast;
 
     public static final double positionHome = distanceToMechanismPosition(Inches.of(0d), pitchCircumference);

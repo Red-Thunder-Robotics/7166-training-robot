@@ -29,11 +29,11 @@ public final class ClimberIOSim implements ClimberIO {
 
         final double actuatorTargetPosition = m_actuatorTargetPosition;
         inputs.actuatorTargetPositionRotations = actuatorTargetPosition;
-        inputs.actuatorTargetPositionDegrees = mechanismPositionToAngle(actuatorTargetPosition).in(Degrees);
+        inputs.actuatorTargetPositionInches = mechanismPositionToAngle(actuatorTargetPosition).in(Degrees);
 
         final double actuatorPosition = m_actuatorPosition;
         inputs.actuatorPositionRotations = actuatorPosition;
-        inputs.actuatorPositionDegrees = mechanismPositionToAngle(actuatorPosition).in(Degrees);
+        inputs.actuatorPositionInches = mechanismPositionToAngle(actuatorPosition).in(Degrees);
 
         inputs.actuatorDutyCycle = actuatorOutput;
 
@@ -48,7 +48,7 @@ public final class ClimberIOSim implements ClimberIO {
 
         final double grabLeaderPosition = m_grabPosition;
         inputs.grabLeaderPositionRotations = grabLeaderPosition;
-        inputs.grabLeaderPositionDegrees = mechanismPositionToAngle(grabLeaderPosition).in(Degrees);
+        inputs.grabLeaderPositionInches = mechanismPositionToAngle(grabLeaderPosition).in(Degrees);
 
         inputs.grabLeaderDutyCycle = grabOutput;
     }

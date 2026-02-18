@@ -28,9 +28,6 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
             m_startRoller = this::startRollerVelocity;
             m_reverseRoller = this::reverseRollerVelocity;
         }
-
-        retract();
-        stopRoller();
     }
 
     @Override

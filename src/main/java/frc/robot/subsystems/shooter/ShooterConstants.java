@@ -17,20 +17,27 @@ public final class ShooterConstants {
     public static final double shouldIndexVelocityThresholdRPS = 5d;
     public static final double latencyCompensationSeconds = 0.150d;
     
-    public static final int flywheelMotorId1 = -1;
-    public static final int flywheelMotorId2 = -1;
+    public static final int flywheelMotorIdLeft = -1;
+    public static final int flywheelMotorIdMiddleUpper = -1;
+    public static final int flywheelMotorIdMiddleLower = -1;
+    public static final int flywheelMotorIdRight = -1;
     public static final int flywheelCurrentLimit = 40;
     public static final NeutralModeValue flywheelNeutralMode = NeutralModeValue.Coast;
-    public static final InvertedValue flywheelInverted = InvertedValue.Clockwise_Positive;
+    public static final InvertedValue flywheelInvertedLeft = InvertedValue.Clockwise_Positive;
+    public static final InvertedValue flywheelInvertedMiddleUpper = InvertedValue.Clockwise_Positive;
+    public static final InvertedValue flywheelInvertedMiddleLower = InvertedValue.CounterClockwise_Positive;
+    public static final InvertedValue flywheelInvertedRight = InvertedValue.CounterClockwise_Positive;
     // public static final double flywheelOutput = 1d;
+    public static final boolean flywheelFOC = true;
 
-    public static final double flywheelPidP = 100d;
+    public static final double flywheelPidP = 0.5d;
+    public static final double flywheelFreeSpeed = flywheelFOC ? 5800d : 6000d;
+    public static final double flywheelPidV = 12d / (flywheelFreeSpeed / 60d);
     public static final Distance flywheelRadius = Inches.of(2d);
 
-    public static final int hoodMotorId1 = -1;
-    public static final int hoodMotorId2 = -1;
+    public static final int hoodMotorId = -1;
     public static final double hoodCurrentLimit = 40;
-    public static final double hoodMotorReduction = 1d;
+    public static final double hoodMotorReduction = (50d / 12d) * (30d / 16d) * (155d / 10d);
     public static final NeutralModeValue hoodNeutralMode = NeutralModeValue.Brake;
     public static final InvertedValue hoodInverted = InvertedValue.Clockwise_Positive;
 

@@ -7,10 +7,10 @@ public interface ClimberIO {
     public static class ClimberIOInputs {
         // actuator
         double actuatorTargetPositionRotations;
-        double actuatorTargetPositionDegrees;
+        double actuatorTargetPositionInches;
 
         double actuatorPositionRotations;
-        double actuatorPositionDegrees;
+        double actuatorPositionInches;
 
         double actuatorDutyCycle;
         double actuatorVelocityRPS;
@@ -22,7 +22,7 @@ public interface ClimberIO {
 
         // grab leader
         double grabLeaderPositionRotations;
-        double grabLeaderPositionDegrees;
+        double grabLeaderPositionInches;
 
         double grabLeaderDutyCycle;
         double grabLeaderVelocityRPS;
@@ -30,7 +30,7 @@ public interface ClimberIO {
 
         // grab follower
         double grabFollowerPositionRotations;
-        double grabFollowerPositionDegrees;
+        double grabFollowerPositionInches;
 
         double grabFollowerVelocityRPS;
         double grabFollowerCurrentAmps;

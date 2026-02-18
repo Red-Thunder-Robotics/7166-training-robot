@@ -49,6 +49,8 @@ public final class IndexerIOReal implements IndexerIO {
 
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
+        BaseStatusSignal.refreshAll(m_generalFeedVelocitySignal, m_generalFeedCurrentSignal, m_shooterFeedVelocitySignal, m_shooterFeedCurrentSignal);
+        
         inputs.generalFeedMotorDutyCycle = PhoenixUtil.getRequestDutyCycle(m_generalFeedMotor.getAppliedControl());
         inputs.generalFeedMotorVelocityRPS = m_generalFeedVelocitySignal.getValueAsDouble();
         inputs.generalFeedMotorCurrentAmps = m_generalFeedCurrentSignal.getValueAsDouble();

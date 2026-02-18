@@ -42,46 +42,37 @@ import frc.robot.util.ConversionUtil;
 public final class ShooterSubsystem extends SubsystemBase {
     public static ShooterSubsystem instance = null;
 
-    private final ShooterIO[] m_io;
-    private final ShooterIOInputsAutoLogged[] m_inputs;
+    private final ShooterIO m_io;
+    private final ShooterIOInputsAutoLogged m_inputs;
 
-    public ShooterSubsystem(ShooterIO[] io) {
+    public ShooterSubsystem(ShooterIO io) {
         instance = this;
 
         m_io = io;
-        m_inputs = new ShooterIOInputsAutoLogged[io.length];
-
-        for (int i = 0; i < io.length; i++)
-            m_inputs[i] = new ShooterIOInputsAutoLogged();
+        m_inputs = new ShooterIOInputsAutoLogged();
     }
 
     @Override
     public void periodic() {
-        for (int i = 0; i < m_io.length; i++) {
-            var inputs = m_inputs[i];
-            m_io[i].updateInputs(inputs);
-            Logger.processInputs("Shooter/Inst" + i, inputs);
-        }
-
+        m_io.updateInputs(m_inputs);
+        Logger.processInputs("Shooter", m_inputs);
 
         var targetPose = StateMachine.getShooterTargetPose();
         if (StateMachine.getShooterState() == ShooterState.Shooting && targetPose.isPresent()) {
             final InterpolationShooterParams params = calculateParams(targetPose.get());
-            for (int i = 0; i < m_io.length; i++) {
-                var io = m_io[i];
-                io.setHoodPosition(Degrees.of(params.degrees()));
-                io.flywheelVelocity(RPM.of(params.rpm()));
-            }
+            m_io.setHoodPosition(Degrees.of(params.degrees()));
+            m_io.flywheelVelocity(RPM.of(params.rpm()));
         }
     }
 
     public Angle getHoodAngle() {
-        return Degrees.of(m_inputs[0].hoodPositionDegrees);
+        return Degrees.of(m_inputs.hoodPositionDegrees);
     }
 
     @AutoLogOutput(key="ShooterShouldIndex")
     public boolean shouldIndex() {
-        return Math.abs(m_inputs[0].flywheelTargetVelocityRPS - m_inputs[0].flywheelMotorVelocityRPS) <= shouldIndexVelocityThresholdRPS;
+        // FIXME: check all motors not just the leader?
+        return Math.abs(m_inputs.flywheelTargetVelocityRPS - m_inputs.flywheelMotorLeftVelocityRPS) <= shouldIndexVelocityThresholdRPS;
     }
 
     private LinearVelocity m_exitVelocity = MetersPerSecond.of(0d);
@@ -95,32 +86,29 @@ public final class ShooterSubsystem extends SubsystemBase {
     public void stateUpdate(ShooterState shooterState) {
         switch (shooterState) {
             case Idle:
-                for (int i = 0; i < m_io.length; i++) {
-                    var io = m_io[i];
-                    // io.flywheelDutyCycle(flywheelOutput);
-                    // io.flywheelStop();
-                    io.kickerStop();
-                }
+                // m_io.flywheelDutyCycle(flywheelOutput);
+                // m_io.flywheelStop();
+                m_io.kickerStop();
                 break;
             case Shooting:
-                for (int i = 0; i < m_io.length; i++) {
-                    var io = m_io[i];
-                    // io.flywheelDutyCycle(flywheelOutput);
-                    io.kickerDutyCycle(kickerOutput);
-                }
+                    // m_io.flywheelDutyCycle(flywheelOutput);
+                    m_io.kickerDutyCycle(kickerOutput);
                 break;
         }
     }
 
     // https://github.com/hammerheads5000/2026Rebuilt/blob/6ecae474f5ed81970d8727d2fe6b17e945a1f08f/src/main/java/frc/robot/subsystems/turret/TurretCalculator.java#L56C1-L61C6
+    // see 5000-License.md
     public static Time calculateTimeOfFlight(LinearVelocity exitVelocity, Angle hoodAngle, Distance distance) {
         double vel = exitVelocity.in(MetersPerSecond);
-        double angle = hoodAngle.in(Radians);
+        // double angle = hoodAngle.in(Radians);
+        double angle = Math.PI / 2d - hoodAngle.in(Radians);
         double dist = distance.in(Meters);
         return Seconds.of(dist / (vel * Math.cos(angle)));
     }
 
     // https://github.com/hammerheads5000/2026Rebuilt/blob/6ecae474f5ed81970d8727d2fe6b17e945a1f08f/src/main/java/frc/robot/subsystems/turret/TurretCalculator.java#L100C1-L127C1
+    // see 5000-License.md
     public static record PhysicsShotData(LinearVelocity velocity, Angle angle, Translation3d target) {};
     public static Distance getDistanceToTarget(Pose2d robot, Translation3d target) {
         return Meters.of(robot.getTranslation().getDistance(target.toTranslation2d()));
@@ -162,7 +150,8 @@ public final class ShooterSubsystem extends SubsystemBase {
             v0 = 0;
             theta = 0;
         }
-        return new PhysicsShotData(InchesPerSecond.of(v0), Radians.of(theta), predictedTarget);
+        // return new PhysicsShotData(InchesPerSecond.of(v0), Radians.of(theta), predictedTarget);
+        return new PhysicsShotData(InchesPerSecond.of(v0), Radians.of(Math.PI / 2d - theta), predictedTarget);
     }
 
 
@@ -210,6 +199,7 @@ public final class ShooterSubsystem extends SubsystemBase {
         // return new ShooterParams(adjustedRpm, adjustedHood);
 
         // https://github.com/hammerheads5000/2026Rebuilt/blob/9a94e647443d8a5651b044449cc5ebb8195efc52/src/main/java/frc/robot/subsystems/turret/TurretCalculator.java#L129
+        // see 5000-License.md
         final int iterations = 3;
 
         PhysicsShotData shot = calculateShotFromFunnelClearance(robotPose, target, target);
