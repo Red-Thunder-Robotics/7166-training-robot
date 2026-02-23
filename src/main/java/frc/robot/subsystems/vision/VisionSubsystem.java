@@ -236,6 +236,7 @@ public final class VisionSubsystem extends SubsystemBase {
                         new VisionObservation(
                             robotPose, timestamp, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev)));
                     allRobotPoses.add(robotPose);
+                    Logger.recordOutput("AprilTagVision/RobotPose" + instanceIndex, robotPose);
 
                     // Log data from instance
                     if (enableInstanceLogging) {
@@ -396,7 +397,8 @@ public final class VisionSubsystem extends SubsystemBase {
             }
 
             // Log robot poses
-            Logger.recordOutput("AprilTagVision/RobotPoses", allRobotPoses.toArray(Pose2d[]::new));
+            // moved to per camera logging
+            // Logger.recordOutput("AprilTagVision/RobotPoses", allRobotPoses.toArray(Pose2d[]::new));
 
             // Log tag poses
             List<Pose3d> allTagPoses = new ArrayList<>();

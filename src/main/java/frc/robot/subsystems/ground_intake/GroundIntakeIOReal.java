@@ -46,6 +46,8 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
         // rollerConfig.CurrentLimits.SupplyCurrentLimit = rollerCurrentLimit;
 
         rollerConfig.Slot0.kP = rollerPidP;
+        rollerConfig.Slot0.kV = rollerPidV;
+        rollerConfig.MotionMagic.MotionMagicAcceleration = rollerTargetAcceleration;
 
         var actuatorConfig = new TalonFXConfiguration();
         actuatorConfig.MotorOutput.NeutralMode = actuatorNeutralMode;
@@ -95,10 +97,8 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
     @Override
     public void setActuatorPosition(double position) {
-        // if (Math.abs(position - m_actuatorTargetPosition) < 0.001d)
-        //     return;
-        m_actuatorTargetPosition = position;
-        m_actuatorMotor.setControl(m_actuatorPositionRequest.withPosition(position));
+        // m_actuatorTargetPosition = position;
+        // m_actuatorMotor.setControl(m_actuatorPositionRequest.withPosition(position));
     }
     @Override
     public void rollerDutyCycle(double output) {

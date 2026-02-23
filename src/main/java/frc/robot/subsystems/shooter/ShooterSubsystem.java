@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
@@ -32,6 +33,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.state_machine.LiveConfig;
 import frc.robot.state_machine.ShooterState;
 import frc.robot.state_machine.StateMachine;
 import frc.robot.subsystems.drive.Drive;
@@ -56,12 +58,32 @@ public final class ShooterSubsystem extends SubsystemBase {
     public void periodic() {
         m_io.updateInputs(m_inputs);
         Logger.processInputs("Shooter", m_inputs);
+        Logger.recordOutput("ShooterShouldIndex", shouldIndex());
 
-        var targetPose = StateMachine.getShooterTargetPose();
-        if (StateMachine.getShooterState() == ShooterState.Shooting && targetPose.isPresent()) {
-            final InterpolationShooterParams params = calculateParams(targetPose.get());
-            m_io.setHoodPosition(Degrees.of(params.degrees()));
-            m_io.flywheelVelocity(RPM.of(params.rpm()));
+        final boolean launcherTuning = LiveConfig.getLauncherTuning();
+        switch (StateMachine.getShooterState()) {
+            case Idle:
+                if (launcherTuning) {
+                    Logger.recordOutput("Shooter/HubDistanceMeters", getDistanceToTarget(Drive.instance.getPose(), StateMachine.getHubPose()).in(Meters));
+                    m_io.setHoodPosition(Degrees.of(LiveConfig.getLauncherTuningAngle()));
+                    m_io.flywheelVelocity(RPM.of(LiveConfig.getLauncherTuningRPM()));
+                }
+                m_io.kickerStop();
+                break;
+            case Shooting:
+                var targetPose = StateMachine.getShooterTargetPose();
+                if (targetPose.isPresent() && !launcherTuning) {
+                    final InterpolationShooterParams params = calculateParams(targetPose.get());
+                    m_io.setHoodPosition(Degrees.of(params.degrees()).plus(Rotations.of(hoodPositionHome)));
+                    m_io.flywheelVelocity(RPM.of(params.rpm()));
+                }
+                if (shouldIndex())
+                    m_io.kickerVelocity(kickerVelocity);
+                break;
+            case Reversing:
+                // m_io.flywheelVelocity(flywheelVelocityReverse);
+                m_io.kickerVelocity(kickerVelocityReverse);
+                break;
         }
     }
 
@@ -69,7 +91,6 @@ public final class ShooterSubsystem extends SubsystemBase {
         return Degrees.of(m_inputs.hoodPositionDegrees);
     }
 
-    @AutoLogOutput(key="ShooterShouldIndex")
     public boolean shouldIndex() {
         // FIXME: check all motors not just the leader?
         return Math.abs(m_inputs.flywheelTargetVelocityRPS - m_inputs.flywheelMotorLeftVelocityRPS) <= shouldIndexVelocityThresholdRPS;
@@ -91,8 +112,8 @@ public final class ShooterSubsystem extends SubsystemBase {
                 m_io.kickerStop();
                 break;
             case Shooting:
-                    // m_io.flywheelDutyCycle(flywheelOutput);
-                    m_io.kickerDutyCycle(kickerOutput);
+                break;
+            case Reversing:
                 break;
         }
     }
@@ -202,23 +223,40 @@ public final class ShooterSubsystem extends SubsystemBase {
         // see 5000-License.md
         final int iterations = 3;
 
-        PhysicsShotData shot = calculateShotFromFunnelClearance(robotPose, target, target);
-        Distance distance = getDistanceToTarget(robotPose, target);
-        Time timeOfFlight = calculateTimeOfFlight(shot.velocity, shot.angle, distance);
+        // PhysicsShotData shot = calculateShotFromFunnelClearance(robotPose, target, target);
+        // Distance distance = getDistanceToTarget(robotPose, target);
+        // Time timeOfFlight = calculateTimeOfFlight(shot.velocity, shot.angle, distance);
+        // Translation3d predictedTarget = target;
+
+        // for (int i = 0; i < iterations; i++) {
+        //     predictedTarget = predictTargetPos(target, fieldSpeeds, timeOfFlight);
+        //     shot = calculateShotFromFunnelClearance(robotPose, target, predictedTarget);
+        //     timeOfFlight = calculateTimeOfFlight(
+        //             shot.velocity, shot.angle, getDistanceToTarget(robotPose, predictedTarget));
+        // }
+
+        // m_exitVelocity = shot.velocity;
+
+        // return new InterpolationShooterParams(
+        //     RadiansPerSecond.of(m_exitVelocity.in(MetersPerSecond) / flywheelRadius.in(Meters)).in(RPM),
+        //     shot.angle.in(Degrees)
+        // );
+
+        double distance = getDistanceToTarget(robotPose, target).in(Meters);
+        InterpolationShooterParams shot = paramMap.map.get(distance);
+        // shot = new ShotData(shot.exitVelocity, shot.hoodAngle, target);
+        Time timeOfFlight = Seconds.of(timeOfFlightMap.get(distance));
         Translation3d predictedTarget = target;
 
+        // Iterate the process, getting better time of flight estimations and updating the predicted target accordingly
         for (int i = 0; i < iterations; i++) {
             predictedTarget = predictTargetPos(target, fieldSpeeds, timeOfFlight);
-            shot = calculateShotFromFunnelClearance(robotPose, target, predictedTarget);
-            timeOfFlight = calculateTimeOfFlight(
-                    shot.velocity, shot.angle, getDistanceToTarget(robotPose, predictedTarget));
+            distance = getDistanceToTarget(robotPose, predictedTarget).in(Meters);
+            shot = paramMap.map.get(distance);
+            // shot = new ShotData(shot.exitVelocity, shot.hoodAngle, predictedTarget);
+            timeOfFlight = Seconds.of(timeOfFlightMap.get(distance));
         }
 
-        m_exitVelocity = shot.velocity;
-
-        return new InterpolationShooterParams(
-            RadiansPerSecond.of(m_exitVelocity.in(MetersPerSecond) / flywheelRadius.in(Meters)).in(RotationsPerSecond),
-            shot.angle.in(Degrees)
-        );
+        return shot;
     }
 }

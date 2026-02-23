@@ -28,6 +28,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.state_machine.StateMachine;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.turret.TurretConstants;
@@ -40,15 +42,17 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 public class DriveCommands {
   private static final double DEADBAND = 0.1d;
-  private static final double ANGLE_KP = 5d;
-  private static final double ANGLE_KD = 0.4d;
-  private static final double ANGLE_MAX_VELOCITY = 8d;
+  private static final double ANGLE_KP = 1.25d;
+  private static final double ANGLE_KD = 0d;
+  private static final double ANGLE_MAX_VELOCITY = 4d;
   private static final double ANGLE_MAX_ACCELERATION = 20d;
   private static final double FF_START_DELAY = 2d; // Secs
   // private static final double FF_RAMP_RATE = 0d; // Volts/Sec
-  private static final double FF_RAMP_RATE = 3d; // Volts/Sec
+  private static final double FF_RAMP_RATE = 0.5d; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 6d; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05d; // Rad/Sec^2
 
@@ -71,6 +75,8 @@ public class DriveCommands {
     // Get linear velocity
     Translation2d linearVelocity =
         getLinearVelocityFromJoysticks(driverX, driverY);
+
+    Logger.recordOutput("Odometry/JoystickLinearVelocity", linearVelocity);
 
     // Apply rotation deadband
     double omega = MathUtil.applyDeadband(driverOmega, DEADBAND);
@@ -96,14 +102,24 @@ public class DriveCommands {
           0d,
           ANGLE_KD,
           new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
-  static { angleController.enableContinuousInput(-Math.PI, Math.PI); }
+  static {
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(Units.degreesToRadians(Constants.USE_TURRET ? TurretConstants.shouldIndexThresholdDegrees : DriveConstants.SHOULD_INDEX_THRESHOLD_DEGREES));
+  }
 
   public static double calculateOmega(Drive drive, Rotation2d rotation) {
     final double output = angleController.calculate(
       drive.getRotation().getRadians(), rotation.getRadians());
-    StateMachine.setWithinJoystickRotationErrorThreshold(Math.abs(angleController.getPositionError()) <= Units.degreesToRadians(TurretConstants.shouldIndexThresholdDegrees));
+    // final boolean atGoal = angleController.atGoal();
+    final boolean atGoal = Math.abs(angleController.getPositionError()) < angleController.getPositionTolerance();
+    StateMachine.setWithinJoystickRotationErrorThreshold(atGoal);
+    // Logger.recordOutput("DriveOmega/Output", output);
+    // Logger.recordOutput("DriveOmega/Drivetrain", drive.getRotation().getRadians());
+    // Logger.recordOutput("DriveOmega/Target", rotation.getRadians());
+    // Logger.recordOutput("DriveOmega/PositionError", angleController.getPositionError());
+    // Logger.recordOutput("DriveOmega/AtGoal", atGoal);
 
-    return output;
+    return atGoal ? 0d : output;
   }
 
   /**

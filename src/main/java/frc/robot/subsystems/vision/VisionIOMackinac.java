@@ -82,6 +82,20 @@ public class VisionIOMackinac implements VisionIO {
         m_fpsAprilTagsSubscriber = outputTable.getIntegerTopic("fps_apriltags").subscribe(0);
         m_fpsObjDetectSubscriber = outputTable.getIntegerTopic("fps_objdetect").subscribe(0);
 
+        if (index == 1) {
+            // CameraServer.startAutomaticCapture();
+            
+            // var t = NetworkTableInstance.getDefault().getTable("CameraPublisher").getSubTable("Camera" + index);
+            // t.getBooleanTopic("connected").publish().set(true);
+            // t.getStringTopic("description").publish().set("Mackinac Camera" + index);
+            // String mode = "" + camera.width() + "x" + camera.height() + " MJPEG 60 fps";
+            // t.getStringTopic("mode").publish().set(mode);
+            // t.getStringArrayTopic("modes").publish().set(new String[]{ mode });
+            // String source = "mjpg:http://10.71.66.14:5803/stream.mjpg";
+            // t.getStringTopic("source").publish().set(source);
+            // t.getStringArrayTopic("streams").publish().set(new String[]{ source });
+        }
+
         m_slowPeriodicTimer.start();
 
         String layoutString;

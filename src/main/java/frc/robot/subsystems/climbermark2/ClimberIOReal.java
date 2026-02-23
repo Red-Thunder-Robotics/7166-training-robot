@@ -72,9 +72,9 @@ public final class ClimberIOReal implements ClimberIO {
 
         m_grabFollowerMotor.setControl(new Follower(grabLeaderId, grabFollowerMatchLeaderInverted ? MotorAlignmentValue.Aligned : MotorAlignmentValue.Opposed));
 
-        m_actuatorMotor.setPosition(m_actuatorTargetPosition);
-        m_grabLeaderMotor.setPosition(m_grabTargetPosition);
-        m_grabFollowerMotor.setPosition(m_grabTargetPosition);
+        PhoenixUtil.tryUntilOk(5, () -> m_actuatorMotor.setPosition(m_actuatorTargetPosition));
+        PhoenixUtil.tryUntilOk(5, () -> m_grabLeaderMotor.setPosition(m_grabTargetPosition));
+        PhoenixUtil.tryUntilOk(5, () -> m_grabFollowerMotor.setPosition(m_grabTargetPosition));
     }
 
     @Override

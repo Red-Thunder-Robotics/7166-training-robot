@@ -46,19 +46,17 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Mode;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.SimulationCommands;
 import frc.robot.commands.SimulationCommands.SimFuelCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.state_machine.ClimberMark1State;
 import frc.robot.state_machine.IntakeState;
+import frc.robot.state_machine.LiveConfig;
 import frc.robot.state_machine.StateMachine;
 import frc.robot.state_machine.StateMachine.RobotCommands;
 import frc.robot.subsystems.climbermark1.ClimberIO;
-import frc.robot.subsystems.climbermark1.ClimberIOReal;
 import frc.robot.subsystems.climbermark1.ClimberIOSim;
 import frc.robot.subsystems.climbermark1.ClimberSubsystem;
 import frc.robot.subsystems.drive.Drive;
@@ -76,15 +74,12 @@ import frc.robot.subsystems.indexer.IndexerIOReal;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesIO;
-import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesIOReal;
 import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesSubsystem;
-import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.turret.TurretIO;
-import frc.robot.subsystems.turret.TurretIOReal;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.subsystems.vision.VisionIO;
@@ -154,18 +149,16 @@ public class Robot extends LoggedRobot {
                         new ModuleIOTalonFX(TunerConstants.FrontRight),
                         new ModuleIOTalonFX(TunerConstants.BackLeft),
                         new ModuleIOTalonFX(TunerConstants.BackRight));
-                // if (Constants.USE_TURRET)
-                //     m_turretSubsystem = new TurretSubsystem(new TurretIOReal());
+                if (Constants.USE_TURRET)
+                    m_turretSubsystem = new TurretSubsystem(new TurretIOReal());
                 m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIOReal());
-                // m_indexerSubsystem = new IndexerSubsystem(new IndexerIOReal());
-                // m_shooterSubsystem = new ShooterSubsystem(new ShooterIOReal());
+                m_indexerSubsystem = new IndexerSubsystem(new IndexerIOReal());
+                // FIXME: real subsystems
+                m_shooterSubsystem = new ShooterSubsystem(new ShooterIOReal());
                 // m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
                 // m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIOReal());
                 if (Constants.USE_TURRET)
                     m_turretSubsystem = new TurretSubsystem(new TurretIO() {});
-                // m_intakeSubsystem = new GroundIntakeSubsystem(new GroundIntakeIO() {});
-                m_indexerSubsystem = new IndexerSubsystem(new IndexerIO() {});
-                m_shooterSubsystem = new ShooterSubsystem(new ShooterIO() {});
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIO() {});
                 m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIO() {});
 
@@ -251,6 +244,11 @@ public class Robot extends LoggedRobot {
         
         m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
+        m_autoChooser.addOption(
+            "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(m_driveSubsystem));
+        m_autoChooser.addOption(
+            "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(m_driveSubsystem));
+
         resetGyro(Rotation2d.kZero);
         configureButtons();
         m_commandScheduler.onCommandInterrupt((Command command, Optional<Command> interruptor) -> {
@@ -277,6 +275,9 @@ public class Robot extends LoggedRobot {
         // Controls.deployIntakeButton.debounce(0.5d).whileTrue(
         //     IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
         Controls.retractIntakeButton.onTrue(RobotCommands.retractIntake());
+
+        Controls.reverseButton.onTrue(RobotCommands.setShooterReversing());
+        Controls.reverseButton.onFalse(RobotCommands.setShooterIdle());
 
         Controls.hubButton.onTrue(
             RobotCommands.engageShooterHub()
@@ -485,6 +486,9 @@ public class Robot extends LoggedRobot {
     
     private Supplier<Optional<Rotation2d>> getShooterRotationalGoalSupplier() {
         return Constants.USE_TURRET ? () -> Optional.empty() : () -> {
+            if (LiveConfig.getIsPit())
+                return Optional.empty();
+
             var targetPose = StateMachine.getShooterTargetPose();
             if (targetPose.isEmpty())
                 return Optional.empty();
@@ -501,13 +505,13 @@ public class Robot extends LoggedRobot {
         }
     }
     public void resetGyro() {
-        resetGyro(Rotation2d.kPi);
+        resetGyro(Rotation2d.kZero);
     }
 
     private Command repeatingSimFuelCommand() {
         return Commands.repeatingSequence(
             Commands.either(Commands.runOnce(() -> m_commandScheduler.schedule(new SimulationCommands.SimFuelCommand(
-                () -> new Pose3d(Drive.instance.getPose())
+                () -> new Pose3d(m_driveSubsystem.getPose())
                     .plus(new Transform3d(0, 0, Units.feetToMeters(1.5d), Rotation3d.kZero)),
                 () -> {
                     Pose2d robot = m_driveSubsystem.getPose();

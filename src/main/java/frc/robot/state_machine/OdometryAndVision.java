@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -40,6 +42,14 @@ public class OdometryAndVision {
     public static record FuelTxTyObservation(int camera, double[] tx, double[] ty, double timestamp) {}
     public static record FuelPoseRecord(Translation2d translation, double timestamp) {}
 
+    private static final Matrix<N3, N1> qStdDevs = new Matrix<>(Nat.N3(), Nat.N1());
+    private static final Matrix<N3, N1> odometryStateStdDevs =
+      new Matrix<>(VecBuilder.fill(0.003, 0.003, 0.002));
+
+    static {
+        for (int i = 0; i < 3; ++i)
+            qStdDevs.set(i, 0, Math.pow(odometryStateStdDevs.get(i, 0), 2));
+    }
 
     private static final double poseBufferSizeSeconds = 2d;
     private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(poseBufferSizeSeconds);
@@ -92,7 +102,47 @@ public class OdometryAndVision {
         if (sample.isEmpty())
             return;
 
-        Drive.instance.addVisionMeasurement(observation.visionPose, observation.timestamp, observation.stdDevs);
+        // sample --> odometryPose transform and backwards of that
+        var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose);
+        var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
+        // get old estimate by applying odometryToSample Transform
+        Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
+
+        // Calculate 3 x 3 vision matrix
+        var r = new double[3];
+        for (int i = 0; i < 3; ++i) {
+            r[i] = observation.stdDevs().get(i, 0) * observation.stdDevs().get(i, 0);
+        }
+        // Solve for closed form Kalman gain for continuous Kalman filter with A = 0
+        // and C = I. See wpimath/algorithms.md.
+        Matrix<N3, N3> visionK = new Matrix<>(Nat.N3(), Nat.N3());
+            for (int row = 0; row < 3; ++row) {
+            double stdDev = qStdDevs.get(row, 0);
+            if (stdDev == 0.0) {
+                visionK.set(row, row, 0.0);
+            } else {
+                visionK.set(row, row, stdDev / (stdDev + Math.sqrt(stdDev * r[row])));
+            }
+        }
+        // difference between estimate and vision pose
+        Transform2d transform = new Transform2d(estimateAtTime, observation.visionPose());
+        // scale transform by visionK
+        var kTimesTransform =
+            visionK.times(
+            VecBuilder.fill(
+            transform.getX(), transform.getY(), transform.getRotation().getRadians()));
+        Transform2d scaledTransform =
+            new Transform2d(
+            kTimesTransform.get(0, 0),
+            kTimesTransform.get(1, 0),
+            Rotation2d.fromRadians(kTimesTransform.get(2, 0)));
+
+        // Recalculate current estimate by applying scaled transform to old estimate
+        // then replaying odometry data
+        estimatedPose = estimateAtTime.plus(scaledTransform).plus(sampleToOdometryTransform);
+
+        // Drive.instance.addVisionMeasurement(observation.visionPose, observation.timestamp, observation.stdDevs);
+        Drive.instance.addVisionMeasurement(estimatedPose, observation.timestamp, observation.stdDevs);
     }
 
     private final Map<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();

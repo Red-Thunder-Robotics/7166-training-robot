@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants;
 
 public final class VisionConstants {
@@ -25,6 +27,14 @@ public final class VisionConstants {
     public static final double demoTagPosePersistenceSecs = 0.5d;
     public static final double fuelDetectConfidenceThreshold = 0.35d;
     public static final double timestampOffset = 0d;
+
+    // cameras 1 and 3
+    private static final Distance frontCameraX = Inches.of(0.997d);
+    private static final Distance frontCameraY = Inches.of(10.065d);
+    private static final Distance frontCameraZ = Inches.of(20.477d);
+    private static final Angle frontCameraRoll = Degrees.of(0d);
+    private static final Angle frontCameraPitch = Degrees.of(-8d);
+    private static final Angle frontCameraYaw = Degrees.of(20d);
 
     public record CameraConfig(
         Supplier<Pose3d> pose,
@@ -61,16 +71,16 @@ public final class VisionConstants {
         // )
         new CameraConfig( // thriftycam0
             () -> new Pose3d(
-                Inches.of(-2.128d),
-                Inches.of(-10.52d),
-                Inches.of(17.467d),
+                frontCameraX,
+                frontCameraY.unaryMinus(),
+                frontCameraZ,
                 new Rotation3d(
-                    Degrees.of(0d),
-                    Degrees.of(-27.5d),
-                    Degrees.of(25d))),
+                    frontCameraRoll,
+                    frontCameraPitch,
+                    frontCameraYaw)),
             "0x3220:0x5C8:0xA00",
-            1280,
-            720,
+            1600,
+            1304,
             0,
             50,
             10,
@@ -79,16 +89,16 @@ public final class VisionConstants {
         ),
         new CameraConfig( // thriftycam1
             () -> new Pose3d(
-                Inches.of(-0.218d),
-                Inches.of(-10.52d),
-                Inches.of(17.467d),
+                frontCameraX,
+                frontCameraY.unaryMinus(),
+                frontCameraZ,
                 new Rotation3d(
-                    Degrees.of(-90d),
-                    Degrees.of(-27.5d),
-                    Degrees.of(25d))),
+                    frontCameraRoll,
+                    frontCameraPitch,
+                    frontCameraYaw)),
             "0x3100:0x5C8:0xA00",
-            1280,
-            720,
+            1600,
+            1304,
             0,
             50,
             10,
@@ -97,16 +107,16 @@ public final class VisionConstants {
         ),
         new CameraConfig( // thriftycam2
             () -> new Pose3d(
-                Inches.of(-2.128d),
-                Inches.of(-10.52d),
-                Inches.of(17.467d),
+                frontCameraX,
+                frontCameraY.unaryMinus(),
+                frontCameraZ,
                 new Rotation3d(
-                    Degrees.of(0d),
-                    Degrees.of(-27.5d),
-                    Degrees.of(25d))),
+                    frontCameraRoll,
+                    frontCameraPitch,
+                    frontCameraYaw)),
             "0x3220:0x5C8:0xA00",
-            1280,
-            720,
+            1600,
+            1304,
             0,
             50,
             10,
@@ -115,16 +125,16 @@ public final class VisionConstants {
         ),
         new CameraConfig( // thriftycam3
             () -> new Pose3d(
-                Inches.of(-2.128d),
-                Inches.of(10.52d),
-                Inches.of(17.467d),
+                frontCameraX,
+                frontCameraY,
+                frontCameraZ,
                 new Rotation3d(
-                    Degrees.of(-90d),
-                    Degrees.of(-27.5d),
-                    Degrees.of(-25d))),
-            "0x3220:0x5C8:0xA00",
-            1280,
-            720,
+                    frontCameraRoll,
+                    frontCameraPitch,
+                    frontCameraYaw.unaryMinus())),
+            "0x1000:0x5C8:0xA00",
+            1600,
+            1304,
             0,
             50,
             10,

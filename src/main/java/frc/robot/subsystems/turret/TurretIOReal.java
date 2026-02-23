@@ -50,7 +50,7 @@ public final class TurretIOReal implements TurretIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(50d, m_positionSignal, m_velocitySignal, m_currentSignal);
 
-        m_motor.setPosition(m_targetPosition);
+        PhoenixUtil.tryUntilOk(5, () -> m_motor.setPosition(m_targetPosition));
     }
 
     @Override

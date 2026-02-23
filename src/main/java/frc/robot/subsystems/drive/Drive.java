@@ -18,7 +18,6 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -39,7 +38,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -56,7 +55,6 @@ import frc.robot.state_machine.StateMachine;
 import frc.robot.util.LocalADStarAK;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -254,6 +252,9 @@ public class Drive extends SubsystemBase {
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.CURRENT_MODE != Mode.SIM);
+
+    Logger.recordOutput("Odometry/SpeedsX", getChassisSpeeds().vxMetersPerSecond);
+    Logger.recordOutput("Odometry/SpeedsY", getChassisSpeeds().vyMetersPerSecond);
   }
 
   /**
@@ -399,7 +400,8 @@ public class Drive extends SubsystemBase {
 
   /** Returns the maximum angular speed in radians per sec. */
   public double getMaxAngularSpeedRadPerSec() {
-    return getMaxLinearSpeedMetersPerSec() / DRIVE_BASE_RADIUS;
+    // return getMaxLinearSpeedMetersPerSec() / DRIVE_BASE_RADIUS;
+    return Units.degreesToRadians(1080d);
   }
 
   public double getYawVelocityRadPerSec() {

@@ -2,7 +2,8 @@ package frc.robot.state_machine;
 
 public enum ShooterState {
     Idle,
-    Shooting;
+    Shooting,
+    Reversing;
 
     public boolean indexerWaitsForShooter() {
         switch (this) {

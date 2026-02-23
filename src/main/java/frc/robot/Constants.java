@@ -27,7 +27,7 @@ public final class Constants {
         REPLAY
     }
 
-    private static final boolean USE_TWO_CONTROLLERS_DESIRED = true;
+    private static final boolean USE_TWO_CONTROLLERS_DESIRED = false;
     public static final boolean USE_TWO_CONTROLLERS = !RobotBase.isSimulation() && USE_TWO_CONTROLLERS_DESIRED;
     public static final int DRIVER_CONTROLLER = 0;
     public static final int OPERATOR_CONTROLLER = USE_TWO_CONTROLLERS ? 1 : DRIVER_CONTROLLER;
@@ -52,5 +52,7 @@ public final class Constants {
     public static final class DriveConstants {
         public static final Distance BUMPER_WIDTH = Inches.of(31d);
         public static final Distance BUMPER_LENGTH = BUMPER_WIDTH;
+
+        public static final double SHOULD_INDEX_THRESHOLD_DEGREES = 4d;
     }
 }

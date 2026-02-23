@@ -12,15 +12,18 @@ import edu.wpi.first.units.measure.AngularVelocity;
 public final class GroundIntakeConstants {
     public static final int rollerMotorId = 54;
     public static final int rollerCurrentLimit = 40;
-    public static final NeutralModeValue rollerNeutralMode = NeutralModeValue.Brake;
-    public static final InvertedValue rollerInverted = InvertedValue.Clockwise_Positive;
+    public static final NeutralModeValue rollerNeutralMode = NeutralModeValue.Coast;
+    public static final InvertedValue rollerInverted = InvertedValue.CounterClockwise_Positive;
     public static final boolean rollerUseDutyCycle = false;
     public static final double rollerOutput = 0.85d;
     public static final double rollerOutputReverse = -rollerOutput;
-    public static final AngularVelocity rollerOutputVelocity = RPM.of(1d);
+    // public static final AngularVelocity rollerOutputVelocity = RPM.of(4000d);
+    public static final AngularVelocity rollerOutputVelocity = RPM.of(2000d);
     public static final AngularVelocity rollerOutputVelocityReverse = rollerOutputVelocity.unaryMinus();
 
-    public static final double rollerPidP = 100d;
+    public static final double rollerPidP = 0.75d;
+    public static final double rollerPidV = 12d / (5800d / 60d);
+    public static final double rollerTargetAcceleration = 266d;
 
     public static final int actuatorMotorId = 57;
     public static final int actuatorCurrentLimit = 40;

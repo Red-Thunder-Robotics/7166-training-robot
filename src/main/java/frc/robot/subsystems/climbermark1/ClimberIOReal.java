@@ -56,8 +56,8 @@ public final class ClimberIOReal implements ClimberIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(50d, m_leftPositionSignal, m_leftVelocitySignal, m_leftCurrentSignal, m_rightPositionSignal, m_rightVelocitySignal, m_rightCurrentSignal);
 
-        m_leftMotor.setPosition(m_leftTargetPosition);
-        m_rightMotor.setPosition(m_rightTargetPosition);
+        PhoenixUtil.tryUntilOk(5, () -> m_leftMotor.setPosition(m_leftTargetPosition));
+        PhoenixUtil.tryUntilOk(5, () -> m_rightMotor.setPosition(m_rightTargetPosition));
     }
 
     @Override

@@ -92,8 +92,8 @@ public final class ShooterIOSim implements ShooterIO {
     }
 
     @Override
-    public void kickerDutyCycle(double output) {
-        m_kickerOutput = output;
+    public void kickerVelocity(AngularVelocity velocity) {
+        // m_kickerOutput = output;
     }
     @Override
     public void kickerStop() {

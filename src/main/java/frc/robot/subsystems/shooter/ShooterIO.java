@@ -39,6 +39,8 @@ public interface ShooterIO {
         double hoodMotorCurrentAmps;
 
         // kicker
+        double kickerTargetVelocityRPS;
+
         double kickerMotorDutyCycle;
         double kickerMotorVelocityRPS;
         double kickerMotorCurrentAmps;
@@ -54,6 +56,6 @@ public interface ShooterIO {
 
     public default void setHoodPosition(Angle angle) {}
 
-    public default void kickerDutyCycle(double output) {}
+    public default void kickerVelocity(AngularVelocity velocity) {}
     public default void kickerStop() {}
 }

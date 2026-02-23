@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Radians;
 
 import java.util.Optional;
-import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -113,6 +112,8 @@ public class StateMachine {
     }
 
     public static boolean turretShouldIndex() {
+        if (LiveConfig.getIsPit())
+            return true;
         return Constants.USE_TURRET ? TurretSubsystem.instance.shouldIndex() : withinJoystickRotationErrorThreshold;
     }
     public static boolean shouldIndex() {
@@ -194,6 +195,9 @@ public class StateMachine {
         }
         public static Command setShooterShooting() {
             return setShooterState(ShooterState.Shooting);
+        }
+        public static Command setShooterReversing() {
+            return setShooterState(ShooterState.Reversing);
         }
 
         // shooter + turret
@@ -329,6 +333,9 @@ public class StateMachine {
         Inches.of(158.84d),
         Feet.of(6d));
     private static Translation3d hubPose = new Translation3d();
+    public static Translation3d getHubPose() {
+        return hubPose;
+    }
 
     // https://github.com/hammerheads5000/2026Rebuilt/blob/b32c384e337b1a89d3d651c05696c9366a105504/src/main/java/frc/robot/Constants.java#L398
     // see 5000-License.md
@@ -432,6 +439,7 @@ public class StateMachine {
 
         Logger.recordOutput("StateMachine/ShooterTargetPose", new Pose3d(shooterTargetPose.orElse(new Translation3d()), new Rotation3d()));
 
+        Logger.recordOutput("StateMachine/ShouldIndex", shouldIndex());
         Logger.recordOutput("StateMachine/TurretShouldIndex", turretShouldIndex());
 
         HubActiveState.periodic();

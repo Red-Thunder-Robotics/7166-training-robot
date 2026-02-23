@@ -20,20 +20,20 @@ public final class IndexerIOSim implements IndexerIO {
         m_shooterFeedOutput = 0d;
     }
 
-    @Override
-    public void generalFeedDutyCycle(double output) {
-        m_generalFeedOutput = output;
-    }
+    // @Override
+    // public void generalFeedDutyCycle(double output) {
+    //     m_generalFeedOutput = output;
+    // }
     @Override
     public void generalFeedStop() {
         m_generalFeedOutput = 0d;
     }
-    @Override
-    public void shooterFeedDutyCycle(double output) {
-        m_shooterFeedOutput = output;
-    }
-    @Override
-    public void shooterFeedStop() {
-        m_shooterFeedOutput = 0d;
-    }
+    // @Override
+    // public void shooterFeedDutyCycle(double output) {
+    //     m_shooterFeedOutput = output;
+    // }
+    // @Override
+    // public void shooterFeedStop() {
+    //     m_shooterFeedOutput = 0d;
+    // }
 }
