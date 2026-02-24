@@ -28,6 +28,7 @@ import frc.robot.subsystems.climbermark1.ClimberSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.ground_intake.GroundIntakeSubsystem;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.light_emitting_diodes.LightEmittingDiodesSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.util.HubActiveState;
@@ -97,6 +98,7 @@ public class StateMachine {
     public static ShooterTargetState getShooterTargetState() {
         return shooterTargetState;
     }
+    // NOTE: Turret stateUpdate requires this to only be called when changed
     public static void setShooterTargetState(ShooterTargetState newTurretState) {
         shooterTargetState = newTurretState;
         if (Constants.USE_TURRET)
@@ -417,6 +419,7 @@ public class StateMachine {
             }
         }
 
+        // set generalRobotState
         {
             GeneralRobotState newGeneralRobotState = GeneralRobotState.Idle;
             final boolean isFiring = IndexerSubsystem.instance.getIsFeeding();
@@ -433,6 +436,8 @@ public class StateMachine {
             }
 
             generalRobotState = newGeneralRobotState;
+
+            LightEmittingDiodesSubsystem.instance.stateUpdate(newGeneralRobotState);
 
             Logger.recordOutput("StateMachine/GeneralRobotState", generalRobotState);
         }

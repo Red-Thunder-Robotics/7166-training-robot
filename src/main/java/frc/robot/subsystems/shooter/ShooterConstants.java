@@ -88,6 +88,7 @@ public final class ShooterConstants {
         }
     }
     public static final InterpolationParamMap paramMap = InterpolationParamMap.Normal;
+    // distance to seconds
     public static final InterpolatingDoubleTreeMap timeOfFlightMap = new InterpolatingDoubleTreeMap();
     static {
         timeOfFlightMap.put(3.5d, 1.5d); // random numbers right now

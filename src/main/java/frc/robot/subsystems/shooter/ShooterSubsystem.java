@@ -107,8 +107,6 @@ public final class ShooterSubsystem extends SubsystemBase {
     public void stateUpdate(ShooterState shooterState) {
         switch (shooterState) {
             case Idle:
-                // m_io.flywheelDutyCycle(flywheelOutput);
-                // m_io.flywheelStop();
                 m_io.kickerStop();
                 break;
             case Shooting:

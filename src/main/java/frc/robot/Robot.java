@@ -158,8 +158,6 @@ public class Robot extends LoggedRobot {
                 m_shooterSubsystem = new ShooterSubsystem(new ShooterIOReal());
                 // m_climberSubsystem = new ClimberSubsystem(new ClimberIOReal());
                 // m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIOReal());
-                if (Constants.USE_TURRET)
-                    m_turretSubsystem = new TurretSubsystem(new TurretIO() {});
                 m_climberSubsystem = new ClimberSubsystem(new ClimberIO() {});
                 m_lightEmittingDiodesSubsystem = new LightEmittingDiodesSubsystem(new LightEmittingDiodesIO() {});
 
