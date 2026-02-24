@@ -15,84 +15,48 @@ import frc.robot.Constants;
 import frc.robot.util.PhoenixUtil;
 
 public final class IndexerIOReal implements IndexerIO {
-    private final TalonFX m_generalFeedMotor = new TalonFX(generalFeedMotorId, Constants.CANBUS);
-    // private final TalonFX m_shooterFeedMotor = new TalonFX(shooterFeedMotorId, Constants.CANBUS);
+    private final TalonFX m_motor = new TalonFX(motorId, Constants.CANBUS);
 
-    private final StatusSignal<AngularVelocity> m_generalFeedVelocitySignal = m_generalFeedMotor.getVelocity();
-    private final StatusSignal<Current> m_generalFeedCurrentSignal = m_generalFeedMotor.getSupplyCurrent();
+    private final StatusSignal<AngularVelocity> m_velocitySignal = m_motor.getVelocity();
+    private final StatusSignal<Current> m_currentSignal = m_motor.getSupplyCurrent();
 
-    // private final StatusSignal<AngularVelocity> m_shooterFeedVelocitySignal = m_shooterFeedMotor.getVelocity();
-    // private final StatusSignal<Current> m_shooterFeedCurrentSignal = m_shooterFeedMotor.getSupplyCurrent();
-
-    private final DutyCycleOut m_generalFeedDutyCycleRequest = new DutyCycleOut(0d);
-    private final MotionMagicVelocityVoltage m_generalFeedVelocityRequest = new MotionMagicVelocityVoltage(0d)
+    private final MotionMagicVelocityVoltage m_velocityRequest = new MotionMagicVelocityVoltage(0d)
         .withEnableFOC(true);
-    // private final DutyCycleOut m_shooterFeedDutyCycleRequest = new DutyCycleOut(0d);
 
     public IndexerIOReal() {
-        var generalFeedConfig = new TalonFXConfiguration();
-        generalFeedConfig.MotorOutput.NeutralMode = generalFeedNeutralMode;
-        generalFeedConfig.MotorOutput.Inverted = generalFeedInverted;
+        var config = new TalonFXConfiguration();
+        config.MotorOutput.NeutralMode = neutralMode;
+        config.MotorOutput.Inverted = inverted;
+        
+        // config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        // config.CurrentLimits.SupplyCurrentLimit = currentLimit;
 
-        // generalFeedConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        // generalFeedConfig.CurrentLimits.SupplyCurrentLimit = generalFeedCurrentLimit;
+        config.Slot0.kP = pidP;
+        config.Slot0.kV = pidV;
+        config.MotionMagic.MotionMagicAcceleration = targetAcceleration;
 
-        generalFeedConfig.Slot0.kP = generalFeedPidP;
-        generalFeedConfig.Slot0.kV = generalFeedPidV;
-        generalFeedConfig.MotionMagic.MotionMagicAcceleration = generalFeedTargetAcceleration;
+        PhoenixUtil.tryUntilOk(5, () -> m_motor.getConfigurator().apply(config));
 
-        // var shooterFeedConfig = new TalonFXConfiguration();
-        // shooterFeedConfig.MotorOutput.NeutralMode = shooterFeedNeutralMode;
-        // shooterFeedConfig.MotorOutput.Inverted = shooterFeedInverted;
-
-        // // shooterFeedConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        // // shooterFeedConfig.CurrentLimits.SupplyCurrentLimit = shooterFeedCurrentLimit;
-
-        PhoenixUtil.tryUntilOk(5, () -> m_generalFeedMotor.getConfigurator().apply(generalFeedConfig));
-        // PhoenixUtil.tryUntilOk(5, () -> m_shooterFeedMotor.getConfigurator().apply(shooterFeedConfig));
-
-        // BaseStatusSignal.setUpdateFrequencyForAll(50d, m_generalFeedVelocitySignal, m_generalFeedCurrentSignal, m_shooterFeedVelocitySignal, m_shooterFeedCurrentSignal);
-        BaseStatusSignal.setUpdateFrequencyForAll(50d, m_generalFeedVelocitySignal, m_generalFeedCurrentSignal);
+        BaseStatusSignal.setUpdateFrequencyForAll(50d, m_velocitySignal, m_currentSignal);
     }
 
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
-        // BaseStatusSignal.refreshAll(m_generalFeedVelocitySignal, m_generalFeedCurrentSignal, m_shooterFeedVelocitySignal, m_shooterFeedCurrentSignal);
-        BaseStatusSignal.refreshAll(m_generalFeedVelocitySignal, m_generalFeedCurrentSignal);
-        
-        inputs.generalFeedMotorDutyCycle = PhoenixUtil.getRequestDutyCycle(m_generalFeedMotor.getAppliedControl());
-        inputs.generalFeedMotorVelocityRPS = m_generalFeedVelocitySignal.getValueAsDouble();
-        inputs.generalFeedMotorCurrentAmps = m_generalFeedCurrentSignal.getValueAsDouble();
+        BaseStatusSignal.refreshAll(m_velocitySignal, m_currentSignal);
 
-        // inputs.shooterFeedMotorDutyCycle = PhoenixUtil.getRequestDutyCycle(m_generalFeedMotor.getAppliedControl());
-        // inputs.shooterFeedMotorVelocityRPS = m_shooterFeedVelocitySignal.getValueAsDouble();
-        // inputs.shooterFeedMotorCurrentAmps = m_shooterFeedCurrentSignal.getValueAsDouble();
+        inputs.targetVelocityRPS = PhoenixUtil.getRequestVelocity(m_motor.getAppliedControl());
+        
+        inputs.velocityRPS = m_velocitySignal.getValueAsDouble();
+        inputs.currentAmps = m_currentSignal.getValueAsDouble();
     }
 
     @Override
     public void idle() {
-        m_generalFeedMotor.disable();
-        // m_shooterFeedMotor.disable();
+        m_motor.disable();
     }
 
-    // @Override
-    // public void generalFeedDutyCycle(double output) {
-    //     m_generalFeedMotor.setControl(m_generalFeedDutyCycleRequest.withOutput(output));
-    // }
     @Override
-    public void generalFeedVelocity(AngularVelocity velocity) {
-        m_generalFeedMotor.setControl(m_generalFeedVelocityRequest.withVelocity(velocity));
+    public void runVelocity(AngularVelocity velocity) {
+        m_motor.setControl(m_velocityRequest.withVelocity(velocity));
     }
-    @Override
-    public void generalFeedStop() {
-        m_generalFeedMotor.disable();
-    }
-    // @Override
-    // public void shooterFeedDutyCycle(double output) {
-    //     m_shooterFeedMotor.setControl(m_shooterFeedDutyCycleRequest.withOutput(output));
-    // }
-    // @Override
-    // public void shooterFeedStop() {
-    //     m_shooterFeedMotor.disable();
-    // }
 }
