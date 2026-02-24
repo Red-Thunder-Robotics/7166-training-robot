@@ -65,8 +65,9 @@ import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
   public static Drive instance = null;
   // TunerConstants doesn't include these constants, so they are declared locally
-  static final double ODOMETRY_FREQUENCY =
-      new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
+  // static final double ODOMETRY_FREQUENCY =
+  //     new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
+  static final double ODOMETRY_FREQUENCY = 100d;
   public static final double DRIVE_BASE_RADIUS =
       Math.max(
           Math.max(
@@ -401,7 +402,7 @@ public class Drive extends SubsystemBase {
   /** Returns the maximum angular speed in radians per sec. */
   public double getMaxAngularSpeedRadPerSec() {
     // return getMaxLinearSpeedMetersPerSec() / DRIVE_BASE_RADIUS;
-    return Units.degreesToRadians(1080d);
+    return Units.degreesToRadians(360d);
   }
 
   public double getYawVelocityRadPerSec() {

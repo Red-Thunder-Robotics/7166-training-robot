@@ -27,7 +27,7 @@ public final class GroundIntakeConstants {
 
     public static final int actuatorMotorId = 57;
     public static final int actuatorCurrentLimit = 40;
-    public static final double actuatorMotorReduction = (50d / 12d) * (58d / 16d) * (44d / 14d);
+    public static final double actuatorMotorReduction = (50d / 10d) * (60d / 14d) * (54d / 22d);
     public static final NeutralModeValue actuatorNeutralMode = NeutralModeValue.Brake;
     public static final InvertedValue actuatorInverted = InvertedValue.CounterClockwise_Positive;
     public static final double actuatorPositionHome = angleToMechanismPosition(Degrees.of(-147.75d));
