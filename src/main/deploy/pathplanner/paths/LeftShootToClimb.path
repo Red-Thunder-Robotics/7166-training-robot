@@ -3,16 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.2814743589743607,
-        "y": 6.546692307692308
+        "x": 4.085,
+        "y": 7.388
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.0673159751732246,
-        "y": 6.384622100111725
+        "x": 3.870841616198864,
+        "y": 7.225929792419417
       },
       "isLocked": false,
       "linkedName": "LeftShootPos"
+    },
+    {
+      "anchor": {
+        "x": 2.3471807228915655,
+        "y": 6.799710843373493
+      },
+      "prevControl": {
+        "x": 2.6422289156626504,
+        "y": 7.477228915662651
+      },
+      "nextControl": {
+        "x": 2.243105226403097,
+        "y": 6.5607226662518245
+      },
+      "isLocked": false,
+      "linkedName": null
     },
     {
       "anchor": {
@@ -28,13 +44,18 @@
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.65,
+      "rotationDegrees": -90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
       "name": "ClimbMark1Deploy",
-      "waypointRelativePos": 0.5320729237002055,
+      "waypointRelativePos": 1.05,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -60,7 +81,7 @@
   "folder": "Left",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -45.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

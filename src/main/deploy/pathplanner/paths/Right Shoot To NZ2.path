@@ -3,49 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.7535587188612105,
-        "y": 2.1991445783132533
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 6.685481927710843,
-        "y": 0.38514457831325233
-      },
-      "isLocked": false,
-      "linkedName": "RightNZ4"
-    },
-    {
-      "anchor": {
         "x": 4.019120481927711,
         "y": 0.4725662650602419
       },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.453265060240964,
+        "y": 0.39607228915662873
+      },
+      "isLocked": false,
+      "linkedName": "RightShoot pos"
+    },
+    {
+      "anchor": {
+        "x": 7.800108433734941,
+        "y": 3.4449036144578313
+      },
       "prevControl": {
-        "x": 4.265718962885747,
-        "y": 0.5136660118865816
+        "x": 7.887530120481928,
+        "y": 0.24308433734939738
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RightShoot pos"
+      "linkedName": "RightNZ2"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "EngageShooterHub",
-      "waypointRelativePos": 0.7,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "EngageShooterHub"
-        }
-      }
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.2,
+    "maxVelocity": 5.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -53,7 +41,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 5.2,
+    "velocity": 0,
     "rotation": 90.0
   },
   "reversed": false,

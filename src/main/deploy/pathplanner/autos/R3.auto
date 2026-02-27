@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RightShootToNeutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RightPickUpInNeutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RightPickedNeutralToShootPos"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AfterShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RightTenchToClimb"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbMark1Home"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Right",
+  "choreoAuto": false
+}

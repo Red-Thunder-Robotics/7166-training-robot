@@ -32,16 +32,16 @@
     },
     {
       "anchor": {
-        "x": 2.0005653883223737,
-        "y": 1.5352925498085916
+        "x": 1.9100722891566262,
+        "y": 1.641831325301205
       },
       "prevControl": {
-        "x": 1.7936634267031213,
-        "y": 1.3509330793570473
+        "x": 1.7031703275373742,
+        "y": 1.4574718548496606
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RightShoot pos"
+      "linkedName": "OutPostShootPos"
     }
   ],
   "rotationTargets": [
@@ -81,7 +81,7 @@
   "folder": "Right",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": false
 }

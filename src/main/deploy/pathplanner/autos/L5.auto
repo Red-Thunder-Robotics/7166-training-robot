@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightShootToNeutral"
+            "pathName": "LeftStartPosToNeutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RightPickUpInNeutral"
+            "pathName": "LeftNeutralStartEnd"
           }
         },
         {
@@ -25,13 +25,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightPickedNeutralToShootPos"
+            "pathName": "LeftNuetralPush"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RightPickedNeutralStop"
+            "pathName": "LeftNuetralPushToShoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "EngageShooterHub"
           }
         },
         {
@@ -44,6 +50,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Right",
+  "folder": "Left",
   "choreoAuto": false
 }

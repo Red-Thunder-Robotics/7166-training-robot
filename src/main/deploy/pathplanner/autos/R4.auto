@@ -11,21 +11,9 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "IntakeDeployOn"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "RightPickUpInNeutral"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "IntakeHomeOff"
           }
         },
         {
@@ -38,18 +26,6 @@
           "type": "named",
           "data": {
             "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightShootPosToClimb"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ClimbMark1Home"
           }
         }
       ]

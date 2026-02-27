@@ -5,33 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "EngageShooterHub"
+            "pathName": "RightShootToNeutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "CenterDepotOutPost"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "DisengageShooter"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "IntakeDeployOn"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "PickUpDepot"
+            "pathName": "RightPickUpInNeutral"
           }
         },
         {
@@ -43,13 +25,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "CenterDepotToOutPost"
+            "pathName": "Right NZ Push"
           }
         },
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 2.0
+            "pathName": "RightNZ push to Left Shoot"
           }
         },
         {
@@ -67,25 +49,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "CenterOutPostToClimbPos"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ClimbMark1Deploy"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "CenterClimb2"
+            "pathName": "LeftShootToClimb"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Center",
+  "folder": "Right",
   "choreoAuto": false
 }
