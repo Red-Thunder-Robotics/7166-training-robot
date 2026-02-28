@@ -17,27 +17,27 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "IntakeHomeOff"
-          }
-        },
-        {
           "type": "path",
           "data": {
-            "pathName": "Right NZ Push"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightNZ push to Left Shoot"
+            "pathName": "RightPickedNeutralToShootPos"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "EngageShooterHub"
+            "name": "AfterShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Shoot To NZ2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right NZ2 To Shoot"
           }
         },
         {

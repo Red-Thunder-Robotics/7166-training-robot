@@ -9,23 +9,23 @@
       "prevControl": null,
       "nextControl": {
         "x": 3.747877733989732,
-        "y": 0.35177284935025777
+        "y": 0.3517728493502577
       },
       "isLocked": false,
       "linkedName": "RightShoot pos"
     },
     {
       "anchor": {
-        "x": 1.6868056788000545,
-        "y": 1.2866370896131492
+        "x": 1.91,
+        "y": 1.642
       },
       "prevControl": {
-        "x": 1.9133826255592172,
-        "y": 1.392291655048324
+        "x": 2.116951459866985,
+        "y": 1.5017463253282692
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "OutPostShootPos"
     }
   ],
   "rotationTargets": [],

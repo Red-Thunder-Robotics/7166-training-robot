@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": null
+            "pathName": "RightStartToShootPos"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": null
+            "name": "EngageShooterHub"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": null
+            "name": "AfterShoot"
           }
         },
         {
