@@ -11,7 +11,6 @@ public final class Controls {
     // NOTE: do not have overlapping controls because of Constants.USE_TWO_CONTROLLERS
 
     public static final Trigger manualTurretToggle = operatorController.rightStick();
-    public static final Trigger hoodStow = operatorController.b();
 
     public static final Trigger resetGyroButton = driveController.start();
 

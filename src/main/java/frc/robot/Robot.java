@@ -277,11 +277,6 @@ public class Robot extends LoggedRobot {
         
         Controls.resetGyroButton.onTrue(Commands.runOnce(this::resetGyro));
 
-        // TODO: test
-        // Controls.hoodHome.onTrue(
-        //     RobotCommands.disengageShooter()
-        //         .andThen(m_shooterSubsystem.runOnce(m_shooterSubsystem::hoodHome)));
-
         Controls.deployIntakeButton.onTrue(RobotCommands.deployIntake());
         Controls.deployIntakeButton.debounce(0.5d).whileTrue(
             IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
