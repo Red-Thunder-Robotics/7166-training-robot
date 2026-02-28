@@ -46,8 +46,6 @@ import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1d;
-  private static final double ANGLE_KP = 1.25d;
-  private static final double ANGLE_KD = 0d;
   private static final double ANGLE_MAX_VELOCITY = 4d;
   private static final double ANGLE_MAX_ACCELERATION = 20d;
   private static final double FF_START_DELAY = 2d; // Secs
@@ -98,9 +96,9 @@ public class DriveCommands {
   // Create PID controller
   private static ProfiledPIDController angleController =
       new ProfiledPIDController(
-          ANGLE_KP,
+          DriveConstants.ANGLE_KP,
           0d,
-          ANGLE_KD,
+          DriveConstants.ANGLE_KD,
           new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
   static {
     angleController.enableContinuousInput(-Math.PI, Math.PI);
@@ -108,16 +106,17 @@ public class DriveCommands {
   }
 
   public static double calculateOmega(Drive drive, Rotation2d rotation) {
+    // FIXME DELETEME: need to aim to the right
     final double output = angleController.calculate(
-      drive.getRotation().getRadians(), rotation.getRadians());
+      StateMachine.odometryAndVision.getRotation().getRadians(), rotation.getRadians());
     // final boolean atGoal = angleController.atGoal();
     final boolean atGoal = Math.abs(angleController.getPositionError()) < angleController.getPositionTolerance();
     StateMachine.setWithinJoystickRotationErrorThreshold(atGoal);
-    // Logger.recordOutput("DriveOmega/Output", output);
-    // Logger.recordOutput("DriveOmega/Drivetrain", drive.getRotation().getRadians());
-    // Logger.recordOutput("DriveOmega/Target", rotation.getRadians());
-    // Logger.recordOutput("DriveOmega/PositionError", angleController.getPositionError());
-    // Logger.recordOutput("DriveOmega/AtGoal", atGoal);
+    Logger.recordOutput("DriveOmega/Output", output);
+    Logger.recordOutput("DriveOmega/Drivetrain", StateMachine.odometryAndVision.getRotation().getDegrees());
+    Logger.recordOutput("DriveOmega/Target", rotation.getDegrees());
+    Logger.recordOutput("DriveOmega/PositionError", angleController.getPositionError());
+    Logger.recordOutput("DriveOmega/AtGoal", atGoal);
 
     return atGoal ? 0d : output;
   }
@@ -137,12 +136,15 @@ public class DriveCommands {
           boolean isFlipped =
               DriverStation.getAlliance().isPresent()
                   && DriverStation.getAlliance().get() == Alliance.Red;
+          var rotation = StateMachine.odometryAndVision.getRotation();
+          // below allows resetgyro to not be overidden by vision :/
+          // var rotation = StateMachine.odometryAndVision.getOdometryPose().getRotation();
           drive.runVelocity(
               ChassisSpeeds.fromFieldRelativeSpeeds(
                   speeds,
                   isFlipped
-                      ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                      : drive.getRotation()));
+                      ? rotation.plus(new Rotation2d(Math.PI))
+                      : rotation));
         },
         drive);
   }
@@ -168,7 +170,7 @@ public class DriveCommands {
               // Calculate angular speed
               double omega =
                   angleController.calculate(
-                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
+                      StateMachine.odometryAndVision.getRotation().getRadians(), rotationSupplier.get().getRadians());
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
@@ -183,13 +185,13 @@ public class DriveCommands {
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds,
                       isFlipped
-                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation()));
+                          ? StateMachine.odometryAndVision.getRotation().plus(new Rotation2d(Math.PI))
+                          : StateMachine.odometryAndVision.getRotation()));
             },
             drive)
 
         // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+        .beforeStarting(() -> angleController.reset(StateMachine.odometryAndVision.getRotation().getRadians()));
   }
 
   /**
@@ -286,14 +288,14 @@ public class DriveCommands {
             Commands.runOnce(
                 () -> {
                   state.positions = drive.getWheelRadiusCharacterizationPositions();
-                  state.lastAngle = drive.getRotation();
+                  state.lastAngle = StateMachine.odometryAndVision.getRotation();
                   state.gyroDelta = 0.0;
                 }),
 
             // Update gyro delta
             Commands.run(
                     () -> {
-                      var rotation = drive.getRotation();
+                      var rotation = StateMachine.odometryAndVision.getRotation();
                       state.gyroDelta += Math.abs(rotation.minus(state.lastAngle).getRadians());
                       state.lastAngle = rotation;
                     })

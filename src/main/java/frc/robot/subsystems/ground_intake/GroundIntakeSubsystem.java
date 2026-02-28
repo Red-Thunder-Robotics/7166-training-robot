@@ -2,10 +2,14 @@ package frc.robot.subsystems.ground_intake;
 
 import static frc.robot.subsystems.ground_intake.GroundIntakeConstants.*;
 
+import java.util.function.BooleanSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.state_machine.IntakeState;
+import frc.robot.util.ConditionWaiter;
 
 public final class GroundIntakeSubsystem extends SubsystemBase {
     public static GroundIntakeSubsystem instance = null;
@@ -13,21 +17,15 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
     private final GroundIntakeIO m_io;
     private final GroundIntakeIOInputsAutoLogged m_inputs = new GroundIntakeIOInputsAutoLogged();
 
-    private final Runnable m_startRoller;
-    private final Runnable m_reverseRoller;
-    
+    private ConditionWaiter m_startRollerWaiter = new ConditionWaiter(this::isAtDeployedPosition);
+    private ConditionWaiter m_reverseRollerWaiter = new ConditionWaiter(this::isAtDeployedPosition);
+    private ConditionWaiter m_deployWaiter = new ConditionWaiter(this::areRollersStopped);
+    private ConditionWaiter m_retractWaiter = new ConditionWaiter(this::areRollersStopped);
+
     public GroundIntakeSubsystem(GroundIntakeIO io) {
         instance = this;
 
         m_io = io;
-
-        if (rollerUseDutyCycle) {
-            m_startRoller = this::startRollerDutyCycle;
-            m_reverseRoller = this::reverseRollerDutyCycle;
-        } else {
-            m_startRoller = this::startRollerVelocity;
-            m_reverseRoller = this::reverseRollerVelocity;
-        }
     }
 
     @Override
@@ -35,25 +33,50 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
         m_io.updateInputs(m_inputs);
         
         Logger.processInputs("GroundIntake", m_inputs);
+
+        if (m_startRollerWaiter.process())
+            startRoller();
+        if (m_reverseRollerWaiter.process())
+            reverseRoller();
+        if (m_deployWaiter.process())
+            deploy();
+        if (m_retractWaiter.process())
+            retract();
     }
 
-    public void stateUpdate(IntakeState intakeState) {
+    public boolean isAtDeployedPosition() {
+        return m_inputs.isDeployed && Math.abs(m_inputs.actuatorPositionDegrees - m_inputs.targetActuatorPositionDegrees) < 10d;
+    }
+    public boolean areRollersStopped() {
+        return Math.abs(m_inputs.rollerMotorVelocityRPS) < 10d;
+    }
+
+    public void stateUpdate(IntakeState intakeState, IntakeState oldIntakeState) {
         switch (intakeState) {
             case HomeOff:
                 stopRoller();
-                retract();
+                if (oldIntakeState.isDeployed())
+                    m_retractWaiter.activate();
+                else
+                    retract();
                 break;
             case DeployedOff:
                 stopRoller();
                 deploy();
                 break;
             case DeployedOn:
-                m_startRoller.run();
                 deploy();
+                if (oldIntakeState.isDeployed())
+                    startRoller();
+                else
+                    m_startRollerWaiter.activate();
                 break;
             case DeployedReverse:
-                m_reverseRoller.run();
                 deploy();
+                if (oldIntakeState.isDeployed())
+                    reverseRoller();
+                else
+                    m_reverseRollerWaiter.activate();
                 break;
         }
     }
@@ -62,16 +85,10 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
     //     m_io.idle();
     // }
 
-    private void startRollerDutyCycle() {
-        m_io.rollerDutyCycle(rollerOutput);
-    }
-    private void reverseRollerDutyCycle() {
-        m_io.rollerDutyCycle(rollerOutputReverse);
-    }
-    private void startRollerVelocity() {
+    private void startRoller() {
         m_io.rollerVelocity(rollerOutputVelocity);
     }
-    private void reverseRollerVelocity() {
+    private void reverseRoller() {
         m_io.rollerVelocity(rollerOutputVelocityReverse);
     }
     public void stopRoller() {

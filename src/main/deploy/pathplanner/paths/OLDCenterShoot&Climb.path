@@ -3,38 +3,59 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5256923076923092,
-        "y": 3.8373205128205132
+        "x": 3.505634427684117,
+        "y": 4.079263531499556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.607128995083709,
-        "y": 3.7715682295789374
+        "x": 3.085670978981679,
+        "y": 4.063422310501798
       },
       "isLocked": false,
       "linkedName": "CenterStartPos"
     },
     {
       "anchor": {
-        "x": 2.4,
+        "x": 2.8054658385093165,
+        "y": 4.079263531499556
+      },
+      "prevControl": {
+        "x": 3.0554658385093165,
+        "y": 4.079263531499556
+      },
+      "nextControl": {
+        "x": 2.555465838509316,
+        "y": 4.079263531499556
+      },
+      "isLocked": false,
+      "linkedName": "CenterShootPos"
+    },
+    {
+      "anchor": {
+        "x": 2.8135137533274177,
         "y": 3.685
       },
       "prevControl": {
-        "x": 2.9036945613515233,
-        "y": 3.718579785938795
+        "x": 3.1595567499951485,
+        "y": 3.9371503683594313
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "CenterClimbPos"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.9469496021220161,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
       "name": "EngageShooterHub",
-      "waypointRelativePos": 0.09511568123393312,
+      "waypointRelativePos": 0.9932885906040269,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -54,7 +75,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -0.0
   },
   "reversed": false,
   "folder": "Center",

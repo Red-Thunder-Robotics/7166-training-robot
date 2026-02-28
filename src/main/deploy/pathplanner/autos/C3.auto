@@ -7,25 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftStartPosToNZ1"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "LeftNZ1StartEnd"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "IntakeHomeOff"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "LeftNZ1ToShoot"
+            "pathName": "CenterToShootPos"
           }
         },
         {
@@ -43,13 +25,37 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftTrenchToNZ2"
+            "pathName": "CenterShootPosToDepot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeDeployOn"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNZ2ToTrench"
+            "pathName": "PickUpDepot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CenterDepotToOutPost"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CenterOutPostToShootPos"
           }
         },
         {
@@ -68,6 +74,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left",
+  "folder": "Center",
   "choreoAuto": false
 }

@@ -2,18 +2,27 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.ConversionUtil.angleToMechanismPosition;
+
+import java.util.HashMap;
+import java.util.Optional;
+
+import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import frc.robot.state_machine.StateMachine;
 
 public final class ShooterConstants {
     // public static final long spinUpDurationMilliseconds = 800L;
@@ -66,6 +75,55 @@ public final class ShooterConstants {
     // https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
     public static record InterpolationShooterParams(double rpm, double degrees) { };
 
+    private static final InterpolationShooterParams trenchShooterParams = new InterpolationShooterParams(1950d, 35d);
+    public static enum LauncherLocationParam {
+        TrenchLeft(
+            new Translation2d(Meters.of(4d), Meters.of(7.388d)),
+            trenchShooterParams),
+        TrenchRight(
+            new Translation2d(Meters.of(4d), Meters.of(0.688d)),
+            trenchShooterParams),
+        HubCenter(
+            new Translation2d(Meters.of(2.985594d), StateMachine.getHubPoseBlue().getMeasureY()),
+            new InterpolationShooterParams(1500d, 20d)),
+        TowerLeft(
+            new Translation2d(Meters.of(1.52d), Meters.of(4.177d)),
+            new InterpolationShooterParams(1800d, 30d)),
+        FieldLeft(
+            new Translation2d(Meters.of(0.456d), Meters.of(7.633d)),
+            new InterpolationShooterParams(2400d, 30d));
+
+        private Translation2d m_location;
+        public final InterpolationShooterParams m_params;
+
+        LauncherLocationParam(Translation2d location, InterpolationShooterParams params) {
+            m_location = location;
+            m_params = params;
+        }
+
+        static Optional<LauncherLocationParam> getFromRobot(Translation2d robot) {
+            double furthestDistance = 9999d;
+            LauncherLocationParam result = null;
+            final var values = LauncherLocationParam.values();
+            for (int i = 0; i < values.length; i++) {
+                final var value = values[i];
+                final double distance = robot.getDistance(StateMachine.allianceFlip(value.m_location));
+                // if we're close than the previous point and we're not within a few inches to the last distance (avoid being between and constantly flipping between two)
+                if (distance < furthestDistance && (furthestDistance == 9999d ? true : Math.abs(distance - furthestDistance) > Units.inchesToMeters(4d))) {
+                    furthestDistance = distance;
+                    result = value;
+                }
+            }
+
+            if (result == null) {
+                Logger.recordOutput("Shooter/ClosestParamLocation", "[NONE]");
+                return Optional.empty();
+            }
+            Logger.recordOutput("Shooter/ClosestParamLocation", result.name());
+            return Optional.of(result);
+        }
+    }
+
     public static enum InterpolationParamMap {
         Normal,
         Low;
@@ -81,8 +139,11 @@ public final class ShooterConstants {
             );
 
         static {
-            Normal.map.put(1d, new InterpolationShooterParams(3000d, 60d));
-            Normal.map.put(2d, new InterpolationShooterParams(3000d, 60d));
+            // Normal.map.put(1d, new InterpolationShooterParams(3000d, 60d));
+            // Normal.map.put(2d, new InterpolationShooterParams(3000d, 60d));
+
+            for (final var value : LauncherLocationParam.values())
+                Normal.map.put(value.m_location.getDistance(StateMachine.getHubPoseBlue().toTranslation2d()), value.m_params);
 
             // TODO: low map, if we want to use it
         }

@@ -114,8 +114,8 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition(),
         new SwerveModulePosition()
       };
-  private SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
+  // private SwerveDrivePoseEstimator poseEstimator =
+  //     new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
 
   public Drive(
       GyroIO gyroIO,
@@ -161,17 +161,15 @@ public class Drive extends SubsystemBase {
   public void configurePathPlanner() {
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configure(
-      this::getPose,
-      this::setPose,
-      // (Pose2d) -> {},
+      // this::getPose,
+      StateMachine.odometryAndVision::getEstimatedPose,
+      // this::setPose,
+      StateMachine.odometryAndVision::resetPose,
       this::getChassisSpeeds,
       this::runVelocity,
       new PPHolonomicDriveController(
           new PIDConstants(4d, 0d, 0d),
-          // new PIDConstants(VisionConstants.GotoPoseConstants.translationP, VisionConstants.GotoPoseConstants.translationI, VisionConstants.GotoPoseConstants.translationD),
-          // new PIDConstants(VisionConstants.GotoPoseConstants.rotationP, VisionConstants.GotoPoseConstants.rotationI, VisionConstants.GotoPoseConstants.rotationD)),
-          // new PIDConstants(VisionConstants.GotoPoseConstants.rotationP, 0, 0)),
-          new PIDConstants(7d, 0d, 0d)),
+          new PIDConstants(12d, 0d, 0d)),
       PP_CONFIG,
       () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
       this
@@ -248,14 +246,15 @@ public class Drive extends SubsystemBase {
       }
 
       // Apply update
-      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+      // poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
     }
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.CURRENT_MODE != Mode.SIM);
 
-    Logger.recordOutput("Odometry/SpeedsX", getChassisSpeeds().vxMetersPerSecond);
-    Logger.recordOutput("Odometry/SpeedsY", getChassisSpeeds().vyMetersPerSecond);
+    final var speeds = getChassisSpeeds();
+    Logger.recordOutput("Odometry/SpeedsX", speeds.vxMetersPerSecond);
+    Logger.recordOutput("Odometry/SpeedsY", speeds.vyMetersPerSecond);
   }
 
   /**
@@ -363,20 +362,20 @@ public class Drive extends SubsystemBase {
   }
 
   /** Returns the current odometry pose. */
-  @AutoLogOutput(key = "Odometry/Robot")
-  public Pose2d getPose() {
-    return poseEstimator.getEstimatedPosition();
-  }
+  // @AutoLogOutput(key = "Odometry/Robot")
+  // public Pose2d getPose() {
+  //   return poseEstimator.getEstimatedPosition();
+  // }
 
   /** Returns the current odometry rotation. */
-  public Rotation2d getRotation() {
-    return getPose().getRotation();
-  }
+  // public Rotation2d getRotation() {
+  //   return getPose().getRotation();
+  // }
 
   /** Resets the current odometry pose. */
-  public void setPose(Pose2d pose) {
-    poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
-  }
+  // public void setPose(Pose2d pose) {
+  //   poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
+  // }
 
   public Rotation2d getRawGyroRotation() {
     return rawGyroRotation;
@@ -386,13 +385,13 @@ public class Drive extends SubsystemBase {
   }
 
   /** Adds a new timestamped vision measurement. */
-  public void addVisionMeasurement(
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
-    poseEstimator.addVisionMeasurement(
-        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-  }
+  // public void addVisionMeasurement(
+  //     Pose2d visionRobotPoseMeters,
+  //     double timestampSeconds,
+  //     Matrix<N3, N1> visionMeasurementStdDevs) {
+  //   poseEstimator.addVisionMeasurement(
+  //       visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+  // }
 
   /** Returns the maximum linear speed in meters per sec. */
   public double getMaxLinearSpeedMetersPerSec() {

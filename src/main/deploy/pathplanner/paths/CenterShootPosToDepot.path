@@ -3,37 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.8135137533274177,
-        "y": 3.685
+        "x": 2.805,
+        "y": 4.079
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0635137533274177,
-        "y": 3.685
+        "x": 2.1213930789707183,
+        "y": 5.2784028393966285
       },
       "isLocked": false,
-      "linkedName": "CenterClimbPos"
+      "linkedName": "CenterShootPos"
     },
     {
       "anchor": {
-        "x": 1.566,
-        "y": 3.685
+        "x": 1.4620361445783134,
+        "y": 6.0
       },
       "prevControl": {
-        "x": 1.816,
-        "y": 3.685
+        "x": 2.2421118012422356,
+        "y": 5.061109139307896
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "CenterClimbPos2"
+      "linkedName": "StartDepoPos."
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.38992042440318336,
-      "rotationDegrees": 180.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -53,7 +48,7 @@
   "folder": "Center",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -0.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

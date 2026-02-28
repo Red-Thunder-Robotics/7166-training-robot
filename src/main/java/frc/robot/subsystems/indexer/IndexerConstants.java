@@ -9,7 +9,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 
 public final class IndexerConstants {
     public static final int motorId = 56;
-    // public static final int currentLimit = 40;
+    public static final int currentLimit = 50;
+    public static final double motorReduction = (18d / 12d);
     public static final NeutralModeValue neutralMode = NeutralModeValue.Coast;
     public static final InvertedValue inverted = InvertedValue.CounterClockwise_Positive;
     public static final AngularVelocity outputVelocity = RPM.of(3000d);

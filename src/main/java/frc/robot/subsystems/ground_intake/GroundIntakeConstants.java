@@ -11,14 +11,10 @@ import edu.wpi.first.units.measure.AngularVelocity;
 
 public final class GroundIntakeConstants {
     public static final int rollerMotorId = 54;
-    public static final int rollerCurrentLimit = 40;
+    public static final int rollerCurrentLimit = 50; // FIXME: try 30
     public static final NeutralModeValue rollerNeutralMode = NeutralModeValue.Coast;
     public static final InvertedValue rollerInverted = InvertedValue.CounterClockwise_Positive;
-    public static final boolean rollerUseDutyCycle = false;
-    public static final double rollerOutput = 0.85d;
-    public static final double rollerOutputReverse = -rollerOutput;
-    // public static final AngularVelocity rollerOutputVelocity = RPM.of(4000d);
-    public static final AngularVelocity rollerOutputVelocity = RPM.of(2000d);
+    public static final AngularVelocity rollerOutputVelocity = RPM.of(5800d);
     public static final AngularVelocity rollerOutputVelocityReverse = rollerOutputVelocity.unaryMinus();
 
     public static final double rollerPidP = 0.75d;
@@ -30,7 +26,7 @@ public final class GroundIntakeConstants {
     public static final double actuatorMotorReduction = (50d / 10d) * (60d / 14d) * (54d / 22d);
     public static final NeutralModeValue actuatorNeutralMode = NeutralModeValue.Brake;
     public static final InvertedValue actuatorInverted = InvertedValue.CounterClockwise_Positive;
-    public static final double actuatorPositionHome = angleToMechanismPosition(Degrees.of(-147.75d));
+    public static final double actuatorPositionHome = angleToMechanismPosition(Degrees.of(-130d));
     public static final double actuatorPositionDeployed = angleToMechanismPosition(Degrees.of(0d));
 
     public static final double actuatorPidP = 35d;

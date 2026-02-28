@@ -1,10 +1,12 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.IntegerSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StringPublisher;
@@ -22,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class VisionIOMackinac implements VisionIO {
     private final AprilTagFieldLayout m_fieldLayout;
+
+    private static final NetworkTable cameraPublisherTable = NetworkTableInstance.getDefault().getTable("CameraPublisher");
 
     private final String m_deviceId;
     private final DoubleArraySubscriber m_observationSubscriber;
@@ -82,18 +86,18 @@ public class VisionIOMackinac implements VisionIO {
         m_fpsAprilTagsSubscriber = outputTable.getIntegerTopic("fps_apriltags").subscribe(0);
         m_fpsObjDetectSubscriber = outputTable.getIntegerTopic("fps_objdetect").subscribe(0);
 
-        if (index == 1) {
-            // CameraServer.startAutomaticCapture();
-            
-            // var t = NetworkTableInstance.getDefault().getTable("CameraPublisher").getSubTable("Camera" + index);
-            // t.getBooleanTopic("connected").publish().set(true);
-            // t.getStringTopic("description").publish().set("Mackinac Camera" + index);
-            // String mode = "" + camera.width() + "x" + camera.height() + " MJPEG 60 fps";
-            // t.getStringTopic("mode").publish().set(mode);
-            // t.getStringArrayTopic("modes").publish().set(new String[]{ mode });
-            // String source = "mjpg:http://10.71.66.14:5803/stream.mjpg";
-            // t.getStringTopic("source").publish().set(source);
-            // t.getStringArrayTopic("streams").publish().set(new String[]{ source });
+        var cameraTable = cameraPublisherTable.getSubTable("Camera" + index);
+        cameraTable.getBooleanTopic("connected").publish().set(true);
+        cameraTable.getStringTopic("description").publish().set("Mackinac Camera" + index);
+        {
+            final String mode = "" + camera.width() + "x" + camera.height() + " MJPEG 60 fps";
+            cameraTable.getStringTopic("mode").publish().set(mode);
+            cameraTable.getStringArrayTopic("modes").publish().set(new String[]{ mode });
+        }
+        {
+            final String source = "mjpg:http://10.71.66.14:580" + (index * 2 + 1) + "/stream.mjpg";
+            cameraTable.getStringTopic("source").publish().set(source);
+            cameraTable.getStringArrayTopic("streams").publish().set(new String[]{ source });
         }
 
         m_slowPeriodicTimer.start();

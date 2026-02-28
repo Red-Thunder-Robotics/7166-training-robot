@@ -33,7 +33,7 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
     private final MotionMagicVoltage m_actuatorPositionRequest = new MotionMagicVoltage(m_actuatorTargetPosition)
         .withEnableFOC(true);
-    private final DutyCycleOut m_rollerDutyCycleRequest = new DutyCycleOut(0d);
+    // private final DutyCycleOut m_rollerDutyCycleRequest = new DutyCycleOut(0d);
     private final MotionMagicVelocityVoltage m_rollerVelocityRequest = new MotionMagicVelocityVoltage(0d)
         .withEnableFOC(true);
 
@@ -97,12 +97,8 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
     @Override
     public void setActuatorPosition(double position) {
-        // m_actuatorTargetPosition = position;
-        // m_actuatorMotor.setControl(m_actuatorPositionRequest.withPosition(position));
-    }
-    @Override
-    public void rollerDutyCycle(double output) {
-        m_rollerMotor.setControl(m_rollerDutyCycleRequest.withOutput(output));
+        m_actuatorTargetPosition = position;
+        m_actuatorMotor.setControl(m_actuatorPositionRequest.withPosition(position));
     }
     @Override
     public void rollerVelocity(AngularVelocity velocity) {

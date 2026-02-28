@@ -15,6 +15,8 @@ import static frc.robot.subsystems.shooter.ShooterConstants.*;
 import static frc.robot.subsystems.turret.TurretConstants.distanceAboveFunnel;
 import static frc.robot.subsystems.turret.TurretConstants.robotToTurretTransform;
 
+import java.util.Optional;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -31,6 +33,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.state_machine.LiveConfig;
@@ -47,6 +50,8 @@ public final class ShooterSubsystem extends SubsystemBase {
     private final ShooterIO m_io;
     private final ShooterIOInputsAutoLogged m_inputs;
 
+    private final Timer m_autoStowTimer = new Timer();
+
     public ShooterSubsystem(ShooterIO io) {
         instance = this;
 
@@ -60,11 +65,17 @@ public final class ShooterSubsystem extends SubsystemBase {
         Logger.processInputs("Shooter", m_inputs);
         Logger.recordOutput("ShooterShouldIndex", shouldIndex());
 
+        if (m_autoStowTimer.isRunning() && m_autoStowTimer.hasElapsed(1d)) {
+            m_autoStowTimer.stop();
+            m_autoStowTimer.reset();
+            hoodStow();
+        }
+
         final boolean launcherTuning = LiveConfig.getLauncherTuning();
         switch (StateMachine.getShooterState()) {
             case Idle:
                 if (launcherTuning) {
-                    Logger.recordOutput("Shooter/HubDistanceMeters", getDistanceToTarget(Drive.instance.getPose(), StateMachine.getHubPose()).in(Meters));
+                    Logger.recordOutput("Shooter/HubDistanceMeters", getDistanceToTarget(StateMachine.odometryAndVision.getEstimatedPose(), StateMachine.getHubPose()).in(Meters));
                     m_io.setHoodPosition(Degrees.of(LiveConfig.getLauncherTuningAngle()));
                     m_io.flywheelVelocity(RPM.of(LiveConfig.getLauncherTuningRPM()));
                 }
@@ -73,9 +84,20 @@ public final class ShooterSubsystem extends SubsystemBase {
             case Shooting:
                 var targetPose = StateMachine.getShooterTargetPose();
                 if (targetPose.isPresent() && !launcherTuning) {
-                    final InterpolationShooterParams params = calculateParams(targetPose.get());
-                    m_io.setHoodPosition(Degrees.of(params.degrees()).plus(Rotations.of(hoodPositionHome)));
-                    m_io.flywheelVelocity(RPM.of(params.rpm()));
+                    Optional<InterpolationShooterParams> paramsOptional = Optional.empty();
+                    // if (StateMachine.getShooterTargetPoseIsHub())
+                    //     paramsOptional = LauncherLocationParam.getFromRobot(StateMachine.odometryAndVision.getEstimatedPose().getTranslation())
+                    //         .map((value) -> value.m_params);
+                    // else
+                    if (LiveConfig.getIsPit())
+                        paramsOptional = Optional.of(LauncherLocationParam.HubCenter.m_params);
+                    else
+                        paramsOptional = Optional.of(calculateParams(targetPose.get()));
+                    if (paramsOptional.isPresent()) {
+                        var params = paramsOptional.get();
+                        m_io.setHoodPosition(Degrees.of(params.degrees())/*.plus(Rotations.of(hoodPositionHome))*/);
+                        m_io.flywheelVelocity(RPM.of(params.rpm()));
+                    }
                 }
                 if (shouldIndex())
                     m_io.kickerVelocity(kickerVelocity);
@@ -91,23 +113,30 @@ public final class ShooterSubsystem extends SubsystemBase {
         return Degrees.of(m_inputs.hoodPositionDegrees);
     }
 
+    public void hoodStow() {
+        m_io.setHoodPosition(hoodPositionHome);
+    }
+
     public boolean shouldIndex() {
         // FIXME: check all motors not just the leader?
         return Math.abs(m_inputs.flywheelTargetVelocityRPS - m_inputs.flywheelMotorLeftVelocityRPS) <= shouldIndexVelocityThresholdRPS;
     }
 
-    private LinearVelocity m_exitVelocity = MetersPerSecond.of(0d);
-    public LinearVelocity getExitVelocity() {
-        return m_exitVelocity;
-    }
+    // private LinearVelocity m_exitVelocity = MetersPerSecond.of(0d);
     // public LinearVelocity getExitVelocity() {
-    //     return InchesPerSecond.of(m_inputs.flywheelMotorVelocityRPS * (2d * Math.PI) * flywheelRadius.in(Inches));
+    //     return m_exitVelocity;
     // }
+    public LinearVelocity getExitVelocity() {
+        return InchesPerSecond.of(m_inputs.flywheelMotorLeftVelocityRPS * (2d * Math.PI) * flywheelRadius.in(Inches) / 2d);
+    }
 
     public void stateUpdate(ShooterState shooterState) {
+        m_autoStowTimer.stop();
         switch (shooterState) {
             case Idle:
                 m_io.kickerStop();
+                m_autoStowTimer.reset();
+                m_autoStowTimer.start();
                 break;
             case Shooting:
                 break;
@@ -175,7 +204,7 @@ public final class ShooterSubsystem extends SubsystemBase {
 
 
     public InterpolationShooterParams calculateParams(Translation3d target) {
-        final var robotPose = Drive.instance.getPose();
+        final var robotPose = StateMachine.odometryAndVision.getEstimatedPose();
         final var fieldSpeeds = Drive.instance.getChassisSpeeds();
         
         // https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2

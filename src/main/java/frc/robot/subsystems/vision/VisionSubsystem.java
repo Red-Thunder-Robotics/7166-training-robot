@@ -175,7 +175,7 @@ public final class VisionSubsystem extends SubsystemBase {
 
                             // Check for ambiguity and select based on estimated rotation
                             if (error0 < error1 * ambiguityThreshold || error1 < error0 * ambiguityThreshold) {
-                                Rotation2d currentRotation = Drive.instance.getRotation();
+                                Rotation2d currentRotation = StateMachine.odometryAndVision.getRotation();
                                 Rotation2d visionRotation0 = robotPose0.getRotation();
                                 Rotation2d visionRotation1 = robotPose1.getRotation();
                                 if (Math.abs(currentRotation.minus(visionRotation0).getRadians())
@@ -236,7 +236,6 @@ public final class VisionSubsystem extends SubsystemBase {
                         new VisionObservation(
                             robotPose, timestamp, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev)));
                     allRobotPoses.add(robotPose);
-                    Logger.recordOutput("AprilTagVision/RobotPose" + instanceIndex, robotPose);
 
                     // Log data from instance
                     if (enableInstanceLogging) {
@@ -264,24 +263,25 @@ public final class VisionSubsystem extends SubsystemBase {
                         };
 
                     for (int index = tagEstimationDataEndIndex + 1; index < values.length; index += 10) {
-                    double[] tx = new double[4];
-                    double[] ty = new double[4];
-                    for (int i = 0; i < 4; i++) {
-                        tx[i] = values[index + 1 + (2 * i)];
-                        ty[i] = values[index + 1 + (2 * i) + 1];
-                    }
-                    int tagId = (int) values[index];
-                    double distance = values[index + 9];
+                        double[] tx = new double[4];
+                        double[] ty = new double[4];
+                        for (int i = 0; i < 4; i++) {
+                            tx[i] = values[index + 1 + (2 * i)];
+                            ty[i] = values[index + 1 + (2 * i) + 1];
+                        }
+                        int tagId = (int) values[index];
+                        double distance = values[index + 9];
 
-                    txTyObservations.put(
-                        tagId, new TxTyObservation(tagId, instanceIndex, tx, ty, distance, timestamp));
+                        txTyObservations.put(
+                            tagId, new TxTyObservation(tagId, instanceIndex, tx, ty, distance, timestamp));
                     }
                 }
 
                 // Save tx ty observation data
                 for (var observation : txTyObservations.values()) {
                     if (!allTxTyObservations.containsKey(observation.tagId())
-                        || observation.distance() < allTxTyObservations.get(observation.tagId()).distance()) {
+                        || observation.distance() < allTxTyObservations.get(observation.tagId()).distance())
+                    {
                         allTxTyObservations.put(observation.tagId(), observation);
                     }
                 }
@@ -397,7 +397,6 @@ public final class VisionSubsystem extends SubsystemBase {
             }
 
             // Log robot poses
-            // moved to per camera logging
             // Logger.recordOutput("AprilTagVision/RobotPoses", allRobotPoses.toArray(Pose2d[]::new));
 
             // Log tag poses

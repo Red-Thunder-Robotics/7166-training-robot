@@ -2,6 +2,7 @@ package frc.robot.state_machine;
 
 import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 
 import java.util.Optional;
@@ -78,8 +79,19 @@ public class StateMachine {
     }
 
     private static Optional<Translation3d> shooterTargetPose = Optional.empty();
+    private static boolean shooterTargetPoseIsHub = false;
+
+    private static void setShooterTargetPose(Optional<Translation3d> pose) {
+        if (pose.isPresent() && pose.get() == hubPose)
+            shooterTargetPoseIsHub = true;
+        shooterTargetPose = pose;
+    }
     public static Optional<Translation3d> getShooterTargetPose() {
         return shooterTargetPose;
+    }
+
+    public static boolean getShooterTargetPoseIsHub() {
+        return shooterTargetPoseIsHub;
     }
 
     private static IntakeState intakeState = IntakeState.HomeOff;
@@ -88,8 +100,9 @@ public class StateMachine {
         return intakeState;
     }
     public static void setIntakeState(IntakeState newIntakeState) {
+        var old = intakeState;
         intakeState = newIntakeState;
-        GroundIntakeSubsystem.instance.stateUpdate(intakeState);
+        GroundIntakeSubsystem.instance.stateUpdate(intakeState, old);
         // IndexerSubsystem.instance.intakeStateUpdate(intakeState);
     }
 
@@ -283,16 +296,10 @@ public class StateMachine {
         }
     }
 
-    private static Rotation2d swerveRotationOffset = new Rotation2d();
-
-    public static Rotation2d getSwerveRotationOffset() {
-        return swerveRotationOffset;
-    }
-
     public static Rotation2d initialSwerveRotation = null;
 
     public static Angle getRobotRotationalGoal(Translation3d targetPose) {
-        Pose2d robotPose = Drive.instance.getPose();
+        Pose2d robotPose = StateMachine.odometryAndVision.getEstimatedPose();
         final ChassisSpeeds robotSpeeds = Drive.instance.getChassisSpeeds();
 
         // t1
@@ -338,6 +345,9 @@ public class StateMachine {
     public static Translation3d getHubPose() {
         return hubPose;
     }
+    public static Translation3d getHubPoseBlue() {
+        return hubPoseBlue;
+    }
 
     // https://github.com/hammerheads5000/2026Rebuilt/blob/b32c384e337b1a89d3d651c05696c9366a105504/src/main/java/frc/robot/Constants.java#L398
     // see 5000-License.md
@@ -351,7 +361,7 @@ public class StateMachine {
     public static final OdometryAndVision odometryAndVision = new OdometryAndVision();
 
     private static boolean isRobotOnAllianceLeft() {
-        final var y = Drive.instance.getPose()
+        final var y = odometryAndVision.getEstimatedPose()
                 .getMeasureY();
         final var threshold = FieldConstants.FIELD_WIDTH.div(2d);
 
@@ -364,6 +374,8 @@ public class StateMachine {
     private static boolean needsToUpdateRobot = true;
     @SuppressWarnings("unused") // for useTurret
     public static synchronized void periodic(Robot robot) {
+        Logger.recordOutput("Odometry/Robot", odometryAndVision.getEstimatedPose());
+        
         Logger.recordOutput("StateMachine/IntakeState", intakeState);
         Logger.recordOutput("StateMachine/ShooterTargetState", shooterTargetState);
         Logger.recordOutput("StateMachine/ShooterState", shooterState);
@@ -385,8 +397,6 @@ public class StateMachine {
             else
                 initialSwerveRotation = Rotation2d.kPi;
 
-            swerveRotationOffset = initialSwerveRotation.plus(Rotation2d.kPi);
-
             // VisionSubsystem.update();
             // for (var value : VisionSubsystem.RelativeReefLocation.values())
             //     value.update();
@@ -404,19 +414,15 @@ public class StateMachine {
         }
 
         if (Constants.USE_TURRET && TurretSubsystem.instance.getManualEnabled())
-            shooterTargetPose = Optional.empty();
+            setShooterTargetPose(Optional.empty());
         else {
-            switch (StateMachine.getShooterTargetState()) {
-                case HubTracking:
-                    shooterTargetPose = Optional.of(hubPose);
-                    break;
-                case AllianceFeed:
-                    shooterTargetPose = Optional.of(isRobotOnAllianceLeft() ? allianceFeedLeft : allianceFeedRight);
-                    break;
-                default:
-                    shooterTargetPose = Optional.empty();
-                    break;
-            }
+            setShooterTargetPose(
+                switch (StateMachine.getShooterTargetState()) {
+                    case HubTracking -> Optional.of(hubPose);
+                    case AllianceFeed -> Optional.of(allianceFlip(isRobotOnAllianceLeft() ? allianceFeedLeft : allianceFeedRight));
+                    default -> Optional.empty();
+                }
+            );
         }
 
         // set generalRobotState

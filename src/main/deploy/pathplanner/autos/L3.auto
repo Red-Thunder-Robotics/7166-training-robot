@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftStartPosToNeutral"
+            "pathName": "LeftStartToDepot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeDeployOn"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNeutralStartEnd"
+            "pathName": "PickUpDepot"
           }
         },
         {
@@ -25,25 +31,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNeutralToShoot"
+            "pathName": "LeftDepotToClimb"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "EngageShooterHub"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "LeftShootToClimb"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ClimbMark1Home"
           }
         }
       ]

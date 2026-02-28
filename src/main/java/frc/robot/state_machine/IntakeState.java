@@ -25,6 +25,17 @@ public enum IntakeState {
                 return false;
         }
     }
+    public boolean isDeployed() {
+        switch (this) {
+            case DeployedOff:
+            case DeployedOn:
+            case DeployedReverse:
+                return true;
+
+            default:
+                return false;
+        }
+    }
     public IntakeState off() {
         switch (this) {
             case DeployedOff:

@@ -7,23 +7,25 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.net.PortForwarder;
+import frc.robot.state_machine.OdometryAndVision.VisionObservation;
+import frc.robot.state_machine.StateMachine;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.LimelightHelpers;
 
 public final class VisionIOLimelight implements VisionIO {
     public VisionIOLimelight() {
         for (int port = 5800; port <= 5809; port++)
-            PortForwarder.add(port, limelightFrontName + ".local", port);
+            PortForwarder.add(port, limelightFrontLeftName + ".local", port);
 
         for (int port = 5800; port <= 5809; port++)
-            PortForwarder.add(port + 10, limelightBackName + ".local", port);
+            PortForwarder.add(port + 10, limelightBackRightName + ".local", port);
     }
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
-        boolean megaTagSuccess = updateVisionMegaTag2(limelightFrontName);
+        boolean megaTagSuccess = updateVisionMegaTag2(limelightFrontLeftName);
         {
-            var success = updateVisionMegaTag2(limelightBackName);
+            var success = updateVisionMegaTag2(limelightBackRightName);
             megaTagSuccess |= success;
         }
 
@@ -38,7 +40,8 @@ public final class VisionIOLimelight implements VisionIO {
         if (Math.abs(drive.getYawVelocityRadPerSec()) > (4 * Math.PI))
             return false;
 
-        final double yaw_degrees = drive.getRotation().getDegrees();
+        // final double yaw_degrees = StateMachine.odometryAndVision.getRotation().getDegrees();
+        final double yaw_degrees = StateMachine.odometryAndVision.getOdometryPose().getRotation().getDegrees();
 
         LimelightHelpers.SetRobotOrientation(limelightName, yaw_degrees, 0, 0, 0, 0, 0);
         LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
@@ -48,10 +51,7 @@ public final class VisionIOLimelight implements VisionIO {
         if(mt2.tagCount == 0)
             return false;
 
-        drive.addVisionMeasurement(
-            mt2.pose, mt2.timestampSeconds,
-            stdDevs
-        );
+        StateMachine.odometryAndVision.addVisionObservation(new VisionObservation(mt2.pose, mt2.timestampSeconds, stdDevs));
 
         return true;
     }

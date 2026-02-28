@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 4.085,
-        "y": 7.388
+        "y": 7.412
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.870841616198864,
-        "y": 7.225929792419417
+        "x": 3.819503105590062,
+        "y": 7.41095652173913
       },
       "isLocked": false,
       "linkedName": "LeftShootPos"
@@ -48,6 +48,10 @@
     {
       "waypointRelativePos": 0.65,
       "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 1.4854111405835553,
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [],

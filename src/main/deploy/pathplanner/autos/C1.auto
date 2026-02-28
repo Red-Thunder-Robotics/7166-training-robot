@@ -5,45 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "EngageShooterHub"
-          }
-        },
-        {
           "type": "path",
           "data": {
-            "pathName": "CenterDepotOutPost"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "DisengageShooter"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "IntakeDeployOn"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "PickUpDepot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "CenterDepotToOutPost"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
+            "pathName": "CenterToShootPos"
           }
         },
         {
@@ -56,24 +20,6 @@
           "type": "named",
           "data": {
             "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "CenterOutPostToClimbPos"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ClimbMark1Deploy"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "CenterClimb2"
           }
         }
       ]

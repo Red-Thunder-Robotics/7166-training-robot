@@ -58,8 +58,8 @@ public final class IntakeCommands {
                     : ChassisSpeeds.fromFieldRelativeSpeeds(
                         wantedSpeeds,
                         StateMachine.ALLIANCE == Alliance.Red
-                            ? drive.getRotation().plus(Rotation2d.kPi)
-                            : drive.getRotation());
+                            ? StateMachine.odometryAndVision.getRotation().plus(Rotation2d.kPi)
+                            : StateMachine.odometryAndVision.getRotation());
             // Find nearest fuel
             var fuelTranslation = getNearestFuel();
             // Log targeted fuel
@@ -81,7 +81,7 @@ public final class IntakeCommands {
             }
 
             // Nudge wanted speeds in direction of fuel
-            Pose2d robot = drive.getPose();
+            Pose2d robot = StateMachine.odometryAndVision.getEstimatedPose();
             Transform2d robotToIntake =
                 new Transform2d(
                     -(DriveConstants.BUMPER_WIDTH.in(Meters) + intakingOffset), 0d, Rotation2d.kPi);
@@ -135,7 +135,7 @@ public final class IntakeCommands {
     }
 
     private static Optional<Translation2d> getNearestFuel() {
-        Pose2d robot = Drive.instance.getPose();
+        Pose2d robot = StateMachine.odometryAndVision.getEstimatedPose();
         Pose2d robotFlipped = robot.transformBy(new Transform2d(Translation2d.kZero, Rotation2d.kPi));
         Pose2d intakePose =
             robot.transformBy(

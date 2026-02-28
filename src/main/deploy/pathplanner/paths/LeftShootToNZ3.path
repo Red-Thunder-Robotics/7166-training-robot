@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 4.085,
-        "y": 7.388
+        "y": 7.412
       },
       "prevControl": null,
       "nextControl": {
         "x": 8.390204819277107,
-        "y": 7.378879518072289
+        "y": 7.402879518072289
       },
       "isLocked": false,
       "linkedName": "LeftShootPos"

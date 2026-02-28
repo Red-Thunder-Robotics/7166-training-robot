@@ -9,9 +9,13 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -27,6 +31,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -47,7 +52,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.Mode;
+import frc.robot.commands.AutoDriveCommands;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.SimulationCommands;
 import frc.robot.commands.SimulationCommands.SimFuelCommand;
 import frc.robot.generated.TunerConstants;
@@ -270,9 +277,14 @@ public class Robot extends LoggedRobot {
         
         Controls.resetGyroButton.onTrue(Commands.runOnce(this::resetGyro));
 
+        // TODO: test
+        // Controls.hoodHome.onTrue(
+        //     RobotCommands.disengageShooter()
+        //         .andThen(m_shooterSubsystem.runOnce(m_shooterSubsystem::hoodHome)));
+
         Controls.deployIntakeButton.onTrue(RobotCommands.deployIntake());
-        // Controls.deployIntakeButton.debounce(0.5d).whileTrue(
-        //     IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
+        Controls.deployIntakeButton.debounce(0.5d).whileTrue(
+            IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
         Controls.retractIntakeButton.onTrue(RobotCommands.retractIntake());
 
         Controls.reverseButton.onTrue(RobotCommands.setShooterReversing());
@@ -324,7 +336,7 @@ public class Robot extends LoggedRobot {
 
         // debug
         if (Constants.USE_TURRET) {
-            Controls.operatorController.rightStick().onTrue(m_turretSubsystem.toggleManualModeCommand());
+            Controls.manualTurretToggle.onTrue(m_turretSubsystem.toggleManualModeCommand());
 
             m_turretSubsystem.setManualSupplier(() -> {
                 if (Math.abs(Controls.operatorController.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.15)
@@ -345,6 +357,15 @@ public class Robot extends LoggedRobot {
         // FIXME: waitForEmptyHopper command using vision
         Command waitForEmptyHopper = Commands.waitSeconds(3d);
         NamedCommands.registerCommand("AfterShoot", waitForEmptyHopper.andThen(RobotCommands.disengageShooter()));
+
+        // NamedCommands.registerCommand("ClimbRotate", Commands.defer(() -> {
+        //     var robotPose = StateMachine.odometryAndVision.getEstimatedPose();
+        //     robotPose = new Pose2d(robotPose.getTranslation(), Rotation2d.kZero);
+        //     return AutoBuilder.pathfindToPose(robotPose, new PathConstraints(
+        //         MetersPerSecond.of(1d), MetersPerSecondPerSecond.of(1d),
+        //         RadiansPerSecond.of(360d), RadiansPerSecondPerSecond.of(720d)));
+        // }, Set.of()));
+        NamedCommands.registerCommand("ClimbRotate", AutoDriveCommands.faceRotation2d(Rotation2d.kZero));
 
         // CLIMBER MARK 1
         NamedCommands.registerCommand("ClimbMark1Deploy", RobotCommands.setClimberBothState(ClimberMark1State.Deployed));
@@ -439,8 +460,8 @@ public class Robot extends LoggedRobot {
                 ChassisSpeeds.fromFieldRelativeSpeeds(
                     speeds,
                     isFlipped
-                    ? m_driveSubsystem.getRotation().plus(new Rotation2d(Math.PI))
-                    : m_driveSubsystem.getRotation()));
+                    ? StateMachine.odometryAndVision.getRotation().plus(new Rotation2d(Math.PI))
+                    : StateMachine.odometryAndVision.getRotation()));
         }
     }
 
@@ -492,15 +513,15 @@ public class Robot extends LoggedRobot {
             if (targetPose.isEmpty())
                 return Optional.empty();
 
-            var rotation = m_driveSubsystem.getRotation();
+            var rotation = StateMachine.odometryAndVision.getRotation();
             return Optional.of(rotation.plus(new Rotation2d(StateMachine.getRobotRotationalGoal(targetPose.get()))));
         };
     }
 
     public void resetGyro(Rotation2d offset) {
         if (StateMachine.initialSwerveRotation != null) {
-            final Pose2d pose = new Pose2d(m_driveSubsystem.getPose().getTranslation(), StateMachine.initialSwerveRotation.plus(offset));
-            m_driveSubsystem.setPose(pose);
+            final Pose2d pose = new Pose2d(StateMachine.odometryAndVision.getEstimatedPose().getTranslation(), StateMachine.initialSwerveRotation.plus(offset));
+            StateMachine.odometryAndVision.resetPose(pose);
         }
     }
     public void resetGyro() {
@@ -510,10 +531,10 @@ public class Robot extends LoggedRobot {
     private Command repeatingSimFuelCommand() {
         return Commands.repeatingSequence(
             Commands.either(Commands.runOnce(() -> m_commandScheduler.schedule(new SimulationCommands.SimFuelCommand(
-                () -> new Pose3d(m_driveSubsystem.getPose())
+                () -> new Pose3d(StateMachine.odometryAndVision.getEstimatedPose())
                     .plus(new Transform3d(0, 0, Units.feetToMeters(1.5d), Rotation3d.kZero)),
                 () -> {
-                    Pose2d robot = m_driveSubsystem.getPose();
+                    Pose2d robot = StateMachine.odometryAndVision.getEstimatedPose();
                     LinearVelocity vel = m_shooterSubsystem.getExitVelocity();
 
                     Angle turretAngle = Constants.USE_TURRET ? m_turretSubsystem.getAngle() : Degrees.of(0d);

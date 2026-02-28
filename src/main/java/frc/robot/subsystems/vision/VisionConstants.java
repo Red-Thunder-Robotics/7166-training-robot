@@ -12,10 +12,11 @@ import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants;
 
 public final class VisionConstants {
-    public static final String limelightFrontName = "limelight-front";
-    public static final String limelightBackName = "limelight-back";
+    public static final String limelightFrontLeftName = "limelight-frontl";
+    public static final String limelightBackRightName = "limelight-backr";
 
-    private static final boolean forceEnableInstanceLogging = false;
+    private static final boolean forceEnableInstanceLogging = true;
+    @SuppressWarnings("unused")
     public static final boolean enableInstanceLogging =
         forceEnableInstanceLogging || Constants.CURRENT_MODE == Constants.Mode.REPLAY;
 

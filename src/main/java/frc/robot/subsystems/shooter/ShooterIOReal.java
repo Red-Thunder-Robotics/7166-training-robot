@@ -227,9 +227,13 @@ public final class ShooterIOReal implements ShooterIO {
     }
 
     @Override
-    public void setHoodPosition(Angle angle) {
-        m_hoodTargetPosition = angleToMechanismPosition(angle);
+    public void setHoodPosition(double position) {
+        m_hoodTargetPosition = position;
         m_hoodMotor.setControl(m_hoodPositionRequest.withPosition(m_hoodTargetPosition));
+    }
+    @Override
+    public void setHoodPosition(Angle angle) {
+        setHoodPosition(angleToMechanismPosition(angle));
     }
 
     @Override

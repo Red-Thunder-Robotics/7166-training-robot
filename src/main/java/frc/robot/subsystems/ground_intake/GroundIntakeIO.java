@@ -25,7 +25,6 @@ public interface GroundIntakeIO {
     public default void idle() {}
     
     public default void setActuatorPosition(double position) {}
-    public default void rollerDutyCycle(double output) {}
     public default void rollerVelocity(AngularVelocity velocity) {}
     public default void rollerStop() {}
 }

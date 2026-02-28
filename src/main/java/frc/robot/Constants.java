@@ -27,7 +27,7 @@ public final class Constants {
         REPLAY
     }
 
-    private static final boolean USE_TWO_CONTROLLERS_DESIRED = false;
+    private static final boolean USE_TWO_CONTROLLERS_DESIRED = true;
     public static final boolean USE_TWO_CONTROLLERS = !RobotBase.isSimulation() && USE_TWO_CONTROLLERS_DESIRED;
     public static final int DRIVER_CONTROLLER = 0;
     public static final int OPERATOR_CONTROLLER = USE_TWO_CONTROLLERS ? 1 : DRIVER_CONTROLLER;
@@ -35,7 +35,7 @@ public final class Constants {
     public static final CANBus CANBUS = new CANBus("Canivore");
 
     public static final boolean USE_TURRET = false;
-    public static final boolean USE_MACKINAC = true;
+    public static final boolean USE_MACKINAC = false;
 
     public static final class FieldConstants {
         public static final Distance APRIL_TAG_WIDTH = Inches.of(6.5d);
@@ -50,9 +50,12 @@ public final class Constants {
     }
 
     public static final class DriveConstants {
+        public static final double ANGLE_KP = 1.25d;
+        public static final double ANGLE_KD = 0d;
+
         public static final Distance BUMPER_WIDTH = Inches.of(31d);
         public static final Distance BUMPER_LENGTH = BUMPER_WIDTH;
 
-        public static final double SHOULD_INDEX_THRESHOLD_DEGREES = 4d;
+        public static final double SHOULD_INDEX_THRESHOLD_DEGREES = 0.5d;
     }
 }

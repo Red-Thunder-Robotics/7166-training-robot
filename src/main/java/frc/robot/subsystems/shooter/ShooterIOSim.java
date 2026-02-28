@@ -16,14 +16,16 @@ public final class ShooterIOSim implements ShooterIO {
     private double m_flywheelTargetVelocityRPS = 0d;
     private double m_flywheelVelocityRPS = 0d;
 
+    private double m_kickerTargetVelocityRPS = 0d;
+    private double m_kickerVelocityRPS = 0d;
+
     private boolean m_hoodStopped = false;
     private double m_hoodTargetPosition = hoodPositionHome;
     private double m_hoodPosition = m_hoodTargetPosition;
 
     private final PIDController m_flywheelVelocityPID = new PIDController(0.5d, 0d, 0d);
+    private final PIDController m_kickerVelocityPID = new PIDController(0.5d, 0d, 0d);
     private final PIDController m_hoodPID = new PIDController(0.5d, 0d, 0d);
-
-    private double m_kickerOutput = 0d;
 
     public ShooterIOSim() {
 
@@ -32,7 +34,6 @@ public final class ShooterIOSim implements ShooterIO {
     @Override
     public void updateInputs(ShooterIOInputs inputs) {
         inputs.flywheelMotorLeftDutyCycle = m_flywheelOutput;
-        inputs.kickerMotorDutyCycle = m_kickerOutput;
 
         if (!m_flywheelStopped) {
             final double flywheelVelocityOutput = m_flywheelVelocityPID.calculate(m_flywheelVelocityRPS);
@@ -48,6 +49,10 @@ public final class ShooterIOSim implements ShooterIO {
 
             inputs.hoodMotorDutyCycle = hoodOutput;
         }
+
+        inputs.kickerTargetVelocityRPS = m_kickerTargetVelocityRPS;
+        m_kickerVelocityRPS += m_kickerVelocityPID.calculate(m_kickerVelocityRPS);
+        inputs.kickerMotorVelocityRPS = m_kickerVelocityRPS;
 
         final double hoodTargetPosition = m_hoodTargetPosition;
         inputs.hoodTargetPositionRotations = hoodTargetPosition;
@@ -85,18 +90,23 @@ public final class ShooterIOSim implements ShooterIO {
     }
 
     @Override
-    public void setHoodPosition(Angle angle) {
+    public void setHoodPosition(double position) {
         m_hoodStopped = false;
-        m_hoodTargetPosition = angleToMechanismPosition(angle);
+        m_hoodTargetPosition = position;
         m_hoodPID.setSetpoint(m_hoodTargetPosition);
+    }
+    @Override
+    public void setHoodPosition(Angle angle) {
+        setHoodPosition(angleToMechanismPosition(angle));
     }
 
     @Override
     public void kickerVelocity(AngularVelocity velocity) {
-        // m_kickerOutput = output;
+        m_kickerTargetVelocityRPS = velocity.in(RotationsPerSecond);
+        m_kickerVelocityPID.setSetpoint(m_kickerTargetVelocityRPS);
     }
     @Override
     public void kickerStop() {
-        m_kickerOutput = 0d;
+        m_kickerVelocityPID.setSetpoint(0d);
     }
 }

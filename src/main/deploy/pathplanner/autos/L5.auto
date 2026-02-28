@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftStartPosToNeutral"
+            "pathName": "LeftStartPosToNZ1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNeutralStartEnd"
+            "pathName": "LeftNZ1StartEnd"
           }
         },
         {
@@ -25,13 +25,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNuetralPush"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "LeftNuetralPushToShoot"
+            "pathName": "LeftNZ1ToShoot"
           }
         },
         {

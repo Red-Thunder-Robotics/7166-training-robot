@@ -54,6 +54,7 @@ public interface ShooterIO {
     public default void flywheelVelocity(AngularVelocity velocity) {}
     public default void flywheelStop() {}
 
+    public default void setHoodPosition(double position) {}
     public default void setHoodPosition(Angle angle) {}
 
     public default void kickerVelocity(AngularVelocity velocity) {}

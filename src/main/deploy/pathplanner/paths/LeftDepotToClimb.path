@@ -8,11 +8,27 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.2394742555263452,
-        "y": 5.2668275164117935
+        "x": 1.759106462487287,
+        "y": 6.0
       },
       "isLocked": false,
       "linkedName": "EndDepoPos."
+    },
+    {
+      "anchor": {
+        "x": 1.5580390417036374,
+        "y": 6.0
+      },
+      "prevControl": {
+        "x": 1.3080390417036374,
+        "y": 6.0
+      },
+      "nextControl": {
+        "x": 1.8080390417036374,
+        "y": 6.0
+      },
+      "isLocked": false,
+      "linkedName": null
     },
     {
       "anchor": {
@@ -20,21 +36,26 @@
         "y": 4.755948717948717
       },
       "prevControl": {
-        "x": 0.8910720752217309,
-        "y": 5.404468811631974
+        "x": 1.3326974267968053,
+        "y": 5.29449866903283
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "LeftClimbPos."
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.2,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
       "name": "ClimbMark1Deploy",
-      "waypointRelativePos": 0.34571235651586263,
+      "waypointRelativePos": 0.7,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

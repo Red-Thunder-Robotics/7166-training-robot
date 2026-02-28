@@ -5,27 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "LeftStartToDepot"
-          }
-        },
-        {
           "type": "named",
           "data": {
-            "name": "IntakeDeployOn"
+            "name": "EngageShooterHub"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickUpDepot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "IntakeHomeOff"
+            "pathName": "LeftStartToShoot"
           }
         },
         {
@@ -43,7 +31,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftDepotToClimb"
+            "pathName": "LeftShootToClimb"
           }
         },
         {

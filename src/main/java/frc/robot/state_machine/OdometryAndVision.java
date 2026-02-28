@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.littletonrobotics.junction.AutoLogOutput;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
@@ -31,6 +33,8 @@ import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.util.ApriltagUtil;
 
 public class OdometryAndVision {
+    private Rotation2d gyroOffset = Rotation2d.kZero;
+    
     public static record OdometryObservation(
       SwerveModulePosition[] wheelPositions, Optional<Rotation2d> gyroAngle, double timestamp) {}
     public static record VisionObservation(Pose2d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {}
@@ -71,6 +75,17 @@ public class OdometryAndVision {
         return estimatedPose;
     }
 
+    public Rotation2d getRotation() {
+        return estimatedPose.getRotation();
+    }
+
+    public void resetPose(Pose2d pose) {
+        gyroOffset = pose.getRotation().minus(odometryPose.getRotation().minus(gyroOffset));
+        estimatedPose = pose;
+        odometryPose = pose;
+        poseBuffer.clear();
+    }
+
     public void addOdometryObservation(OdometryObservation observation) {
         Twist2d twist = kinematics.toTwist2d(lastWheelPositions, observation.wheelPositions());
         lastWheelPositions = observation.wheelPositions();
@@ -79,7 +94,7 @@ public class OdometryAndVision {
         // Use gyro if connected
         observation.gyroAngle.ifPresent(
             gyroAngle -> {
-                Rotation2d angle = gyroAngle;
+                Rotation2d angle = gyroAngle.plus(gyroOffset);
                 odometryPose = new Pose2d(odometryPose.getTranslation(), angle);
             });
         // Add pose to buffer at timestamp
@@ -140,9 +155,6 @@ public class OdometryAndVision {
         // Recalculate current estimate by applying scaled transform to old estimate
         // then replaying odometry data
         estimatedPose = estimateAtTime.plus(scaledTransform).plus(sampleToOdometryTransform);
-
-        // Drive.instance.addVisionMeasurement(observation.visionPose, observation.timestamp, observation.stdDevs);
-        Drive.instance.addVisionMeasurement(estimatedPose, observation.timestamp, observation.stdDevs);
     }
 
     private final Map<Integer, TxTyPoseRecord> txTyPoses = new HashMap<>();

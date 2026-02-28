@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftStartPosToNeutral"
+            "pathName": "LeftStartPosToNZ1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNeutralStartEnd"
+            "pathName": "LeftNZ1StartEnd"
           }
         },
         {
@@ -25,37 +25,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNeutralToShoot"
+            "pathName": "LeftNeutralPush"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftNeutralPushToShoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "EngageShooterHub"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Go and Grab NZ2"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left NZ2 To Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "LeftShootToClimb"
           }
         }
       ]

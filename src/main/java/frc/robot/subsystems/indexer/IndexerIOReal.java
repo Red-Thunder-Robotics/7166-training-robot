@@ -28,8 +28,10 @@ public final class IndexerIOReal implements IndexerIO {
         config.MotorOutput.NeutralMode = neutralMode;
         config.MotorOutput.Inverted = inverted;
         
-        // config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        // config.CurrentLimits.SupplyCurrentLimit = currentLimit;
+        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        config.CurrentLimits.SupplyCurrentLimit = currentLimit;
+
+        config.Feedback.SensorToMechanismRatio = motorReduction;
 
         config.Slot0.kP = pidP;
         config.Slot0.kV = pidV;
