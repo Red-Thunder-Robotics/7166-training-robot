@@ -75,23 +75,30 @@ public final class ShooterConstants {
     // https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
     public static record InterpolationShooterParams(double rpm, double degrees) { };
 
-    private static final InterpolationShooterParams trenchShooterParams = new InterpolationShooterParams(1950d, 35d);
+    private static final InterpolationShooterParams trenchShooterParams =
+        new InterpolationShooterParams(1650d, 30d);
     public static enum LauncherLocationParam {
+        // TrenchLeft(
+        //     new Translation2d(Meters.of(4d), Meters.of(7.388d)),
+        //     trenchShooterParams),
+        // TrenchRight(
+        //     new Translation2d(Meters.of(4d), Meters.of(0.688d)),
+        //     trenchShooterParams),
         TrenchLeft(
-            new Translation2d(Meters.of(4d), Meters.of(7.388d)),
+            new Translation2d(Meters.of(4.138d), Meters.of(7.632d)),
             trenchShooterParams),
         TrenchRight(
-            new Translation2d(Meters.of(4d), Meters.of(0.688d)),
+            new Translation2d(Meters.of(4.138d), Meters.of(0.444d)),
             trenchShooterParams),
         HubCenter(
             new Translation2d(Meters.of(2.985594d), StateMachine.getHubPoseBlue().getMeasureY()),
-            new InterpolationShooterParams(1500d, 20d)),
+            new InterpolationShooterParams(1435d, 20d)),
         TowerLeft(
             new Translation2d(Meters.of(1.52d), Meters.of(4.177d)),
-            new InterpolationShooterParams(1800d, 30d)),
+            new InterpolationShooterParams(1600d, 30d)),
         FieldLeft(
             new Translation2d(Meters.of(0.456d), Meters.of(7.633d)),
-            new InterpolationShooterParams(2400d, 30d));
+            new InterpolationShooterParams(2100d, 30d));
 
         private Translation2d m_location;
         public final InterpolationShooterParams m_params;
@@ -108,7 +115,7 @@ public final class ShooterConstants {
             for (int i = 0; i < values.length; i++) {
                 final var value = values[i];
                 final double distance = robot.getDistance(StateMachine.allianceFlip(value.m_location));
-                // if we're close than the previous point and we're not within a few inches to the last distance (avoid being between and constantly flipping between two)
+                // if we're closer than the previous point and we're not within a few inches to the last distance (avoid being between and constantly flipping between two)
                 if (distance < furthestDistance && (furthestDistance == 9999d ? true : Math.abs(distance - furthestDistance) > Units.inchesToMeters(4d))) {
                     furthestDistance = distance;
                     result = value;
@@ -142,8 +149,11 @@ public final class ShooterConstants {
             // Normal.map.put(1d, new InterpolationShooterParams(3000d, 60d));
             // Normal.map.put(2d, new InterpolationShooterParams(3000d, 60d));
 
-            for (final var value : LauncherLocationParam.values())
-                Normal.map.put(value.m_location.getDistance(StateMachine.getHubPoseBlue().toTranslation2d()), value.m_params);
+            for (final var value : LauncherLocationParam.values()) {
+                final double distance = value.m_location.getDistance(StateMachine.getHubPoseBlue().toTranslation2d());
+                System.out.println(value.name() + "; " + distance);
+                Normal.map.put(distance, value.m_params);
+            }
 
             // TODO: low map, if we want to use it
         }

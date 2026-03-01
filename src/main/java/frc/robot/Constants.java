@@ -53,7 +53,7 @@ public final class Constants {
         public static final double ANGLE_KP = 1.25d;
         public static final double ANGLE_KD = 0d;
 
-        public static final Distance BUMPER_WIDTH = Inches.of(31d);
+        public static final Distance BUMPER_WIDTH = Inches.of(34.52d); // 31
         public static final Distance BUMPER_LENGTH = BUMPER_WIDTH;
 
         public static final double SHOULD_INDEX_THRESHOLD_DEGREES = 0.5d;

@@ -269,21 +269,21 @@ public final class ShooterSubsystem extends SubsystemBase {
         //     shot.angle.in(Degrees)
         // );
 
-        double distance = getDistanceToTarget(robotPose, target).in(Meters);
-        InterpolationShooterParams shot = paramMap.map.get(distance);
-        // shot = new ShotData(shot.exitVelocity, shot.hoodAngle, target);
-        Time timeOfFlight = Seconds.of(timeOfFlightMap.get(distance));
-        Translation3d predictedTarget = target;
+        final double distance = getDistanceToTarget(robotPose, target).in(Meters);
+        // InterpolationShooterParams shot = paramMap.map.get(distance);
+        // // shot = new ShotData(shot.exitVelocity, shot.hoodAngle, target);
+        // Time timeOfFlight = Seconds.of(timeOfFlightMap.get(distance));
+        // Translation3d predictedTarget = target;
 
-        // Iterate the process, getting better time of flight estimations and updating the predicted target accordingly
-        for (int i = 0; i < iterations; i++) {
-            predictedTarget = predictTargetPos(target, fieldSpeeds, timeOfFlight);
-            distance = getDistanceToTarget(robotPose, predictedTarget).in(Meters);
-            shot = paramMap.map.get(distance);
-            // shot = new ShotData(shot.exitVelocity, shot.hoodAngle, predictedTarget);
-            timeOfFlight = Seconds.of(timeOfFlightMap.get(distance));
-        }
+        // // Iterate the process, getting better time of flight estimations and updating the predicted target accordingly
+        // for (int i = 0; i < iterations; i++) {
+        //     predictedTarget = predictTargetPos(target, fieldSpeeds, timeOfFlight);
+        //     distance = getDistanceToTarget(robotPose, predictedTarget).in(Meters);
+        //     shot = paramMap.map.get(distance);
+        //     // shot = new ShotData(shot.exitVelocity, shot.hoodAngle, predictedTarget);
+        //     timeOfFlight = Seconds.of(timeOfFlightMap.get(distance));
+        // }
 
-        return shot;
+        return paramMap.map.get(distance);
     }
 }
