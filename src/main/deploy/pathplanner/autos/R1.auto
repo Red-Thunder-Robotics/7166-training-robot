@@ -21,12 +21,6 @@
           "data": {
             "name": "AfterShoot"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightShootPosToClimb"
-          }
         }
       ]
     }
