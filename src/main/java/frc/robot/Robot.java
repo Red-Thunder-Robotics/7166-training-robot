@@ -466,6 +466,9 @@ public class Robot extends LoggedRobot {
         if (m_autoCommand != null)
             m_commandScheduler.cancel(m_autoCommand);
 
+        RobotCommands.disengageShooter();
+        // RobotCommands.setIntakeState(StateMachine.getIntakeState().off());
+
         // CLIMBER MARK 2 MAYBE
         // if (RobotCommands.getHasAutoClimbRan()) {
         //     m_commandScheduler.schedule(

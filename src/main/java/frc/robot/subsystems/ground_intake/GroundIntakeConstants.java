@@ -11,7 +11,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 
 public final class GroundIntakeConstants {
     public static final int rollerMotorId = 54;
-    public static final int rollerCurrentLimit = 50; // FIXME: try 30
+    public static final int rollerCurrentLimit = 40; // FIXME: try 30
     public static final NeutralModeValue rollerNeutralMode = NeutralModeValue.Coast;
     public static final InvertedValue rollerInverted = InvertedValue.CounterClockwise_Positive;
     public static final AngularVelocity rollerOutputVelocity = RPM.of(5800d);

@@ -33,7 +33,7 @@ public final class ShooterConstants {
     public static final int flywheelMotorIdMiddleUpper = 12;
     public static final int flywheelMotorIdMiddleLower = 17;
     public static final int flywheelMotorIdRight = 16;
-    // public static final int flywheelCurrentLimit = 40;
+    public static final int flywheelCurrentLimit = 40;
     public static final NeutralModeValue flywheelNeutralMode = NeutralModeValue.Coast;
     public static final InvertedValue flywheelInvertedLeft = InvertedValue.Clockwise_Positive;
     public static final InvertedValue flywheelInvertedMiddleUpper = InvertedValue.Clockwise_Positive;
@@ -62,7 +62,7 @@ public final class ShooterConstants {
     public static final double hoodMaxVelocity = 10d;
     
     public static final int kickerMotorId = 9;
-    // public static final int kickerCurrentLimit = 40;
+    public static final int kickerCurrentLimit = 40;
     public static final NeutralModeValue kickerNeutralMode = NeutralModeValue.Coast;
     public static final InvertedValue kickerInverted = InvertedValue.CounterClockwise_Positive;
     public static final AngularVelocity kickerVelocity = RPM.of(4500d);

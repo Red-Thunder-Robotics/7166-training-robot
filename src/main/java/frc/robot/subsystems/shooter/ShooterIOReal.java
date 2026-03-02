@@ -82,8 +82,8 @@ public final class ShooterIOReal implements ShooterIO {
         var flywheelConfig = new TalonFXConfiguration();
         flywheelConfig.MotorOutput.NeutralMode = flywheelNeutralMode;
 
-        // flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        // flywheelConfig.CurrentLimits.SupplyCurrentLimit = flywheelCurrentLimit;
+        flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        flywheelConfig.CurrentLimits.SupplyCurrentLimit = flywheelCurrentLimit;
 
         flywheelConfig.Slot0.kP = flywheelPidP;
         flywheelConfig.Slot0.kV = flywheelPidV;
@@ -110,8 +110,8 @@ public final class ShooterIOReal implements ShooterIO {
         kickerConfig.MotorOutput.NeutralMode = kickerNeutralMode;
         kickerConfig.MotorOutput.Inverted = kickerInverted;
 
-        // kickerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        // kickerConfig.CurrentLimits.SupplyCurrentLimit = kickerCurrentLimit;
+        kickerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        kickerConfig.CurrentLimits.SupplyCurrentLimit = kickerCurrentLimit;
 
         kickerConfig.Slot0.kP = kickerPidP;
         kickerConfig.Slot0.kV = kickerPidV;
