@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.state_machine.LiveConfig;
 import frc.robot.state_machine.ShooterState;
+import frc.robot.state_machine.LauncherTarget;
 import frc.robot.state_machine.StateMachine;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.ShooterConstants.InterpolationShooterParams;
@@ -82,21 +83,23 @@ public final class ShooterSubsystem extends SubsystemBase {
                 m_io.kickerStop();
                 break;
             case Shooting:
-                var targetPose = StateMachine.getShooterTargetPose();
-                if (targetPose.isPresent() && !launcherTuning) {
-                    Optional<InterpolationShooterParams> paramsOptional = Optional.empty();
-                    // if (StateMachine.getShooterTargetPoseIsHub())
-                    //     paramsOptional = LauncherLocationParam.getFromRobot(StateMachine.odometryAndVision.getEstimatedPose().getTranslation())
-                    //         .map((value) -> value.m_params);
-                    // else
-                    if (LiveConfig.getIsPit())
-                        paramsOptional = Optional.of(LauncherLocationParam.HubCenter.m_params);
-                    else
-                        paramsOptional = Optional.of(calculateParams(targetPose.get()));
-                    if (paramsOptional.isPresent()) {
-                        var params = paramsOptional.get();
-                        m_io.setHoodPosition(Degrees.of(params.degrees())/*.plus(Rotations.of(hoodPositionHome))*/);
-                        m_io.flywheelVelocity(RPM.of(params.rpm()));
+                var targetPose = StateMachine.getLauncherTargetPose();
+                if (!launcherTuning) {
+                    if (StateMachine.getLauncherTarget() == LauncherTarget.AllianceFeed)
+                        setParams(allianceFeedParams);
+                    else if (targetPose.isPresent()) {
+                        // if (StateMachine.getLauncherTargetPoseIsHub())
+                        //     paramsOptional = LauncherLocationParam.getFromRobot(StateMachine.odometryAndVision.getEstimatedPose().getTranslation())
+                        //         .map((value) -> value.m_params);
+                        // else
+
+                        InterpolationShooterParams params;
+                        if (LiveConfig.getIsPit())
+                            params = LauncherLocationParam.HubCenter.m_params;
+                        else
+                            params = calculateParams(targetPose.get());
+                        if (params != null)
+                            setParams(params);
                     }
                 }
                 if (shouldIndex())
@@ -122,12 +125,22 @@ public final class ShooterSubsystem extends SubsystemBase {
         return Math.abs(m_inputs.flywheelTargetVelocityRPS - m_inputs.flywheelMotorLeftVelocityRPS) <= shouldIndexVelocityThresholdRPS;
     }
 
+    private void setParams(InterpolationShooterParams params) {
+        m_io.setHoodPosition(Degrees.of(params.degrees()));
+        m_io.flywheelVelocity(RPM.of(params.rpm()));
+    }
+
     // private LinearVelocity m_exitVelocity = MetersPerSecond.of(0d);
     // public LinearVelocity getExitVelocity() {
     //     return m_exitVelocity;
     // }
     public LinearVelocity getExitVelocity() {
-        return InchesPerSecond.of(m_inputs.flywheelMotorLeftVelocityRPS * (2d * Math.PI) * flywheelRadius.in(Inches) / 2d);
+        final double multiplier = 1.07d;
+
+        // return InchesPerSecond.of(m_inputs.flywheelMotorLeftVelocityRPS * (2d * Math.PI) * flywheelRadius.in(Inches) / 2d);
+        final double vb = m_inputs.flywheelMotorLeftVelocityRPS * (2d * Math.PI) * flywheelRadiusBig.in(Inches);
+        final double vs = m_inputs.flywheelMotorLeftVelocityRPS * (2d * Math.PI) * flywheelRadiusSmall.in(Inches);
+        return InchesPerSecond.of(multiplier * (vb + vs) / 2d);
     }
 
     public void stateUpdate(ShooterState shooterState) {
@@ -205,50 +218,11 @@ public final class ShooterSubsystem extends SubsystemBase {
 
     public InterpolationShooterParams calculateParams(Translation3d target) {
         final var robotPose = StateMachine.odometryAndVision.getEstimatedPose();
-        final var fieldSpeeds = Drive.instance.getChassisSpeeds();
+        // final var fieldSpeeds = Drive.instance.getChassisSpeeds();
         
-        // https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
-        // // FIXME: using shotData.velocity is inaccurate because we aren't targeting that (we're targeting baseline from parameter map)
-        // // so we need to get a conversion from rotations per minute to exit velocity and then discard calculateShotFromFunnelClearance
-        // var shotData = calculateShotFromFunnelClearance(robotPose, target, target);
-        // m_exitVelocity = shotData.velocity;
-
-        // final Distance distance = getDistanceToTarget(robotPose, target);
-
-        // ShooterParams baseline = paramMap.map.get(distance.in(Meters));
-        // double baselineVelocity = distance.in(Meters) / calculateTimeOfFlight(m_exitVelocity, Degrees.of(baseline.degrees()), distance).in(Seconds);
-
-        // Translation2d futurePose = robotPose.getTranslation().plus(
-        //     ConversionUtil.chassisSpeedsToTranslation2d(Drive.instance.getChassisSpeeds().times(latencyCompensationSeconds))
-        // );
-
-        // Translation2d toGoal = target.toTranslation2d().minus(futurePose);
-        // Translation2d targetDirection = toGoal.div(toGoal.getNorm());
-
-        // Translation2d targetVelocity = targetDirection.times(baselineVelocity);
-
-        // Translation2d shotVelocity = targetVelocity.minus(ConversionUtil.chassisSpeedsToTranslation2d(Drive.instance.getChassisSpeeds()));
-
-        // // Rotation2d turretAngle = shotVelocity.getAngle();
-        // double requiredVelocity = shotVelocity.getNorm();
-
-        // double velocityRatio = requiredVelocity / baselineVelocity;
-
-        // double rpmFactor = Math.sqrt(velocityRatio);
-        // double hoodFactor = Math.sqrt(velocityRatio);
-
-        // double adjustedRpm = baseline.rpm() * rpmFactor;
-
-        // double totalVelocity = baselineVelocity / Math.cos(Math.toRadians(baseline.degrees()));
-        // double targetHorizFromHood = baselineVelocity * hoodFactor;
-        // double ratio = MathUtil.clamp(targetHorizFromHood / totalVelocity, 0d, 1d);
-        // double adjustedHood = Math.toDegrees(Math.acos(ratio));
-
-        // return new ShooterParams(adjustedRpm, adjustedHood);
-
         // https://github.com/hammerheads5000/2026Rebuilt/blob/9a94e647443d8a5651b044449cc5ebb8195efc52/src/main/java/frc/robot/subsystems/turret/TurretCalculator.java#L129
         // see 5000-License.md
-        final int iterations = 3;
+        // final int iterations = 3;
 
         // PhysicsShotData shot = calculateShotFromFunnelClearance(robotPose, target, target);
         // Distance distance = getDistanceToTarget(robotPose, target);

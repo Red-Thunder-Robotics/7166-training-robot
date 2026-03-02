@@ -1,6 +1,6 @@
 package frc.robot.state_machine;
 
-public enum ShooterTargetState {
+public enum LauncherTarget {
     Idle,
     HubTracking,
     AllianceFeed

@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.commands.DriveCommands;
 import frc.robot.Robot;
 import frc.robot.subsystems.climbermark1.ClimberSubsystem;
 import frc.robot.subsystems.drive.Drive;
@@ -78,20 +79,20 @@ public class StateMachine {
         return generalRobotState;
     }
 
-    private static Optional<Translation3d> shooterTargetPose = Optional.empty();
-    private static boolean shooterTargetPoseIsHub = false;
+    private static Optional<Translation3d> launcherTargetPose = Optional.empty();
+    private static boolean launcherTargetPoseIsHub = false;
 
-    private static void setShooterTargetPose(Optional<Translation3d> pose) {
+    private static void setLauncherTargetPose(Optional<Translation3d> pose) {
         if (pose.isPresent() && pose.get() == hubPose)
-            shooterTargetPoseIsHub = true;
-        shooterTargetPose = pose;
+            launcherTargetPoseIsHub = true;
+        launcherTargetPose = pose;
     }
-    public static Optional<Translation3d> getShooterTargetPose() {
-        return shooterTargetPose;
+    public static Optional<Translation3d> getLauncherTargetPose() {
+        return launcherTargetPose;
     }
 
-    public static boolean getShooterTargetPoseIsHub() {
-        return shooterTargetPoseIsHub;
+    public static boolean getLauncherTargetPoseIsHub() {
+        return launcherTargetPoseIsHub;
     }
 
     private static IntakeState intakeState = IntakeState.HomeOff;
@@ -106,16 +107,18 @@ public class StateMachine {
         // IndexerSubsystem.instance.intakeStateUpdate(intakeState);
     }
 
-    private static ShooterTargetState shooterTargetState = ShooterTargetState.Idle;
+    private static LauncherTarget launcherTarget = LauncherTarget.Idle;
 
-    public static ShooterTargetState getShooterTargetState() {
-        return shooterTargetState;
+    public static LauncherTarget getLauncherTarget() {
+        return launcherTarget;
     }
     // NOTE: Turret stateUpdate requires this to only be called when changed
-    public static void setShooterTargetState(ShooterTargetState newTurretState) {
-        shooterTargetState = newTurretState;
+    public static void setLauncherTarget(LauncherTarget newTarget) {
+        launcherTarget = newTarget;
         if (Constants.USE_TURRET)
-            TurretSubsystem.instance.stateUpdate(shooterTargetState);
+            TurretSubsystem.instance.stateUpdate(launcherTarget);
+
+        DriveCommands.resetAngleController();
     }
 
     private static boolean withinJoystickRotationErrorThreshold = false;
@@ -181,21 +184,21 @@ public class StateMachine {
         }
 
         // turret
-        public static Command setShooterTargetState(ShooterTargetState turretState) {
-            Command command = Commands.runOnce(() -> StateMachine.setShooterTargetState(turretState));
+        public static Command setLauncherTarget(LauncherTarget turretState) {
+            Command command = Commands.runOnce(() -> StateMachine.setLauncherTarget(turretState));
             if (Constants.USE_TURRET)
                 command.addRequirements(TurretSubsystem.instance);
             return command;
         }
 
-        public static Command setShooterTargetIdle() {
-            return setShooterTargetState(ShooterTargetState.Idle);
+        public static Command setLauncherTargetIdle() {
+            return setLauncherTarget(LauncherTarget.Idle);
         }
-        public static Command setShooterTargetHubTracking() {
-            return setShooterTargetState(ShooterTargetState.HubTracking);
+        public static Command setLauncherTargetHubTracking() {
+            return setLauncherTarget(LauncherTarget.HubTracking);
         }
-        public static Command setShooterTargetAllianceFeed() {
-            return setShooterTargetState(ShooterTargetState.AllianceFeed);
+        public static Command setLauncherTargetAllianceFeed() {
+            return setLauncherTarget(LauncherTarget.AllianceFeed);
         }
 
         // shooter
@@ -217,17 +220,17 @@ public class StateMachine {
 
         // shooter + turret
         public static Command engageShooterHub() {
-            return setShooterTargetHubTracking()
+            return setLauncherTargetHubTracking()
                 .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
                 .andThen(setShooterShooting());
         }
         public static Command engageShooterAllianceFeed() {
-            return setShooterTargetAllianceFeed()
+            return setLauncherTargetAllianceFeed()
                 .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
                 .andThen(setShooterShooting());
         }
         public static Command disengageShooter() {
-            return setShooterTargetIdle()
+            return setLauncherTargetIdle()
                 .alongWith(setShooterIdle());
         }
 
@@ -377,7 +380,7 @@ public class StateMachine {
         Logger.recordOutput("Odometry/Robot", odometryAndVision.getEstimatedPose());
         
         Logger.recordOutput("StateMachine/IntakeState", intakeState);
-        Logger.recordOutput("StateMachine/ShooterTargetState", shooterTargetState);
+        Logger.recordOutput("StateMachine/LauncherTarget", launcherTarget);
         Logger.recordOutput("StateMachine/ShooterState", shooterState);
         // Logger.recordOutput("StateMachine/ClimberState", climberState);
         Logger.recordOutput("StateMachine/ClimberLeftState", climberLeftState);
@@ -414,10 +417,10 @@ public class StateMachine {
         }
 
         if (Constants.USE_TURRET && TurretSubsystem.instance.getManualEnabled())
-            setShooterTargetPose(Optional.empty());
+            setLauncherTargetPose(Optional.empty());
         else {
-            setShooterTargetPose(
-                switch (StateMachine.getShooterTargetState()) {
+            setLauncherTargetPose(
+                switch (StateMachine.getLauncherTarget()) {
                     case HubTracking -> Optional.of(hubPose);
                     case AllianceFeed -> Optional.of(allianceFlip(isRobotOnAllianceLeft() ? allianceFeedLeft : allianceFeedRight));
                     default -> Optional.empty();
@@ -430,7 +433,7 @@ public class StateMachine {
             GeneralRobotState newGeneralRobotState = GeneralRobotState.Idle;
             final boolean isFiring = IndexerSubsystem.instance.getIsFeeding();
 
-            switch (shooterTargetState) {
+            switch (launcherTarget) {
                 case HubTracking:
                     newGeneralRobotState = isFiring ? GeneralRobotState.HubTrackingFiring : GeneralRobotState.HubTracking;
                     break;
@@ -448,7 +451,7 @@ public class StateMachine {
             Logger.recordOutput("StateMachine/GeneralRobotState", generalRobotState);
         }
 
-        Logger.recordOutput("StateMachine/ShooterTargetPose", new Pose3d(shooterTargetPose.orElse(new Translation3d()), new Rotation3d()));
+        Logger.recordOutput("StateMachine/LauncherTargetPose", new Pose3d(launcherTargetPose.orElse(new Translation3d()), new Rotation3d()));
 
         Logger.recordOutput("StateMachine/ShouldIndex", shouldIndex());
         Logger.recordOutput("StateMachine/TurretShouldIndex", turretShouldIndex());

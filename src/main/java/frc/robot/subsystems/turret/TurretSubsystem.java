@@ -16,7 +16,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.state_machine.StateMachine;
-import frc.robot.state_machine.ShooterTargetState;
+import frc.robot.state_machine.LauncherTarget;
 import frc.robot.util.ConversionUtil;
 
 public final class TurretSubsystem extends SubsystemBase {
@@ -66,7 +66,7 @@ public final class TurretSubsystem extends SubsystemBase {
             m_manualTarget = m_manualTarget.plus(Degrees.of(m_manualSupplier.getAsDouble()));
             setAngle(m_manualTarget);
         } else {
-            StateMachine.getShooterTargetPose().ifPresent(this::target3dPose);
+            StateMachine.getLauncherTargetPose().ifPresent(this::target3dPose);
         }
 
         m_debugPose = new Pose3d(
@@ -102,9 +102,9 @@ public final class TurretSubsystem extends SubsystemBase {
         m_io.setPosition(ConversionUtil.angleToMechanismPosition(measurement));
     }
 
-    public void stateUpdate(ShooterTargetState turretState) {
+    public void stateUpdate(LauncherTarget launcherTarget) {
         m_manualEnabled = false;
-        switch (turretState) {
+        switch (launcherTarget) {
             case Idle:
                 m_io.idle();
                 break;

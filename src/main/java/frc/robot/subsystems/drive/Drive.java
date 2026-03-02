@@ -48,6 +48,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.Mode;
 import frc.robot.generated.TunerConstants;
 import frc.robot.state_machine.OdometryAndVision;
@@ -255,6 +256,12 @@ public class Drive extends SubsystemBase {
     final var speeds = getChassisSpeeds();
     Logger.recordOutput("Odometry/SpeedsX", speeds.vxMetersPerSecond);
     Logger.recordOutput("Odometry/SpeedsY", speeds.vyMetersPerSecond);
+  }
+
+  public boolean isMoving() {
+    final var speeds = getChassisSpeeds();
+    return Math.abs(speeds.vxMetersPerSecond) >= DriveConstants.IS_MOVING_THRESHOLD_METERS ||
+      Math.abs(speeds.vyMetersPerSecond) >= DriveConstants.IS_MOVING_THRESHOLD_METERS;
   }
 
   /**

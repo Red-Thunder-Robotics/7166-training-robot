@@ -46,7 +46,8 @@ public final class ShooterConstants {
     public static final double flywheelFreeSpeed = flywheelFOC ? 5800d : 6000d;
     public static final double flywheelPidV = 12d / (flywheelFreeSpeed / 60d);
     public static final double flywheelTargetAcceleration = 266d;
-    public static final Distance flywheelRadius = Inches.of(2d);
+    public static final Distance flywheelRadiusBig = Inches.of(2d);
+    public static final Distance flywheelRadiusSmall = Inches.of(1d);
 
     public static final int hoodMotorId = 58;
     // public static final double hoodCurrentLimit = 40;
@@ -75,6 +76,8 @@ public final class ShooterConstants {
     // https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
     public static record InterpolationShooterParams(double rpm, double degrees) { };
 
+    public static final InterpolationShooterParams allianceFeedParams =
+        new InterpolationShooterParams(1600d, 40d);
     private static final InterpolationShooterParams trenchShooterParams =
         new InterpolationShooterParams(1650d, 30d);
     public static enum LauncherLocationParam {

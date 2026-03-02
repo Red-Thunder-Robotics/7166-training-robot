@@ -13,6 +13,7 @@ import static edu.wpi.first.units.Units.Meters;
 
 import com.ctre.phoenix6.CANBus;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.util.ApriltagUtil;
@@ -57,5 +58,7 @@ public final class Constants {
         public static final Distance BUMPER_LENGTH = BUMPER_WIDTH;
 
         public static final double SHOULD_INDEX_THRESHOLD_DEGREES = 0.5d;
+        public static final double SHOULD_INDEX_THRESHOLD_MOVING_DEGREES = 5d;
+        public static final double IS_MOVING_THRESHOLD_METERS = Units.inchesToMeters(2d);
     }
 }

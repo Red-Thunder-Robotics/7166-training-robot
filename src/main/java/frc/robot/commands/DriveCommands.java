@@ -102,16 +102,23 @@ public class DriveCommands {
           new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
   static {
     angleController.enableContinuousInput(-Math.PI, Math.PI);
-    angleController.setTolerance(Units.degreesToRadians(Constants.USE_TURRET ? TurretConstants.shouldIndexThresholdDegrees : DriveConstants.SHOULD_INDEX_THRESHOLD_DEGREES));
   }
 
+  public static void resetAngleController() {
+    angleController.reset(StateMachine.odometryAndVision.getRotation().getRadians());
+  }
   public static double calculateOmega(Drive drive, Rotation2d rotation) {
     // FIXME DELETEME: need to aim to the right
     final double output = angleController.calculate(
       StateMachine.odometryAndVision.getRotation().getRadians(), rotation.getRadians());
-    // final boolean atGoal = angleController.atGoal();
-    final boolean atGoal = Math.abs(angleController.getPositionError()) < angleController.getPositionTolerance();
+
+    double tolerance = Units.degreesToRadians(Constants.USE_TURRET ? TurretConstants.shouldIndexThresholdDegrees : DriveConstants.SHOULD_INDEX_THRESHOLD_DEGREES);
+    if (drive.isMoving() && !Constants.USE_TURRET)
+      tolerance = Units.degreesToRadians(DriveConstants.SHOULD_INDEX_THRESHOLD_MOVING_DEGREES);
+    final boolean atGoal = Math.abs(angleController.getPositionError()) < tolerance;
+
     StateMachine.setWithinJoystickRotationErrorThreshold(atGoal);
+
     Logger.recordOutput("DriveOmega/Output", output);
     Logger.recordOutput("DriveOmega/Drivetrain", StateMachine.odometryAndVision.getRotation().getDegrees());
     Logger.recordOutput("DriveOmega/Target", rotation.getDegrees());

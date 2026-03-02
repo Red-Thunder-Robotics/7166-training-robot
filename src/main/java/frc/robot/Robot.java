@@ -13,6 +13,8 @@ import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static frc.robot.subsystems.shooter.ShooterConstants.hoodPositionHome;
+import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
 
 import java.util.Optional;
 import java.util.Set;
@@ -329,13 +331,13 @@ public class Robot extends LoggedRobot {
         //     Controls.climbSafetyButton
         // ));
 
-        // debug
         if (Constants.USE_TURRET) {
             Controls.manualTurretToggle.onTrue(m_turretSubsystem.toggleManualModeCommand());
 
             m_turretSubsystem.setManualSupplier(() -> {
-                if (Math.abs(Controls.operatorController.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.15)
-                    return Controls.operatorController.getRightX() * 2.5;
+                var controller = Controls.operatorController;
+                if (Math.abs(controller.getRawAxis(XboxController.Axis.kRightX.value)) >= 0.15)
+                    return controller.getRightX() * 2.5;
                 return 0d;
             });
         }
@@ -350,7 +352,7 @@ public class Robot extends LoggedRobot {
         NamedCommands.registerCommand("IntakeHomeOff", RobotCommands.setIntakeState(IntakeState.HomeOff));
 
         // FIXME: waitForEmptyHopper command using vision
-        Command waitForEmptyHopper = Commands.waitSeconds(3d);
+        Command waitForEmptyHopper = Commands.waitSeconds(5d);
         NamedCommands.registerCommand("AfterShoot", waitForEmptyHopper.andThen(RobotCommands.disengageShooter()));
 
         // NamedCommands.registerCommand("ClimbRotate", Commands.defer(() -> {
@@ -397,6 +399,11 @@ public class Robot extends LoggedRobot {
         }
     }
 
+    private void resetState() {
+        RobotCommands.disengageShooter();
+        // RobotCommands.setIntakeState(StateMachine.getIntakeState().off());
+    }
+
     /** This function is called periodically when disabled. */
     @Override
     public void disabledPeriodic() {}
@@ -422,6 +429,10 @@ public class Robot extends LoggedRobot {
             m_autoSimFuelCommand = repeatingSimFuelCommand();
 
         m_commandScheduler.schedule(m_autoSimFuelCommand);
+    }
+    @Override
+    public void autonomousExit() {
+        resetState();
     }
 
     /** This function is called periodically during autonomous. */
@@ -466,8 +477,7 @@ public class Robot extends LoggedRobot {
         if (m_autoCommand != null)
             m_commandScheduler.cancel(m_autoCommand);
 
-        RobotCommands.disengageShooter();
-        // RobotCommands.setIntakeState(StateMachine.getIntakeState().off());
+        resetState();
 
         // CLIMBER MARK 2 MAYBE
         // if (RobotCommands.getHasAutoClimbRan()) {
@@ -507,7 +517,7 @@ public class Robot extends LoggedRobot {
             if (LiveConfig.getIsPit())
                 return Optional.empty();
 
-            var targetPose = StateMachine.getShooterTargetPose();
+            var targetPose = StateMachine.getLauncherTargetPose();
             if (targetPose.isEmpty())
                 return Optional.empty();
 
@@ -534,10 +544,11 @@ public class Robot extends LoggedRobot {
                 () -> {
                     Pose2d robot = StateMachine.odometryAndVision.getEstimatedPose();
                     LinearVelocity vel = m_shooterSubsystem.getExitVelocity();
+                    Logger.recordOutput("SimFuel/ShooterExitVelocity", vel);
 
                     Angle turretAngle = Constants.USE_TURRET ? m_turretSubsystem.getAngle() : Degrees.of(0d);
                     Rotation2d fieldYaw = robot.getRotation().plus(new Rotation2d(turretAngle.in(Radians)));
-                    double pitchRad = m_shooterSubsystem.getHoodAngle().in(Radians);
+                    double pitchRad = m_shooterSubsystem.getHoodAngle().plus(mechanismPositionToAngle(hoodPositionHome)).in(Radians);
 
                     Translation3d localDirection = new Translation3d(
                         Math.cos(pitchRad),
@@ -550,9 +561,9 @@ public class Robot extends LoggedRobot {
                         fieldYaw.getRadians()
                     );
 
-                    // is this maliciously ensuring "works in sim"??? idk
                     Translation3d fieldDirection = localDirection.rotateBy(fieldRotation);
                     fieldDirection = fieldDirection.times(vel.in(MetersPerSecond));
+                    // is this maliciously ensuring "works in sim"??? idk
                     fieldDirection = fieldDirection.plus(ConversionUtil.chassisSpeedsToTranslation3d(m_driveSubsystem.getChassisSpeeds()));
 
                     return fieldDirection;
