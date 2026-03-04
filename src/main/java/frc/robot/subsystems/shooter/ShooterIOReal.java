@@ -170,21 +170,27 @@ public final class ShooterIOReal implements ShooterIO {
         
         inputs.flywheelTargetVelocityRPS = PhoenixUtil.getRequestVelocity(m_flywheelMotorLeft.getAppliedControl());
 
+        final double leftCurrent = m_flywheelLeftCurrentSignal.getValueAsDouble();
         inputs.flywheelMotorLeftDutyCycle = PhoenixUtil.getRequestDutyCycle(m_flywheelMotorLeft.getAppliedControl());
         inputs.flywheelMotorLeftVelocityRPS = m_flywheelLeftVelocitySignal.getValueAsDouble();
-        inputs.flywheelMotorLeftCurrentAmps = m_flywheelLeftCurrentSignal.getValueAsDouble();
+        inputs.flywheelMotorLeftCurrentAmps = leftCurrent;
 
+        final double middleUpperCurrent = m_flywheelMiddleUpperCurrentSignal.getValueAsDouble();
         inputs.flywheelMotorMiddleUpperDutyCycle = PhoenixUtil.getRequestDutyCycle(m_flywheelMotorMiddleUpper.getAppliedControl());
         inputs.flywheelMotorMiddleUpperVelocityRPS = m_flywheelMiddleUpperVelocitySignal.getValueAsDouble();
-        inputs.flywheelMotorMiddleUpperCurrentAmps = m_flywheelMiddleUpperCurrentSignal.getValueAsDouble();
+        inputs.flywheelMotorMiddleUpperCurrentAmps = middleUpperCurrent;
 
+        final double middleLowerCurrent = m_flywheelMiddleLowerCurrentSignal.getValueAsDouble();
         inputs.flywheelMotorMiddleLowerDutyCycle = PhoenixUtil.getRequestDutyCycle(m_flywheelMotorMiddleLower.getAppliedControl());
         inputs.flywheelMotorMiddleLowerVelocityRPS = m_flywheelMiddleLowerVelocitySignal.getValueAsDouble();
-        inputs.flywheelMotorMiddleLowerCurrentAmps = m_flywheelMiddleLowerCurrentSignal.getValueAsDouble();
+        inputs.flywheelMotorMiddleLowerCurrentAmps = middleLowerCurrent;
 
+        final double rightCurrent = m_flywheelRightCurrentSignal.getValueAsDouble();
         inputs.flywheelMotorRightDutyCycle = PhoenixUtil.getRequestDutyCycle(m_flywheelMotorRight.getAppliedControl());
         inputs.flywheelMotorRightVelocityRPS = m_flywheelRightVelocitySignal.getValueAsDouble();
-        inputs.flywheelMotorRightCurrentAmps = m_flywheelRightCurrentSignal.getValueAsDouble();
+        inputs.flywheelMotorRightCurrentAmps = rightCurrent;
+
+        inputs.flywheelTotalCurrentAmps = leftCurrent + middleUpperCurrent + middleLowerCurrent + rightCurrent;
 
 
         final double hoodTargetPosition = m_hoodTargetPosition;

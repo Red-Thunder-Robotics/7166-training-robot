@@ -2,6 +2,7 @@ package frc.robot.state_machine;
 
 public enum IntakeState {
     HomeOff,
+    HomeReverse,
     DeployedOff,
     DeployedOn,
     DeployedReverse;
@@ -10,6 +11,7 @@ public enum IntakeState {
         switch (this) {
             case DeployedOn:
             case DeployedReverse:
+            case HomeReverse:
                 return true;
 
             default:
@@ -19,6 +21,7 @@ public enum IntakeState {
     public boolean areRollersReversed() {
         switch (this) {
             case DeployedReverse:
+            case HomeReverse:
                 return true;
 
             default:
@@ -42,6 +45,8 @@ public enum IntakeState {
             case DeployedOn:
             case DeployedReverse:
                 return DeployedOff;
+            case HomeReverse:
+                return HomeOff;
             default:
                 return this;
         }
@@ -62,6 +67,8 @@ public enum IntakeState {
             case DeployedOn:
             case DeployedReverse:
                 return DeployedReverse;
+            case HomeOff:
+                return HomeReverse;
             default:
                 return this;
         }

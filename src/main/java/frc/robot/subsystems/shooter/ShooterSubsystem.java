@@ -79,7 +79,8 @@ public final class ShooterSubsystem extends SubsystemBase {
                     Logger.recordOutput("Shooter/HubDistanceMeters", getDistanceToTarget(StateMachine.odometryAndVision.getEstimatedPose(), StateMachine.getHubPose()).in(Meters));
                     m_io.setHoodPosition(Degrees.of(LiveConfig.getLauncherTuningAngle()));
                     m_io.flywheelVelocity(RPM.of(LiveConfig.getLauncherTuningRPM()));
-                }
+                } else
+                    m_io.flywheelStop();
                 m_io.kickerStop();
                 break;
             case Shooting:
@@ -121,8 +122,11 @@ public final class ShooterSubsystem extends SubsystemBase {
     }
 
     public boolean shouldIndex() {
-        // FIXME: check all motors not just the leader?
-        return Math.abs(m_inputs.flywheelTargetVelocityRPS - m_inputs.flywheelMotorLeftVelocityRPS) <= shouldIndexVelocityThresholdRPS;
+        final boolean flywheel = Math.abs(m_inputs.flywheelTargetVelocityRPS - m_inputs.flywheelMotorLeftVelocityRPS) <= shouldIndexFlywheelVelocityThresholdRPS;
+        // final boolean kicker = Math.abs(m_inputs.kickerTargetVelocityRPS - m_inputs.kickerMotorVelocityRPS) <= shouldIndexKickerVelocityThresholdRPS;
+
+        // return flywheel && kicker;
+        return flywheel;
     }
 
     private void setParams(InterpolationShooterParams params) {

@@ -4,8 +4,10 @@ import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static frc.robot.subsystems.shooter.ShooterConstants.shouldIndexKickerVelocityThresholdSeconds;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -19,6 +21,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -129,13 +132,15 @@ public class StateMachine {
         withinJoystickRotationErrorThreshold = within;
     }
 
+    private static Timer kickerStartupTimer = new Timer();
+
     public static boolean turretShouldIndex() {
         if (LiveConfig.getIsPit())
             return true;
         return Constants.USE_TURRET ? TurretSubsystem.instance.shouldIndex() : withinJoystickRotationErrorThreshold;
     }
     public static boolean shouldIndex() {
-        return turretShouldIndex() && ShooterSubsystem.instance.shouldIndex();
+        return turretShouldIndex() && ShooterSubsystem.instance.shouldIndex() && kickerStartupTimer.hasElapsed(shouldIndexKickerVelocityThresholdSeconds);
     }
 
     private static ShooterState shooterState = ShooterState.Idle;
@@ -146,6 +151,12 @@ public class StateMachine {
     public static void setShooterState(ShooterState newShooterState) {
         shooterState = newShooterState;
         ShooterSubsystem.instance.stateUpdate(newShooterState);
+        if (newShooterState == ShooterState.Shooting) {
+            kickerStartupTimer.reset();
+            kickerStartupTimer.start();
+        } else {
+            kickerStartupTimer.stop();
+        }
     }
 
     private static ClimberMark1State climberLeftState = ClimberMark1State.Idle;
@@ -176,11 +187,45 @@ public class StateMachine {
             );
         }
 
-        public static Command deployIntake() {
+        public static Command deployIntakeOff() {
+            return setIntakeState(IntakeState.DeployedOff);
+        }
+        public static Command deployIntakeOn() {
             return setIntakeState(IntakeState.DeployedOn);
         }
-        public static Command retractIntake() {
+        public static Command retractIntakeOff() {
             return setIntakeState(IntakeState.HomeOff);
+        }
+
+        public static Command intakeDynamicOn() {
+            return Commands.defer(
+                () -> setIntakeState(intakeState.on()),
+                Set.of(GroundIntakeSubsystem.instance));
+        }
+        public static Command intakeDynamicOff() {
+            return Commands.defer(
+                () -> setIntakeState(intakeState.off()),
+                Set.of(GroundIntakeSubsystem.instance));
+        }
+        public static Command intakeDynamicReverse() {
+            return Commands.defer(
+                () -> setIntakeState(intakeState.reverse()),
+                Set.of(GroundIntakeSubsystem.instance));
+        }
+
+        public static Command intakeDeployedToOnConditional() {
+            return Commands.either(
+                deployIntakeOn(),
+                Commands.none(),
+                () -> intakeState.isDeployed()
+            );
+        }
+        public static Command intakeDeployedToOffConditional() {
+            return Commands.either(
+                deployIntakeOff(),
+                Commands.none(),
+                () -> intakeState.isDeployed()
+            );
         }
 
         // turret
@@ -287,6 +332,17 @@ public class StateMachine {
         //         Set.of(ClimberSubsystem.instance)
         //     );
         // }
+
+        // general
+        public static Command generalReversing() {
+            return setShooterReversing()
+                .alongWith(intakeDynamicReverse());
+        }
+        // idle those that reversing affects
+        public static Command generalReversingIdle() {
+            return setShooterIdle()
+                .alongWith(intakeDynamicOff());
+        }
 
         private static boolean hasAutoClimbRan = false;
         public static boolean getHasAutoClimbRan() {

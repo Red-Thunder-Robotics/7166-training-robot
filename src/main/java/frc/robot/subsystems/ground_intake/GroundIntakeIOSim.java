@@ -34,7 +34,6 @@ public final class GroundIntakeIOSim implements GroundIntakeIO {
         inputs.actuatorPositionDegrees = mechanismPositionToAngle(position).in(Degrees);
 
         inputs.rollerMotorVelocityRPS = m_rollerVelocityRPS;
-        inputs.rollerMotorCurrentAmps = 0d;
     }
 
     @Override

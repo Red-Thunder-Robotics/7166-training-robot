@@ -57,7 +57,7 @@ public final class Constants {
         public static final Distance BUMPER_WIDTH = Inches.of(34.52d); // 31
         public static final Distance BUMPER_LENGTH = BUMPER_WIDTH;
 
-        public static final double SHOULD_INDEX_THRESHOLD_DEGREES = 0.5d;
+        public static final double SHOULD_INDEX_THRESHOLD_DEGREES = 1d;
         public static final double SHOULD_INDEX_THRESHOLD_MOVING_DEGREES = 5d;
         public static final double IS_MOVING_THRESHOLD_METERS = Units.inchesToMeters(2d);
     }

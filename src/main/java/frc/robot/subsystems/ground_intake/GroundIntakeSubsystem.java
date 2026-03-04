@@ -1,14 +1,18 @@
 package frc.robot.subsystems.ground_intake;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.subsystems.ground_intake.GroundIntakeConstants.*;
 
 import java.util.function.BooleanSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.state_machine.IntakeState;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.ConditionWaiter;
 
 public final class GroundIntakeSubsystem extends SubsystemBase {
@@ -21,6 +25,9 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
     private ConditionWaiter m_reverseRollerWaiter = new ConditionWaiter(this::isAtDeployedPosition);
     private ConditionWaiter m_deployWaiter = new ConditionWaiter(this::areRollersStopped);
     private ConditionWaiter m_retractWaiter = new ConditionWaiter(this::areRollersStopped);
+
+    private boolean m_rollerForward = false;
+    private boolean m_rollerReverse = false;
 
     public GroundIntakeSubsystem(GroundIntakeIO io) {
         instance = this;
@@ -42,6 +49,27 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
             deploy();
         if (m_retractWaiter.process())
             retract();
+
+        if (m_rollerForward) {
+            final var speedsX = Drive.instance.getChassisSpeeds().vxMetersPerSecond;
+            AngularVelocity rollerOutput = rollerOutputVelocity;
+
+            /*
+             * goal is slow down rollers as you drive robot-relative forward.
+             * chassis speed multiplied by 60 -> meters per minute
+             * then divide by roller circumference -> rpm offset
+             * substract rollerOutput minus rpm offset with a certain floor
+             */
+            if (speedsX > 0d) {
+                final double rpmOffset = speedsX * 60d / rollerCircumference.in(Meters);
+                double newRPM = rollerOutput.in(RPM) - rpmOffset;
+                newRPM = Math.max(newRPM, rollerOutputVelocityMinimum.in(RPM));
+                rollerOutput = RPM.of(newRPM);
+            }
+
+            m_io.rollerVelocity(rollerOutput);
+        } else if (m_rollerReverse)
+            m_io.rollerVelocity(rollerOutputVelocityReverse);
     }
 
     public boolean isAtDeployedPosition() {
@@ -86,12 +114,16 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
     // }
 
     private void startRoller() {
-        m_io.rollerVelocity(rollerOutputVelocity);
+        // m_io.rollerVelocity(rollerOutputVelocity);
+        m_rollerForward = true;
     }
     private void reverseRoller() {
-        m_io.rollerVelocity(rollerOutputVelocityReverse);
+        // m_io.rollerVelocity(rollerOutputVelocityReverse);
+        m_rollerReverse = true;
     }
     public void stopRoller() {
+        m_rollerForward = false;
+        m_rollerReverse = false;
         m_io.rollerStop();
     }
 

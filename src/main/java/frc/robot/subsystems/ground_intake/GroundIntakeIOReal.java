@@ -86,6 +86,7 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
         final double actuatorPositionRotations = m_actuatorPositionSignal.getValueAsDouble();
         inputs.actuatorPositionRotations = actuatorPositionRotations;
         inputs.actuatorPositionDegrees = mechanismPositionToAngle(actuatorPositionRotations).in(Degrees);
+        inputs.actuatorMotorCurrentAmps = m_actuatorCurrentSignal.getValueAsDouble();
 
         inputs.rollerMotorDutyCycle = PhoenixUtil.getRequestDutyCycle(m_rollerMotor.getAppliedControl());
         inputs.rollerMotorVelocityRPS = m_rollerVelocitySignal.getValueAsDouble();

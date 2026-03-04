@@ -27,6 +27,8 @@ public interface ShooterIO {
         double flywheelMotorRightVelocityRPS;
         double flywheelMotorRightCurrentAmps;
 
+        double flywheelTotalCurrentAmps;
+
         // hood
         double hoodTargetPositionRotations;
         double hoodTargetPositionDegrees;

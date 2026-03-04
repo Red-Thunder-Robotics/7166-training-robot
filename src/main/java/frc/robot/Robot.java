@@ -279,13 +279,25 @@ public class Robot extends LoggedRobot {
         
         Controls.resetGyroButton.onTrue(Commands.runOnce(this::resetGyro));
 
-        Controls.deployIntakeButton.onTrue(RobotCommands.deployIntake());
-        Controls.deployIntakeButton.debounce(0.5d).whileTrue(
-            IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
-        Controls.retractIntakeButton.onTrue(RobotCommands.retractIntake());
+        // when deployIntakeButton pressed, already deployed / has been 0.25 seconds -> deploy + spin rollers OTHERWISE deploy + don't spin rollers
+        Controls.deployIntakeButton
+            .onTrue(Commands.either(
+                RobotCommands.deployIntakeOn(),
+                RobotCommands.deployIntakeOff(),
+                () -> StateMachine.getIntakeState().isDeployed()
+            ));
+        Controls.deployIntakeButton
+            .debounce(0.25d)
+            .onTrue(RobotCommands.intakeDeployedToOnConditional());
+        Controls.deployIntakeButton.onFalse(RobotCommands.intakeDeployedToOffConditional());
 
-        Controls.reverseButton.onTrue(RobotCommands.setShooterReversing());
-        Controls.reverseButton.onFalse(RobotCommands.setShooterIdle());
+        // Controls.deployIntakeButton.debounce(0.5d).whileTrue(
+        //     IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
+
+        Controls.retractIntakeButton.onTrue(RobotCommands.retractIntakeOff());
+
+        Controls.reverseButton.onTrue(RobotCommands.generalReversing());
+        Controls.reverseButton.onFalse(RobotCommands.generalReversingIdle());
 
         Controls.hubButton.onTrue(
             RobotCommands.engageShooterHub()
@@ -348,8 +360,8 @@ public class Robot extends LoggedRobot {
         NamedCommands.registerCommand("EngageShooterHub", engageShooterHub);
         NamedCommands.registerCommand("DisengageShooter", RobotCommands.disengageShooter());
 
-        NamedCommands.registerCommand("IntakeDeployOn", RobotCommands.setIntakeState(IntakeState.DeployedOn));
-        NamedCommands.registerCommand("IntakeHomeOff", RobotCommands.setIntakeState(IntakeState.HomeOff));
+        NamedCommands.registerCommand("IntakeDeployOn", RobotCommands.deployIntakeOn());
+        NamedCommands.registerCommand("IntakeHomeOff", RobotCommands.retractIntakeOff());
 
         // FIXME: waitForEmptyHopper command using vision
         Command waitForEmptyHopper = Commands.waitSeconds(5d);

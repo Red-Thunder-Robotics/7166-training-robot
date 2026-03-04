@@ -26,14 +26,16 @@ import frc.robot.state_machine.StateMachine;
 
 public final class ShooterConstants {
     // public static final long spinUpDurationMilliseconds = 800L;
-    public static final double shouldIndexVelocityThresholdRPS = 3d;
+    public static final double shouldIndexFlywheelVelocityThresholdRPS = 3d;
+    // public static final double shouldIndexKickerVelocityThresholdRPS = 3d;
+    public static final double shouldIndexKickerVelocityThresholdSeconds = 0.5d;
     public static final double latencyCompensationSeconds = 0.150d;
     
     public static final int flywheelMotorIdLeft = 1;
     public static final int flywheelMotorIdMiddleUpper = 12;
     public static final int flywheelMotorIdMiddleLower = 17;
     public static final int flywheelMotorIdRight = 16;
-    public static final int flywheelCurrentLimit = 40;
+    public static final int flywheelCurrentLimit = 15;
     public static final NeutralModeValue flywheelNeutralMode = NeutralModeValue.Coast;
     public static final InvertedValue flywheelInvertedLeft = InvertedValue.Clockwise_Positive;
     public static final InvertedValue flywheelInvertedMiddleUpper = InvertedValue.Clockwise_Positive;
