@@ -31,13 +31,43 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTrenchToClimb"
+            "pathName": "Right Shoot To NZ2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right NZ2 To Shoot"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "ClimbMark1Home"
+            "name": "AfterShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Shoot To NZ3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right NZ3 To Shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AfterShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RightTrenchToClimb"
           }
         }
       ]

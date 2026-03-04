@@ -7,19 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightStartToOutPost"
+            "pathName": "RightStartToShootPos"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightOutPostToShootPos"
+            "name": "EngageShooterHub"
           }
         },
         {
@@ -32,12 +26,6 @@
           "type": "path",
           "data": {
             "pathName": "RightShootPosToClimb"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ClimbMark1Home"
           }
         }
       ]

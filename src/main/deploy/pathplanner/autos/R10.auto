@@ -49,24 +49,6 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Shoot To NZ3"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right NZ3 To Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
             "pathName": "RightTrenchToClimb"
           }
         }

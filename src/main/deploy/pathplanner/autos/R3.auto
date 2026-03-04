@@ -7,37 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightShootToNeutral"
+            "pathName": "RightStartToOutPost"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RightPickUpInNeutral"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightPickedNeutralToShootPos"
+            "pathName": "RightOutPostToShootPos"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "AfterShoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightTrenchToClimb"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ClimbMark1Home"
           }
         }
       ]
