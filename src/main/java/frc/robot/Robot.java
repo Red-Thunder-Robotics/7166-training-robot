@@ -32,6 +32,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 
@@ -418,7 +419,9 @@ public class Robot extends LoggedRobot {
 
     /** This function is called periodically when disabled. */
     @Override
-    public void disabledPeriodic() {}
+    public void disabledPeriodic() {
+        // TODO: use megatag1 (doesn't need gyro input) for nt diagnostic if our starting pose is off by enough?
+    }
 
     private Supplier<Optional<Rotation2d>> m_autonomousRotationSupplier;
     private Command m_autoSimFuelCommand;
@@ -434,8 +437,13 @@ public class Robot extends LoggedRobot {
 
         m_autoCommand = m_autoChooser.get();
 
-        if (m_autoCommand != null)
+        if (m_autoCommand != null) {
             m_commandScheduler.schedule(m_autoCommand);
+            if (m_autoCommand instanceof PathPlannerAuto) {
+                var auto = (PathPlannerAuto) m_autoCommand;
+                resetGyro(auto.getStartingPose().getRotation());
+            }
+        }
 
         if (m_autoSimFuelCommand == null)
             m_autoSimFuelCommand = repeatingSimFuelCommand();
@@ -466,7 +474,7 @@ public class Robot extends LoggedRobot {
             PPHolonomicDriveController.clearRotationFeedbackOverride();
 
         if (rotation.isPresent() && (timestamp - m_pathplannerFeedbackTimestamp) > 0.05d) {
-            final double output = DriveCommands.calculateOmega(m_driveSubsystem, rotation.get());
+            final double output = DriveCommands.calculateOmega(m_driveSubsystem, rotation.get()) * m_driveSubsystem.getMaxAngularSpeedRadPerSec();
             ChassisSpeeds speeds =
                 new ChassisSpeeds(
                     0d,
@@ -486,8 +494,12 @@ public class Robot extends LoggedRobot {
     /** This function is called once when teleop is enabled. */
     @Override
     public void teleopInit() {
-        if (m_autoCommand != null)
+        if (m_autoCommand != null) {
             m_commandScheduler.cancel(m_autoCommand);
+            m_autoCommand = null;
+        }
+
+        m_commandScheduler.cancelAll();
 
         resetState();
 

@@ -17,15 +17,15 @@
     {
       "anchor": {
         "x": 4.019120481927711,
-        "y": 0.4725662650602419
+        "y": 0.636
       },
       "prevControl": {
         "x": 7.589746987951807,
-        "y": 0.450710843373496
+        "y": 0.6141445783132541
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RightShoot pos"
+      "linkedName": "RightShootPos"
     }
   ],
   "rotationTargets": [],
@@ -45,7 +45,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 3.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

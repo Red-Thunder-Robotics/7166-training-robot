@@ -3,24 +3,24 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.4907307692307705,
-        "y": 0.6860769230769233
+        "x": 0.7854392191659267,
+        "y": 0.636
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.4043584905587707,
-        "y": 3.430507907656891
+        "x": 2.699066940493927,
+        "y": 3.380430984579968
       },
       "isLocked": false,
       "linkedName": "OutPostPos"
     },
     {
       "anchor": {
-        "x": 2.805,
+        "x": 2.985594,
         "y": 4.079
       },
       "prevControl": {
-        "x": 2.6052119666140845,
+        "x": 2.785805966614084,
         "y": 3.928717793083185
       },
       "nextControl": null,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 3.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 70.0
   },
   "reversed": false,
   "folder": "Center",

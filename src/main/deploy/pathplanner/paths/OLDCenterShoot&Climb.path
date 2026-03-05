@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 2.8054658385093165,
-        "y": 4.079263531499556
+        "x": 2.985594,
+        "y": 4.079
       },
       "prevControl": {
-        "x": 3.0554658385093165,
-        "y": 4.079263531499556
+        "x": 3.235594,
+        "y": 4.079
       },
       "nextControl": {
-        "x": 2.555465838509316,
-        "y": 4.079263531499556
+        "x": 2.7355939999999994,
+        "y": 4.079
       },
       "isLocked": false,
       "linkedName": "CenterShootPos"
@@ -66,7 +66,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 3.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

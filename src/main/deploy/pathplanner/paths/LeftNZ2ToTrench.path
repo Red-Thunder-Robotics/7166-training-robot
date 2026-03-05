@@ -16,24 +16,29 @@
     },
     {
       "anchor": {
-        "x": 4.085,
-        "y": 7.412
+        "x": 2.5559804791481806,
+        "y": 6.002715173025731
       },
       "prevControl": {
-        "x": 7.756397590361445,
-        "y": 7.424734939759036
+        "x": 6.227378069509626,
+        "y": 6.015450112784767
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "LeftShootPos"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.6114058355437668,
+      "rotationDegrees": -119.99999999999999
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 3.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,12 +47,12 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -45.0
   },
   "reversed": false,
   "folder": "Left",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": -90.0
   },
   "useDefaultConstraints": true

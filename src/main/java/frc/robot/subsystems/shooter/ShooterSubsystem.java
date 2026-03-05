@@ -95,9 +95,9 @@ public final class ShooterSubsystem extends SubsystemBase {
                         // else
 
                         InterpolationShooterParams params;
-                        if (LiveConfig.getIsPit())
-                            params = LauncherLocationParam.HubCenter.m_params;
-                        else
+                        // if (LiveConfig.getIsPit())
+                        //     params = LauncherLocationParam.HubCenter.m_params;
+                        // else
                             params = calculateParams(targetPose.get());
                         if (params != null)
                             setParams(params);

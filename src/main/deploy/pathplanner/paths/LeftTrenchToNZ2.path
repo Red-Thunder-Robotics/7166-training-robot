@@ -3,16 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.085,
-        "y": 7.412
+        "x": 2.5559804791481806,
+        "y": 6.002715173025731
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.630843373493978,
-        "y": 7.40287951807229
+        "x": 5.101823852642159,
+        "y": 5.993594691098021
       },
       "isLocked": false,
       "linkedName": "LeftShootPos"
+    },
+    {
+      "anchor": {
+        "x": 7.650310559006211,
+        "y": 7.282333629103815
+      },
+      "prevControl": {
+        "x": 7.4699837517772965,
+        "y": 7.5431988399471885
+      },
+      "nextControl": {
+        "x": 7.830637366235126,
+        "y": 7.021468418260441
+      },
+      "isLocked": false,
+      "linkedName": null
     },
     {
       "anchor": {
@@ -20,8 +36,8 @@
         "y": 4.570457831325302
       },
       "prevControl": {
-        "x": 8.051445783132529,
-        "y": 6.952698795180724
+        "x": 7.762981366459627,
+        "y": 6.96041703637977
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,9 +47,21 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeDeployOn",
+      "waypointRelativePos": 0.75,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeDeployOn"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 3.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -41,14 +69,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 3.0,
+    "velocity": 2.0,
     "rotation": -90.0
   },
   "reversed": false,
   "folder": "Left",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -45.0
   },
   "useDefaultConstraints": true
 }

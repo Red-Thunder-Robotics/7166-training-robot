@@ -7,19 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightShootToNeutral"
+            "pathName": "RightShootToNZ4"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RightPickUpInNeutral"
+            "pathName": "RightPickUpNZ4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeHomeOff"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RightPickedNeutralToShootPos"
+            "pathName": "RightNZ4ToShootPos"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "EngageShooterHub"
           }
         },
         {

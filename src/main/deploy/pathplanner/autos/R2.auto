@@ -27,6 +27,12 @@
           "data": {
             "pathName": "RightShootPosToClimb"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbMark1Home"
+          }
         }
       ]
     }

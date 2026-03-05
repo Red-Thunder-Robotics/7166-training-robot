@@ -16,12 +16,28 @@
     },
     {
       "anchor": {
+        "x": 7.561783496007099,
+        "y": 7.242094055013309
+      },
+      "prevControl": {
+        "x": 7.327961931643024,
+        "y": 7.330567079367283
+      },
+      "nextControl": {
+        "x": 7.859556344276841,
+        "y": 7.1294232475598935
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
         "x": 7.781615384615385,
         "y": 6.779256410256411
       },
       "prevControl": {
-        "x": 7.55902268880513,
-        "y": 6.893065424714508
+        "x": 7.6664063886424145,
+        "y": 7.04089618456078
       },
       "nextControl": null,
       "isLocked": false,
@@ -34,7 +50,7 @@
   "eventMarkers": [
     {
       "name": "IntakeDeployOn",
-      "waypointRelativePos": 0.15,
+      "waypointRelativePos": 0.3,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -45,7 +61,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 3.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -53,14 +69,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 3.0,
+    "velocity": 2.0,
     "rotation": -90.0
   },
   "reversed": false,
   "folder": "Left",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

@@ -4,36 +4,53 @@
     {
       "anchor": {
         "x": 4.434373493975903,
-        "y": 0.6364819277108438
+        "y": 0.636
       },
       "prevControl": null,
       "nextControl": {
         "x": 4.184703096345168,
-        "y": 0.6493151871140794
+        "y": 0.6488332594032357
       },
       "isLocked": false,
       "linkedName": "RightStartPos"
     },
     {
       "anchor": {
-        "x": 0.4907307692307705,
-        "y": 0.6860769230769233
+        "x": 0.7854392191659267,
+        "y": 0.636
       },
       "prevControl": {
-        "x": 0.7764922750124301,
-        "y": 0.6697900664573291
+        "x": 1.0712007249475863,
+        "y": 0.6197131433804058
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "OutPostPos"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.7586206896551718,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeDeployOn",
+      "waypointRelativePos": 0.647651006711411,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeDeployOn"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 3.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
