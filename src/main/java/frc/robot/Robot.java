@@ -15,6 +15,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static frc.robot.subsystems.shooter.ShooterConstants.hoodPositionHome;
 import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
+import static frc.robot.util.CommandUtil.*;
 
 import java.util.Optional;
 import java.util.Set;
@@ -271,26 +272,29 @@ public class Robot extends LoggedRobot {
         final DoubleSupplier driverOmega = () -> -Controls.driveController.getRightX();
 
         m_driveSubsystem.setDefaultCommand(
-            DriveCommands.joystickDrive(
+            cmdName(DriveCommands.joystickDrive(
                 m_driveSubsystem,
                 driverX,
                 driverY,
                 driverOmega,
-                getShooterRotationalGoalSupplier()));
+                getShooterRotationalGoalSupplier()), "JoystickDrive"));
         
-        Controls.resetGyroButton.onTrue(Commands.runOnce(this::resetGyro));
+        Controls.resetGyroButton.onTrue(cmdName(Commands.runOnce(this::resetGyro), "ResetGyro"));
+
+        Controls.lockWheelsButton.whileTrue(
+            cmdName(Commands.run(m_driveSubsystem::stopWithX, m_driveSubsystem), "LockWheels"));
 
         // when deployIntakeButton pressed, already deployed / has been 0.25 seconds -> deploy + spin rollers OTHERWISE deploy + don't spin rollers
         Controls.deployIntakeButton
-            .onTrue(Commands.either(
+            .onTrue(cmdName(Commands.either(
                 RobotCommands.deployIntakeOn(),
                 RobotCommands.deployIntakeOff(),
                 () -> StateMachine.getIntakeState().isDeployed()
-            ));
+            ), "DeployIntakeInitial"));
         Controls.deployIntakeButton
             .debounce(0.25d)
-            .onTrue(RobotCommands.intakeDeployedToOnConditional());
-        Controls.deployIntakeButton.onFalse(RobotCommands.intakeDeployedToOffConditional());
+            .onTrue(cmdName(RobotCommands.intakeDeployedToOnConditional(), "DeployIntakeDelayed"));
+        Controls.deployIntakeButton.onFalse(cmdName(RobotCommands.intakeDeployedToOffConditional(), "DeployIntakeOff"));
 
         // Controls.deployIntakeButton.debounce(0.5d).whileTrue(
         //     IntakeCommands.joystickAssist(m_driveSubsystem, driverX, driverY, driverOmega, () -> false));
@@ -304,20 +308,20 @@ public class Robot extends LoggedRobot {
             RobotCommands.engageShooterHub()
         );
         Controls.hubButton.onFalse(
-            Commands.either(
+            cmdName(Commands.either(
                 RobotCommands.engageShooterAllianceFeed(),
                 RobotCommands.disengageShooter(),
-                Controls.allianceFeedButton::getAsBoolean)
+                Controls.allianceFeedButton::getAsBoolean), "HubDisengage")
         );
 
         Controls.allianceFeedButton.onTrue(
             RobotCommands.engageShooterAllianceFeed()
         );
         Controls.allianceFeedButton.onFalse(
-            Commands.either(
+            cmdName(Commands.either(
                 RobotCommands.engageShooterHub(),
                 RobotCommands.disengageShooter(),
-                Controls.hubButton::getAsBoolean)
+                Controls.hubButton::getAsBoolean), "AllianceFeedDisengage")
         );
 
         if (Robot.isSimulation())
@@ -366,7 +370,7 @@ public class Robot extends LoggedRobot {
 
         // FIXME: waitForEmptyHopper command using vision
         Command waitForEmptyHopper = Commands.waitSeconds(12d); // next 8?
-        NamedCommands.registerCommand("AfterShoot", waitForEmptyHopper.andThen(RobotCommands.disengageShooter()));
+        NamedCommands.registerCommand("AfterShoot", cmdName(waitForEmptyHopper.andThen(RobotCommands.disengageShooter()), "AfterShoot"));
 
         // NamedCommands.registerCommand("ClimbRotate", Commands.defer(() -> {
         //     var robotPose = StateMachine.odometryAndVision.getEstimatedPose();
@@ -375,7 +379,7 @@ public class Robot extends LoggedRobot {
         //         MetersPerSecond.of(1d), MetersPerSecondPerSecond.of(1d),
         //         RadiansPerSecond.of(360d), RadiansPerSecondPerSecond.of(720d)));
         // }, Set.of()));
-        NamedCommands.registerCommand("ClimbRotate", AutoDriveCommands.faceRotation2d(Rotation2d.kZero));
+        NamedCommands.registerCommand("ClimbRotate", cmdName(AutoDriveCommands.faceRotation2d(Rotation2d.kZero), "AutoClimbRotate"));
 
         // CLIMBER MARK 1
         NamedCommands.registerCommand("ClimbMark1Deploy", RobotCommands.setClimberBothState(ClimberMark1State.Deployed));
@@ -572,7 +576,7 @@ public class Robot extends LoggedRobot {
     }
 
     private Command repeatingSimFuelCommand() {
-        return Commands.repeatingSequence(
+        return cmdName(Commands.repeatingSequence(
             Commands.either(Commands.runOnce(() -> m_commandScheduler.schedule(new SimulationCommands.SimFuelCommand(
                 () -> new Pose3d(StateMachine.odometryAndVision.getEstimatedPose())
                     .plus(new Transform3d(0, 0, Units.feetToMeters(1.5d), Rotation3d.kZero)),
@@ -605,6 +609,6 @@ public class Robot extends LoggedRobot {
                 }
             ))), Commands.none(), m_indexerSubsystem::getIsFeeding),
             Commands.waitSeconds(0.002d)
-        );
+        ), "RepeatingSimFuel");
     }
 }

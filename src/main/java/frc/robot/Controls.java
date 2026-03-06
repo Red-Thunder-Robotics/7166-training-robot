@@ -13,13 +13,14 @@ public final class Controls {
     public static final Trigger manualTurretToggle = operatorController.rightStick();
 
     public static final Trigger resetGyroButton = driveController.start();
+    public static final Trigger lockWheelsButton = driveController.x();
 
     public static final Trigger deployIntakeButton = driveController.rightBumper();
     public static final Trigger retractIntakeButton = driveController.leftBumper();
 
     public static final Trigger reverseButton = operatorController.leftTrigger();
     public static final Trigger hubButton = operatorController.rightTrigger();
-    public static final Trigger allianceFeedButton = operatorController.x();
+    public static final Trigger allianceFeedButton = operatorController.b();
 
     // CLIMBER MARK 1
     public static final Trigger leftClimbUp = operatorController.povUp();
@@ -29,7 +30,7 @@ public final class Controls {
     public static final Trigger rightClimbDown = operatorController.a();
 
     // CLIMBER MARK 2
-    // public static final Trigger climbSafetyButton = operatorController.b();
-    // public static final Trigger climbForward = operatorController.povUp(); // bottom right paddle
-    // public static final Trigger climbBackward = operatorController.povLeft(); // bottom left paddle
+    // public static final Trigger climbSafetyButton = driveController.b();
+    // public static final Trigger climbForward = driveController.povUp(); // bottom right paddle
+    // public static final Trigger climbBackward = driveController.povLeft(); // bottom left paddle
 }

@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static frc.robot.subsystems.turret.TurretConstants.*;
+import static frc.robot.util.CommandUtil.*;
 
 import java.util.function.DoubleSupplier;
 
@@ -84,11 +85,11 @@ public final class TurretSubsystem extends SubsystemBase {
     }
 
     public Command toggleManualModeCommand() {
-        return runOnce(() -> {
+        return cmdName(runOnce(() -> {
             m_manualEnabled = !m_manualEnabled;
             if (m_manualEnabled)
                 m_manualTarget = getAngle();
-        });
+        }), "TurretManualMode");
     }
 
     public void setManualSupplier(DoubleSupplier supplier) {

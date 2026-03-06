@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static frc.robot.subsystems.shooter.ShooterConstants.shouldIndexKickerVelocityThresholdSeconds;
+import static frc.robot.util.CommandUtil.*;
 
 import java.util.Optional;
 import java.util.Set;
@@ -188,44 +189,42 @@ public class StateMachine {
         }
 
         public static Command deployIntakeOff() {
-            return setIntakeState(IntakeState.DeployedOff);
+            return cmdName(setIntakeState(IntakeState.DeployedOff), "IntakeDeployedOff");
         }
         public static Command deployIntakeOn() {
-            return setIntakeState(IntakeState.DeployedOn);
+            return cmdName(setIntakeState(IntakeState.DeployedOn), "IntakeDeployedOn");
         }
         public static Command retractIntakeOff() {
-            return setIntakeState(IntakeState.HomeOff);
+            return cmdName(setIntakeState(IntakeState.HomeOff), "IntakeHomeOff");
         }
 
         public static Command intakeDynamicOn() {
-            return Commands.defer(
+            return cmdName(Commands.defer(
                 () -> setIntakeState(intakeState.on()),
-                Set.of(GroundIntakeSubsystem.instance));
+                Set.of(GroundIntakeSubsystem.instance)), "DynamicOn");
         }
         public static Command intakeDynamicOff() {
-            return Commands.defer(
+            return cmdName(Commands.defer(
                 () -> setIntakeState(intakeState.off()),
-                Set.of(GroundIntakeSubsystem.instance));
+                Set.of(GroundIntakeSubsystem.instance)), "DynamicOff");
         }
         public static Command intakeDynamicReverse() {
-            return Commands.defer(
+            return cmdName(Commands.defer(
                 () -> setIntakeState(intakeState.reverse()),
-                Set.of(GroundIntakeSubsystem.instance));
+                Set.of(GroundIntakeSubsystem.instance)), "DynamicReverse");
         }
 
         public static Command intakeDeployedToOnConditional() {
-            return Commands.either(
+            return cmdName(Commands.either(
                 deployIntakeOn(),
                 Commands.none(),
-                () -> intakeState.isDeployed()
-            );
+                () -> intakeState.isDeployed()), "IntakeDeployedToOnConditional");
         }
         public static Command intakeDeployedToOffConditional() {
-            return Commands.either(
+            return cmdName(Commands.either(
                 deployIntakeOff(),
                 Commands.none(),
-                () -> intakeState.isDeployed()
-            );
+                () -> intakeState.isDeployed()), "IntakeDeployedToOffConditional");
         }
 
         // turret
@@ -237,13 +236,13 @@ public class StateMachine {
         }
 
         public static Command setLauncherTargetIdle() {
-            return setLauncherTarget(LauncherTarget.Idle);
+            return cmdName(setLauncherTarget(LauncherTarget.Idle), "LauncherTargetIdle");
         }
         public static Command setLauncherTargetHubTracking() {
-            return setLauncherTarget(LauncherTarget.HubTracking);
+            return cmdName(setLauncherTarget(LauncherTarget.HubTracking), "LauncherTargetHubTracking");
         }
         public static Command setLauncherTargetAllianceFeed() {
-            return setLauncherTarget(LauncherTarget.AllianceFeed);
+            return cmdName(setLauncherTarget(LauncherTarget.AllianceFeed), "LauncherTargetAllianceFeed");
         }
 
         // shooter
@@ -254,29 +253,29 @@ public class StateMachine {
         }
 
         public static Command setShooterIdle() {
-            return setShooterState(ShooterState.Idle);
+            return cmdName(setShooterState(ShooterState.Idle), "ShooterIdle");
         }
         public static Command setShooterShooting() {
-            return setShooterState(ShooterState.Shooting);
+            return cmdName(setShooterState(ShooterState.Shooting), "ShooterShooting");
         }
         public static Command setShooterReversing() {
-            return setShooterState(ShooterState.Reversing);
+            return cmdName(setShooterState(ShooterState.Reversing), "ShooterReversing");
         }
 
         // shooter + turret
         public static Command engageShooterHub() {
-            return setLauncherTargetHubTracking()
+            return cmdName(setLauncherTargetHubTracking()
                 .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
-                .andThen(setShooterShooting());
+                .andThen(setShooterShooting()), "EngageShooterHub");
         }
         public static Command engageShooterAllianceFeed() {
-            return setLauncherTargetAllianceFeed()
+            return cmdName(setLauncherTargetAllianceFeed()
                 .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
-                .andThen(setShooterShooting());
+                .andThen(setShooterShooting()), "EngageShooterAllianceFeed");
         }
         public static Command disengageShooter() {
-            return setLauncherTargetIdle()
-                .alongWith(setShooterIdle());
+            return cmdName(setLauncherTargetIdle()
+                .alongWith(setShooterIdle()), "DisengageShooter");
         }
 
         // climber mark1
@@ -300,17 +299,17 @@ public class StateMachine {
         }
 
         public static Command climberLeftHome() {
-            return setClimberLeftState(ClimberMark1State.Home);
+            return cmdName(setClimberLeftState(ClimberMark1State.Home), "ClimberLeftHome");
         }
         public static Command climberLeftDeployed() {
-            return setClimberLeftState(ClimberMark1State.Deployed);
+            return cmdName(setClimberLeftState(ClimberMark1State.Deployed), "ClimberLeftDeployed");
         }
 
         public static Command climberRightHome() {
-            return setClimberRightState(ClimberMark1State.Home);
+            return cmdName(setClimberRightState(ClimberMark1State.Home), "ClimberRightHome");
         }
         public static Command climberRightDeployed() {
-            return setClimberRightState(ClimberMark1State.Deployed);
+            return cmdName(setClimberRightState(ClimberMark1State.Deployed), "ClimberRightDeployed");
         }
 
         // climber mark2
@@ -321,27 +320,27 @@ public class StateMachine {
         // }
 
         // public static Command climberStateIncrease() {
-        //     return Commands.defer(
+        //     return withName(Commands.defer(
         //         () -> setClimberState(getClimberState().getNext()),
-        //         Set.of(ClimberSubsystem.instance)
+        //         Set.of(ClimberSubsystem.instance), "ClimberStateIncrease")
         //     );
         // }
         // public static Command climberStateDecrease() {
-        //     return Commands.defer(
+        //     return withName(Commands.defer(
         //         () -> setClimberState(getClimberState().getPrevious()),
-        //         Set.of(ClimberSubsystem.instance)
+        //         Set.of(ClimberSubsystem.instance), "ClimberStateDecrease")
         //     );
         // }
 
         // general
         public static Command generalReversing() {
-            return setShooterReversing()
-                .alongWith(intakeDynamicReverse());
+            return cmdName(setShooterReversing()
+                .alongWith(intakeDynamicReverse()), "GeneralReversing");
         }
         // idle those that reversing affects
         public static Command generalReversingIdle() {
-            return setShooterIdle()
-                .alongWith(intakeDynamicOff());
+            return cmdName(setShooterIdle()
+                .alongWith(intakeDynamicOff()), "GeneralReversingIdle");
         }
 
         private static boolean hasAutoClimbRan = false;
@@ -351,7 +350,7 @@ public class StateMachine {
 
         // FIXME: auto climb behavior
         public static Command autoClimb() {
-            return Commands.runOnce(() -> hasAutoClimbRan = true);
+            return cmdName(Commands.runOnce(() -> hasAutoClimbRan = true), "AutoClimb");
         }
     }
 
