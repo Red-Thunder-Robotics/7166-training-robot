@@ -86,9 +86,9 @@ public final class ShooterSubsystem extends SubsystemBase {
             case Shooting:
                 var targetPose = StateMachine.getLauncherTargetPose();
                 if (!launcherTuning) {
-                    if (StateMachine.getLauncherTarget() == LauncherTarget.AllianceFeed)
+                    /*if (StateMachine.getLauncherTarget() == LauncherTarget.AllianceFeed)
                         setParams(allianceFeedParams);
-                    else if (targetPose.isPresent()) {
+                    else */if (targetPose.isPresent()) {
                         // if (StateMachine.getLauncherTargetPoseIsHub())
                         //     paramsOptional = LauncherLocationParam.getFromRobot(StateMachine.odometryAndVision.getEstimatedPose().getTranslation())
                         //         .map((value) -> value.m_params);

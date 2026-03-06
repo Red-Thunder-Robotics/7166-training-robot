@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.ConversionUtil.angleToMechanismPosition;
+import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -158,6 +159,8 @@ public final class ShooterConstants {
             Normal.map.put(3.1, new InterpolationShooterParams(1600d, 30d));
             Normal.map.put(3.63, trenchShooterParams);
             Normal.map.put(5.5, new InterpolationShooterParams(2200d, 30d));
+            // cross map (only x direction so not horizontal) alliance feed
+            Normal.map.put(11d, new InterpolationShooterParams(3000d, mechanismPositionToAngle(hoodPositionHome).in(Degrees)));
 
             // TODO: low map, if we want to use it
         }
