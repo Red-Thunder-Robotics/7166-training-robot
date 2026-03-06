@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightShootToNZ4"
+            "pathName": "RightStartToNZ5"
           }
         },
         {
@@ -55,7 +55,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right NZ3 To Shoot"
+            "pathName": "RightNZ3ToShoot"
           }
         },
         {

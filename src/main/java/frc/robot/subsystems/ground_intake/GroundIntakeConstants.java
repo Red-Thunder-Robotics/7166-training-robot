@@ -14,6 +14,7 @@ import edu.wpi.first.units.measure.Distance;
 public final class GroundIntakeConstants {
     public static final int rollerMotorId = 54;
     public static final int rollerCurrentLimit = 25;
+    public static final int rollerCurrentLimitAuto = 45;
     public static final NeutralModeValue rollerNeutralMode = NeutralModeValue.Coast;
     public static final InvertedValue rollerInverted = InvertedValue.CounterClockwise_Positive;
     public static final Distance rollerCircumference = Meters.of(0.11172d);
@@ -32,6 +33,7 @@ public final class GroundIntakeConstants {
     public static final InvertedValue actuatorInverted = InvertedValue.CounterClockwise_Positive;
     public static final double actuatorPositionHome = angleToMechanismPosition(Degrees.of(-130d));
     public static final double actuatorPositionDeployed = angleToMechanismPosition(Degrees.of(0d));
+    public static final double actuatorPositionOscillate = actuatorPositionHome / 2d;
 
     public static final double actuatorPidP = 35d;
     public static final double actuatorTargetAcceleration = 20d;

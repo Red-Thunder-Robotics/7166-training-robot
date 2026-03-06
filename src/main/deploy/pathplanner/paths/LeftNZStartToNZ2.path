@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 7.781615384615385,
-        "y": 5.876909307875894
+        "x": 7.800108433734941,
+        "y": 5.0
       },
       "prevControl": {
-        "x": 7.803220940550133,
-        "y": 6.163673469387755
+        "x": 7.821713989669689,
+        "y": 5.286764161511861
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftNZ1"
+      "linkedName": "LeftNZ2"
     }
   ],
   "rotationTargets": [],
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.5,
+    "maxVelocity": 1.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -47,8 +47,8 @@
   "reversed": false,
   "folder": "Left",
   "idealStartingState": {
-    "velocity": 2.0,
+    "velocity": 1.0,
     "rotation": -90.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }

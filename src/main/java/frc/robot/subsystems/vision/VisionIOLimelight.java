@@ -2,6 +2,8 @@ package frc.robot.subsystems.vision;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N1;
@@ -51,6 +53,7 @@ public final class VisionIOLimelight implements VisionIO {
         if(mt2.tagCount == 0)
             return false;
 
+        Logger.recordOutput("Vision/" + limelightName + "/Pose", mt2.pose);
         StateMachine.odometryAndVision.addVisionObservation(new VisionObservation(mt2.pose, mt2.timestampSeconds, stdDevs));
 
         return true;

@@ -430,6 +430,13 @@ public class StateMachine {
             return y.gt(threshold);
     }
 
+    public static boolean wantsToShoot() {
+        return shooterState == ShooterState.Shooting;
+    }
+    public static boolean isShooting() {
+        return generalRobotState.isFiring();
+    }
+
     private static boolean needsToUpdateRobot = true;
     @SuppressWarnings("unused") // for useTurret
     public static synchronized void periodic(Robot robot) {

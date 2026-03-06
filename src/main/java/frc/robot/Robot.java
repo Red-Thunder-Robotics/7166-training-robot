@@ -365,7 +365,7 @@ public class Robot extends LoggedRobot {
         NamedCommands.registerCommand("IntakeHomeOff", RobotCommands.retractIntakeOff());
 
         // FIXME: waitForEmptyHopper command using vision
-        Command waitForEmptyHopper = Commands.waitSeconds(5d);
+        Command waitForEmptyHopper = Commands.waitSeconds(12d); // next 8?
         NamedCommands.registerCommand("AfterShoot", waitForEmptyHopper.andThen(RobotCommands.disengageShooter()));
 
         // NamedCommands.registerCommand("ClimbRotate", Commands.defer(() -> {
@@ -395,11 +395,14 @@ public class Robot extends LoggedRobot {
         Threads.setCurrentThreadPriority(true, 10);
 
         StateMachine.periodic(this);
+        Logger.recordOutput("Pose3dZero", Pose3d.kZero);
     }
 
     /** This function is called once when the robot is disabled. */
     @Override
     public void disabledInit() {
+        resetState();
+
         if (RobotCommands.getHasAutoClimbRan()) {
             // prevent climber from jerking back to setpoint on enable
 
@@ -413,14 +416,26 @@ public class Robot extends LoggedRobot {
     }
 
     private void resetState() {
-        RobotCommands.disengageShooter();
+        m_commandScheduler.schedule(RobotCommands.disengageShooter());
         // RobotCommands.setIntakeState(StateMachine.getIntakeState().off());
     }
 
     /** This function is called periodically when disabled. */
     @Override
     public void disabledPeriodic() {
-        // TODO: use megatag1 (doesn't need gyro input) for nt diagnostic if our starting pose is off by enough?
+        var command = m_autoChooser.get();
+
+        resetGyroFromPathPlanner(command);
+    }
+
+    private void resetGyroFromPathPlanner(Command command) {
+        if (command == null)
+            return;
+
+        if (command instanceof PathPlannerAuto) {
+            var auto = (PathPlannerAuto) command;
+            resetGyro(auto.getStartingPose().getRotation());
+        }
     }
 
     private Supplier<Optional<Rotation2d>> m_autonomousRotationSupplier;
@@ -432,27 +447,21 @@ public class Robot extends LoggedRobot {
         // ensure flywheel is spinning if we want it to be
         StateMachine.setShooterState(StateMachine.getShooterState());
 
+        m_intakeSubsystem.autoInit();
+
         if (m_autonomousRotationSupplier == null)
             m_autonomousRotationSupplier = getShooterRotationalGoalSupplier();
 
         m_autoCommand = m_autoChooser.get();
 
-        if (m_autoCommand != null) {
+        if (m_autoCommand != null)
             m_commandScheduler.schedule(m_autoCommand);
-            if (m_autoCommand instanceof PathPlannerAuto) {
-                var auto = (PathPlannerAuto) m_autoCommand;
-                resetGyro(auto.getStartingPose().getRotation());
-            }
-        }
+        resetGyroFromPathPlanner(m_autoCommand);
 
         if (m_autoSimFuelCommand == null)
             m_autoSimFuelCommand = repeatingSimFuelCommand();
 
         m_commandScheduler.schedule(m_autoSimFuelCommand);
-    }
-    @Override
-    public void autonomousExit() {
-        resetState();
     }
 
     /** This function is called periodically during autonomous. */
@@ -502,6 +511,8 @@ public class Robot extends LoggedRobot {
         m_commandScheduler.cancelAll();
 
         resetState();
+
+        m_intakeSubsystem.teleopInit();
 
         // CLIMBER MARK 2 MAYBE
         // if (RobotCommands.getHasAutoClimbRan()) {

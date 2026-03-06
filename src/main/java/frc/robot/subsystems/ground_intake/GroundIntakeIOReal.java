@@ -112,4 +112,21 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
     public void rollerStop() {
         m_rollerMotor.disable();
     }
+
+    private void setRollerCurrentLimit(double limit) {
+        var config = new TalonFXConfiguration();
+        if (PhoenixUtil.tryUntilOk(5, () -> m_rollerMotor.getConfigurator().refresh(config))) {
+            config.CurrentLimits.SupplyCurrentLimit = limit;
+            PhoenixUtil.tryUntilOk(5, () -> m_rollerMotor.getConfigurator().apply(config));
+        }
+    }
+
+    @Override
+    public void teleopInit() {
+        setRollerCurrentLimit(rollerCurrentLimit);
+    }
+    @Override
+    public void autoInit() {
+        setRollerCurrentLimit(rollerCurrentLimitAuto);
+    }
 }

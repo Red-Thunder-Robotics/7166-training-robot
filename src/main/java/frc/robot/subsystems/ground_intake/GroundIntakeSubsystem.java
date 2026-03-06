@@ -9,9 +9,13 @@ import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import frc.robot.state_machine.IntakeState;
+import frc.robot.state_machine.ShooterState;
+import frc.robot.state_machine.StateMachine;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.ConditionWaiter;
 
@@ -28,6 +32,12 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
 
     private boolean m_rollerForward = false;
     private boolean m_rollerReverse = false;
+
+    private static final double oscillateFrequencySeconds = 0.7d;
+    private static final double oscillateStartDelaySeconds = 2d;
+    private static final int oscillateCountStopThreshold = 6;
+    private Timer m_oscillatorTimer = new Timer();
+    private int m_oscillateCount = 0;
 
     public GroundIntakeSubsystem(GroundIntakeIO io) {
         instance = this;
@@ -60,7 +70,7 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
              * then divide by roller circumference -> rpm offset
              * substract rollerOutput minus rpm offset with a certain floor
              */
-            if (speedsX > 0d) {
+            if (DriverStation.isTeleopEnabled() && speedsX > 0d) {
                 final double rpmOffset = speedsX * 60d / rollerCircumference.in(Meters);
                 double newRPM = rollerOutput.in(RPM) - rpmOffset;
                 newRPM = Math.max(newRPM, rollerOutputVelocityMinimum.in(RPM));
@@ -70,6 +80,27 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
             m_io.rollerVelocity(rollerOutput);
         } else if (m_rollerReverse)
             m_io.rollerVelocity(rollerOutputVelocityReverse);
+
+        // final boolean shouldOscillate = DriverStation.isAutonomousEnabled() && StateMachine.wantsToShoot();
+        final boolean shouldOscillate = (DriverStation.isAutonomousEnabled() || Robot.isSimulation()) && StateMachine.wantsToShoot();
+        Logger.recordOutput("Intake/ShouldOscillate", shouldOscillate);
+        if (m_oscillatorTimer.isRunning()) {
+            if (shouldOscillate) {
+                final boolean waiting = m_oscillateCount < 1 && m_oscillatorTimer.get() < oscillateStartDelaySeconds;
+                if (!waiting && m_oscillatorTimer.advanceIfElapsed(oscillateFrequencySeconds)) {
+                    if (m_oscillateCount < oscillateCountStopThreshold) {
+                        StateMachine.setIntakeState(StateMachine.getIntakeState() == IntakeState.DeployedOn ? IntakeState.OscillateOff : IntakeState.DeployedOn);
+                        m_oscillateCount += 1;
+                    } else
+                        StateMachine.setIntakeState(IntakeState.HomeOff);
+                }
+            } else
+                m_oscillatorTimer.stop();
+        } else if (shouldOscillate) {
+            m_oscillatorTimer.reset();
+            m_oscillatorTimer.start();
+            m_oscillateCount = 0;
+        }
     }
 
     public boolean isAtDeployedPosition() {
@@ -83,10 +114,18 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
         switch (intakeState) {
             case HomeOff:
                 stopRoller();
-                if (oldIntakeState.isDeployed())
+                if (oldIntakeState.isOut())
                     m_retractWaiter.activate();
                 else
                     retract();
+                break;
+            case HomeReverse:
+                retract();
+                if (oldIntakeState.isOut()) {
+                    stopRoller();
+                    m_reverseRollerWaiter.activate();
+                } else
+                    reverseRoller();
                 break;
             case DeployedOff:
                 stopRoller();
@@ -105,6 +144,10 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
                     reverseRoller();
                 else
                     m_reverseRollerWaiter.activate();
+                break;
+            case OscillateOff:
+                deployOscillate();
+                stopRoller();
                 break;
         }
     }
@@ -130,7 +173,17 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
     public void deploy() {
         m_io.setActuatorPosition(actuatorPositionDeployed);
     }
+    public void deployOscillate() {
+        m_io.setActuatorPosition(actuatorPositionOscillate);
+    }
     public void retract() {
         m_io.setActuatorPosition(actuatorPositionHome);
+    }
+
+    public void teleopInit() {
+        m_io.teleopInit();
+    }
+    public void autoInit() {
+        m_io.autoInit();
     }
 }

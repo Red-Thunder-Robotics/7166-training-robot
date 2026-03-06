@@ -7,25 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftStartPosToNZ1"
+            "pathName": "RightStartToNZ5"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNZ1StartEnd"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "IntakeHomeOff"
+            "pathName": "RightPickUpNZ3"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LeftNZ1ToShoot"
+            "pathName": "RightNZ3ToShoot"
           }
         },
         {
@@ -44,6 +38,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left",
+  "folder": "Right",
   "choreoAuto": false
 }

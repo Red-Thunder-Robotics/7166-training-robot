@@ -5,5 +5,19 @@ public enum GeneralRobotState {
     HubTracking,
     HubTrackingFiring,
     AllianceFeed,
-    AllianceFeedFiring
+    AllianceFeedFiring;
+
+    public boolean isFiring() {
+        switch (this) {
+            case Idle:
+            case HubTracking:
+            case AllianceFeed:
+                return false;
+            case HubTrackingFiring:
+            case AllianceFeedFiring:
+                return true;
+        }
+
+        return false;
+    }
 }
