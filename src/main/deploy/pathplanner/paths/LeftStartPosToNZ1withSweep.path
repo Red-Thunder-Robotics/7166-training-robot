@@ -3,45 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.556,
-        "y": 6.002715173025731
+        "x": 4.423,
+        "y": 7.412
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.101843373493979,
-        "y": 5.993594691098021
+        "x": 6.542975903614458,
+        "y": 7.368289156626507
       },
       "isLocked": false,
-      "linkedName": "LeftShootPos"
+      "linkedName": "LeftStartPos"
     },
     {
       "anchor": {
-        "x": 7.650310559006211,
-        "y": 7.282333629103815
+        "x": 7.561783496007099,
+        "y": 7.242094055013309
       },
       "prevControl": {
-        "x": 7.4699837517772965,
-        "y": 7.5431988399471885
+        "x": 7.327961931643024,
+        "y": 7.330567079367283
       },
       "nextControl": {
-        "x": 7.830637366235126,
-        "y": 7.021468418260441
+        "x": 7.859556344276841,
+        "y": 7.1294232475598935
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.8219638554216875,
-        "y": 5.018493975903613
+        "x": 8.27,
+        "y": 6.734144578313253
       },
       "prevControl": {
-        "x": 7.784836788146373,
-        "y": 7.40845318095808
+        "x": 8.154791004027029,
+        "y": 6.995784352617622
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftNZ2"
+      "linkedName": "Left first sweep start"
     }
   ],
   "rotationTargets": [],
@@ -50,7 +50,7 @@
   "eventMarkers": [
     {
       "name": "IntakeDeployOn",
-      "waypointRelativePos": 0.75,
+      "waypointRelativePos": 0.3,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -69,14 +69,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.0,
+    "velocity": 1.0,
     "rotation": -90.0
   },
   "reversed": false,
   "folder": "Left",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -45.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

@@ -1,0 +1,123 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.8712,
+        "y": 2.3722
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.6688572398057713,
+        "y": 1.7474116324907722
+      },
+      "isLocked": false,
+      "linkedName": "RightShootPos"
+    },
+    {
+      "anchor": {
+        "x": 2.685939759036144,
+        "y": 0.9643132530120488
+      },
+      "prevControl": {
+        "x": 2.28515765989402,
+        "y": 1.3452714157213614
+      },
+      "nextControl": {
+        "x": 3.083957579563583,
+        "y": 0.5859826390493519
+      },
+      "isLocked": false,
+      "linkedName": "Right trench waypoint HP side"
+    },
+    {
+      "anchor": {
+        "x": 4.434,
+        "y": 0.658
+      },
+      "prevControl": {
+        "x": 4.683998154458874,
+        "y": 0.6589606077020501
+      },
+      "nextControl": {
+        "x": 4.184001845541127,
+        "y": 0.6570393922979499
+      },
+      "isLocked": false,
+      "linkedName": "RightStartPos"
+    },
+    {
+      "anchor": {
+        "x": 6.368578313253011,
+        "y": 0.84410843373494
+      },
+      "prevControl": {
+        "x": 6.051674698795181,
+        "y": 0.47256626506024185
+      },
+      "nextControl": {
+        "x": 6.530814964773698,
+        "y": 1.0343169217247108
+      },
+      "isLocked": false,
+      "linkedName": "Right trench waypoint NZ side"
+    },
+    {
+      "anchor": {
+        "x": 6.139096385542168,
+        "y": 1.8057469879518067
+      },
+      "prevControl": {
+        "x": 6.171879518072289,
+        "y": 1.5544096385542163
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Right Second start sweep pos"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0921161825725856,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 2.6987551867219848,
+      "rotationDegrees": 0.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeDeployOn",
+      "waypointRelativePos": 3.59305210918114,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeDeployOn"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.5,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 2.0,
+    "rotation": 90.0
+  },
+  "reversed": false,
+  "folder": "Right",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 45.0
+  },
+  "useDefaultConstraints": true
+}

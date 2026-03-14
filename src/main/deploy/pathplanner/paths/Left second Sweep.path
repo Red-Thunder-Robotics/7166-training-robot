@@ -3,63 +3,51 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.556,
-        "y": 6.002715173025731
+        "x": 5.887759036144579,
+        "y": 6.187759036144579
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.101843373493979,
-        "y": 5.993594691098021
+        "x": 5.898686746987952,
+        "y": 5.914566265060241
       },
       "isLocked": false,
-      "linkedName": "LeftShootPos"
+      "linkedName": "Left start second sweep"
     },
     {
       "anchor": {
-        "x": 7.650310559006211,
-        "y": 7.282333629103815
+        "x": 6.9040361445783125,
+        "y": 3.5213975903614454
       },
       "prevControl": {
-        "x": 7.4699837517772965,
-        "y": 7.5431988399471885
+        "x": 5.822192771084336,
+        "y": 3.5323253012048195
       },
       "nextControl": {
-        "x": 7.830637366235126,
-        "y": 7.021468418260441
+        "x": 7.934032661936949,
+        "y": 3.5109935851356004
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.8219638554216875,
-        "y": 5.018493975903613
+        "x": 7.778253012048193,
+        "y": 5.9364216867469874
       },
       "prevControl": {
-        "x": 7.784836788146373,
-        "y": 7.40845318095808
+        "x": 7.778253012048193,
+        "y": 5.6864216867469874
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftNZ2"
+      "linkedName": "Left end second sweep"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "IntakeDeployOn",
-      "waypointRelativePos": 0.75,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "IntakeDeployOn"
-        }
-      }
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.5,
     "maxAcceleration": 3.0,
@@ -70,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 2.0,
-    "rotation": -90.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "Left",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": -45.0
+    "velocity": 2.0,
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }
