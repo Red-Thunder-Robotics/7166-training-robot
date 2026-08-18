@@ -22,6 +22,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.Constants.DriveConstants;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
@@ -77,8 +79,11 @@ public class Module {
     turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
   }
 
-  public boolean lowerDriveCurrentLimits() {
-    return io.setDriveCurrentLimits(constants.SlipCurrent, 50d);
+  public void lowerDriveCurrentLimits() {
+    io.setDriveCurrentLimits(DriveConstants.DRIVE_STATOR_LOW, DriveConstants.DRIVE_SUPPLY_LOW);
+  }
+  public void increaseDriveCurrentLimits() {
+    io.setDriveCurrentLimits(DriveConstants.DRIVE_STATOR_AUTO, DriveConstants.DRIVE_SUPPLY_AUTO);
   }
 
   public double getStatorCurrent() {
@@ -154,5 +159,9 @@ public class Module {
   /** Returns the module velocity in rotations/sec (Phoenix native units). */
   public double getFFCharacterizationVelocity() {
     return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
+  }
+
+  public void setDriveGainP(double gainP) {
+    io.setDriveGainP(gainP);
   }
 }

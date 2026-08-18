@@ -5,9 +5,9 @@
   "pathFolders": [
     "Center",
     "Left",
-    "old",
     "Right",
-    "Test"
+    "Test",
+    "old"
   ],
   "autoFolders": [
     "Center",
@@ -24,12 +24,12 @@
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,
-  "robotMass": 74.088,
+  "robotMass": 58.0,
   "robotMOI": 6.883,
   "robotTrackwidth": 0.546,
   "driveWheelRadius": 0.048,
-  "driveGearing": 5.143,
-  "maxDriveSpeed": 5.45,
+  "driveGearing": 4.941,
+  "maxDriveSpeed": 6.0,
   "driveMotorType": "krakenX60",
   "driveCurrentLimit": 70.0,
   "wheelCOF": 1.2,
@@ -44,6 +44,6 @@
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
   "robotFeatures": [
-    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.501,\"y\":0.0},\"size\":{\"width\":0.7,\"length\":0.3},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":false}}"
+    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":-0.501,\"y\":0.0},\"size\":{\"width\":0.7,\"length\":0.3},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":false}}"
   ]
 }

@@ -11,9 +11,12 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Controls;
 import frc.robot.Robot;
+import frc.robot.commands.ZeroingCommand;
 import frc.robot.state_machine.IntakeState;
 import frc.robot.state_machine.ShooterState;
 import frc.robot.state_machine.StateMachine;
@@ -34,12 +37,22 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
     private boolean m_rollerForward = false;
     private boolean m_rollerReverse = false;
 
-    private static final double oscillateFrequencySeconds = 0.7d;
-    private static final double oscillateStartDelaySeconds = 2d;
-    private static final int oscillateCountStopThreshold = 6;
-    private static final boolean oscillateStopAfterCounInTeleop = false;
-    private Timer m_oscillatorTimer = new Timer();
-    private int m_oscillateCount = 0;
+    // private static final double oscillateFrequencySeconds = 0.7d;
+    // private static final double oscillateStartDelaySeconds = 1d; // 1
+    // // private static final int oscillateCountStopThreshold = 6;
+    // private static final int oscillateCountStopThreshold = 1;
+    // private static final boolean oscillateStopAfterCounInTeleop = false;
+    // private Timer m_oscillatorTimer = new Timer();
+    // private int m_oscillateCount = 0;
+
+    private Timer m_pushTimer = new Timer();
+    private enum PushStep {
+        OutOne,
+        HalfwayTwo,
+        InThree
+    }
+    private PushStep m_pushStep = PushStep.OutOne;
+    private static final double pushFrequencySeconds = 0.5d;
 
     public GroundIntakeSubsystem(GroundIntakeIO io) {
         instance = this;
@@ -47,11 +60,15 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
         m_io = io;
     }
 
+    @SuppressWarnings("unused")
     @Override
     public void periodic() {
         m_io.updateInputs(m_inputs);
         
         Logger.processInputs("GroundIntake", m_inputs);
+
+        if (ZeroingCommand.isSubsystemZeroing(this))
+            return;
 
         if (m_startRollerWaiter.process())
             startRoller();
@@ -63,55 +80,99 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
             retract();
 
         if (m_rollerForward) {
-            final var speedsX = Drive.instance.getChassisSpeeds().vxMetersPerSecond;
-            AngularVelocity rollerOutput = rollerOutputVelocity;
+            if (rollerOutputUsesVelocityControl) {
+                AngularVelocity rollerOutput = rollerOutputVelocity;
 
-            /*
-             * goal is slow down rollers as you drive robot-relative forward.
-             * chassis speed multiplied by 60 -> meters per minute
-             * then divide by roller circumference -> rpm offset
-             * substract rollerOutput minus rpm offset with a certain floor
-             */
-            if (DriverStation.isTeleopEnabled() && speedsX > 0d) {
-                final double rpmOffset = speedsX * 60d / rollerCircumference.in(Meters);
-                double newRPM = rollerOutput.in(RPM) - rpmOffset;
-                newRPM = Math.max(newRPM, rollerOutputVelocityMinimum.in(RPM));
-                rollerOutput = RPM.of(newRPM);
-            }
+                /*
+                * goal is slow down rollers as you drive robot-relative forward.
+                * chassis speed multiplied by 60 -> meters per minute
+                * then divide by roller circumference -> rpm offset
+                * substract rollerOutput minus rpm offset with a certain floor
+                */
+                if (rollerOutputVelocityUsesChassisSpeeds && DriverStation.isTeleopEnabled()) {
+                    final double speedsX = Drive.instance.getChassisSpeeds().vxMetersPerSecond;
+                    if (speedsX > 0d) {
+                        final double rpmOffset = speedsX * 60d / rollerCircumference.in(Meters);
+                        double newRPM = rollerOutput.in(RPM) - rpmOffset;
+                        newRPM = Math.max(newRPM, rollerOutputVelocityMinimum.in(RPM));
+                        rollerOutput = RPM.of(newRPM);
+                    }
+                } else
+                    rollerOutput = rollerOutputVelocityAuto;
 
-            m_io.rollerVelocity(rollerOutput);
+                m_io.rollerVelocity(rollerOutput);
+            } else
+                m_io.rollerCurrent(rollerOutputCurrent);
         } else if (m_rollerReverse)
-            m_io.rollerVelocity(rollerOutputVelocityReverse);
+            if (rollerOutputUsesVelocityControl)
+                m_io.rollerVelocity(rollerOutputVelocityReverse);
+            else
+                m_io.rollerCurrent(rollerOutputCurrentReverse);
 
         final boolean isTeleop = DriverStation.isTeleop();
-        final boolean shouldOscillate = StateMachine.wantsToShoot() && (isTeleop ? Controls.oscillateIntakeButton.getAsBoolean() : true);
-        // final boolean shouldOscillate = (DriverStation.isAutonomousEnabled() || Robot.isSimulation()) && StateMachine.wantsToShoot();
-        Logger.recordOutput("Intake/ShouldOscillate", shouldOscillate);
-        if (m_oscillatorTimer.isRunning()) {
-            if (shouldOscillate) {
-                final boolean waiting = isTeleop ? false : m_oscillateCount < 1 && (m_oscillatorTimer.get() < oscillateStartDelaySeconds);
-                if (!waiting && m_oscillatorTimer.advanceIfElapsed(oscillateFrequencySeconds)) {
-                    final boolean skipStop = oscillateStopAfterCounInTeleop ? false : isTeleop;
-                    if (skipStop || m_oscillateCount < oscillateCountStopThreshold) {
-                        StateMachine.setIntakeState(StateMachine.getIntakeState() == IntakeState.DeployedOn ? IntakeState.OscillateOff : IntakeState.DeployedOn);
-                        m_oscillateCount += 1;
-                    } else
+        // final boolean shouldOscillate = StateMachine.wantsToShoot() && (isTeleop ? Controls.oscillateIntakeButton.getAsBoolean() : true);
+        // final boolean shouldOscillate = StateMachine.wantsToShoot() && !isTeleop;
+
+        // Logger.recordOutput("Intake/ShouldOscillate", shouldOscillate);
+        // if (m_oscillatorTimer.isRunning()) {
+        //     if (shouldOscillate) {
+        //         final boolean waiting = isTeleop ? false : m_oscillateCount < 1 && (m_oscillatorTimer.get() < oscillateStartDelaySeconds);
+        //         if (!waiting && m_oscillatorTimer.advanceIfElapsed(oscillateFrequencySeconds)) {
+        //             final boolean skipStop = oscillateStopAfterCounInTeleop ? false : isTeleop;
+        //             if (skipStop || m_oscillateCount < oscillateCountStopThreshold) {
+        //                 StateMachine.setIntakeState(StateMachine.getIntakeState() == IntakeState.DeployedOff ? IntakeState.OscillateOff : IntakeState.DeployedOff);
+        //                 m_oscillateCount += 1;
+        //             }
+        //             // else
+        //             //     StateMachine.setIntakeState(IntakeState.HomeOff);
+        //         }
+        //     } else
+        //         m_oscillatorTimer.stop();
+        // } else if (shouldOscillate) {
+        //     m_oscillatorTimer.reset();
+        //     m_oscillatorTimer.start();
+        //     m_oscillateCount = 0;
+        // }
+
+        final boolean shouldPush = StateMachine.isShooting();
+        if (m_pushTimer.isRunning()) {
+            if (shouldPush) {
+                final boolean advance = m_pushTimer.advanceIfElapsed(pushFrequencySeconds);
+                switch (m_pushStep) {
+                    case OutOne:
+                        StateMachine.setIntakeState(IntakeState.DeployedOff);
+                        if (advance)
+                            m_pushStep = PushStep.HalfwayTwo;
+                        break;
+                    case HalfwayTwo:
+                        StateMachine.setIntakeState(IntakeState.OscillateOff);
+                        if (advance)
+                            m_pushStep = PushStep.InThree;
+                        break;
+                    case InThree:
                         StateMachine.setIntakeState(IntakeState.HomeOff);
+                        break;
                 }
             } else
-                m_oscillatorTimer.stop();
-        } else if (shouldOscillate) {
-            m_oscillatorTimer.reset();
-            m_oscillatorTimer.start();
-            m_oscillateCount = 0;
+                m_pushTimer.stop();
+        } else if (shouldPush) {
+            m_pushTimer.reset();
+            m_pushTimer.start();
+            m_pushStep = PushStep.OutOne;
         }
+    }
+
+    public Command zeroMechanisms(boolean skipDrive) {
+        return skipDrive
+            ? Commands.runOnce(m_io::actuatorZero, this)
+            : new ZeroingCommand(this, m_io::actuatorZeroingDrive, m_io::actuatorCanZero, m_io::actuatorStop, m_io::actuatorZero);
     }
 
     public boolean isAtDeployedPosition() {
         return m_inputs.isDeployed && Math.abs(m_inputs.actuatorPositionDegrees - m_inputs.targetActuatorPositionDegrees) < 10d;
     }
     public boolean areRollersStopped() {
-        return Math.abs(m_inputs.rollerMotorVelocityRPS) < 10d;
+        return Math.abs(m_inputs.rightRollerMotorVelocityRPS) < 10d;
     }
 
     public void stateUpdate(IntakeState intakeState, IntakeState oldIntakeState) {
@@ -137,10 +198,11 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
                 break;
             case DeployedOn:
                 deploy();
-                if (oldIntakeState.isDeployed())
-                    startRoller();
-                else
-                    m_startRollerWaiter.activate();
+                // if (oldIntakeState.isDeployed())
+                //     startRoller();
+                // else
+                //     m_startRollerWaiter.activate();
+                startRoller();
                 break;
             case DeployedReverse:
                 deploy();
@@ -152,6 +214,11 @@ public final class GroundIntakeSubsystem extends SubsystemBase {
             case OscillateOff:
                 deployOscillate();
                 stopRoller();
+                break;
+            case OscillateOn:
+                deployOscillate();
+                stopRoller();
+                m_io.rollerVelocity(rollerOutputVelocityHalfway);
                 break;
         }
     }

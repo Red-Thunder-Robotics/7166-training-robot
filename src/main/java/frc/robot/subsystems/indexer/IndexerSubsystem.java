@@ -5,7 +5,9 @@ import static frc.robot.subsystems.indexer.IndexerConstants.*;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.state_machine.RobotEvent;
 import frc.robot.state_machine.StateMachine;
 
 public final class IndexerSubsystem extends SubsystemBase {
@@ -16,10 +18,20 @@ public final class IndexerSubsystem extends SubsystemBase {
 
     private boolean m_isFeeding;
 
+    private Timer m_reverseTimer = new Timer();
+
     public IndexerSubsystem(IndexerIO io) {
         instance = this;
 
         m_io = io;
+
+        RobotEvent.OnShootingStart.addListener(() -> {
+            m_io.topRollerVelocity(topRollerVelocityReverse);
+            m_reverseTimer.restart();
+        });
+        RobotEvent.OnShootingEnd.addListener(() -> {
+            m_reverseTimer.stop();
+        });
     }
 
     @Override
@@ -30,20 +42,36 @@ public final class IndexerSubsystem extends SubsystemBase {
 
         boolean isFeeding = false;
 
-        switch (StateMachine.getShooterState()) {
-            case Idle:
-                setIdle();
-                break;
-            case Shooting:
-                if (StateMachine.shouldIndex()) {
-                    isFeeding = true;
-                    m_io.runVelocity(outputVelocity);
-                } else
+        // if (StateMachine.getWantsReverseIndexerBeforeShoot()) {
+        //     m_io.indexerVelocity(indexerOutputVelocityReverse);
+        //     m_io.topRollerVelocity(topRollerVelocityReverse);
+        // } else
+        // if (StateMachine.getIndexerShooterStuff()) {
+        //     m_io.indexerVelocity(indexerOutputVelocity);
+        //     m_io.topRollerVelocity(topRollerVelocity);
+        // }
+        {
+            switch (StateMachine.getShooterState()) {
+                case Idle:
                     setIdle();
-                break;
-            case Reversing:
-                m_io.runVelocity(outputVelocityReverse);
-                break;
+                    break;
+                case Shooting:
+                    if (getReverseIsDone()) {
+                        if (StateMachine.shouldIndex()) {
+                            isFeeding = true;
+                            m_io.indexerVelocity(indexerOutputVelocity);
+                            m_io.topRollerVelocity(topRollerVelocity);
+                        } else
+                            setIdle();
+                        m_io.lowerKickerVelocity(lowerKickerVelocity);
+                    }
+                    break;
+                case Reversing:
+                    m_io.indexerVelocity(indexerOutputVelocityReverse);
+                    m_io.topRollerVelocity(topRollerVelocityReverse);
+                    m_io.lowerKickerVelocity(lowerKickerVelocityReverse);
+                    break;
+            }
         }
 
         m_isFeeding = isFeeding;
@@ -54,7 +82,25 @@ public final class IndexerSubsystem extends SubsystemBase {
         return m_isFeeding;
     }
 
+    @AutoLogOutput(key="IndexerPastThreshold")
+    public boolean getIsPastThreshold() {
+        final double lowerKickerTarget = m_inputs.lowerKickerVelocityRPS;
+        if (lowerKickerTarget == 0d)
+            return false;
+
+        final boolean lowerKicker = Math.abs(lowerKickerTarget - m_inputs.lowerKickerTargetVelocityRPS) <= lowerKickerVelocityThresholdRPS;
+
+        return lowerKicker;
+    }
+
+    @AutoLogOutput(key="ReverseDone")
+    public boolean getReverseIsDone() {
+        return m_reverseTimer.hasElapsed(reverseTime);
+    }
+
     public void setIdle() {
-        m_io.idle();
+        m_io.indexerStop();
+        m_io.topRollerStop();
+        m_io.lowerKickerStop();
     }
 }

@@ -1,0 +1,93 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.843,
+        "y": 4.787480035492458
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.843,
+        "y": 4.087480035492458
+      },
+      "isLocked": false,
+      "linkedName": "LeftNZ2"
+    },
+    {
+      "anchor": {
+        "x": 5.884044117647059,
+        "y": 5.65
+      },
+      "prevControl": {
+        "x": 6.284044117647059,
+        "y": 5.65
+      },
+      "nextControl": {
+        "x": 5.184044117647058,
+        "y": 5.65
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.009,
+        "y": 5.662
+      },
+      "prevControl": {
+        "x": 3.6263531499556345,
+        "y": 5.81899023957409
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LeftShootBump"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.3,
+      "rotationDegrees": 90.0
+    },
+    {
+      "waypointRelativePos": 1.8912466843501332,
+      "rotationDegrees": 90.0
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.3833333333333335,
+      "maxWaypointRelativePos": 1.810416666666669,
+      "constraints": {
+        "maxVelocity": 3.0,
+        "maxAcceleration": 10.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.5,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": -42.77815773281422
+  },
+  "reversed": false,
+  "folder": "Left",
+  "idealStartingState": {
+    "velocity": 2.5,
+    "rotation": 90.0
+  },
+  "useDefaultConstraints": true
+}

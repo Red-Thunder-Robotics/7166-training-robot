@@ -31,6 +31,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.VisionConstants;
@@ -109,6 +110,13 @@ public class OdometryAndVision {
     }
 
     public void addVisionObservation(VisionObservation observation) {
+        // if we are somehow outside of the field (I think this happens because we are trusting odometry too much and we have had wheel slip on the bump),
+        // accept the raw vision pose without question
+        if (estimatedPose.getX() > FieldConstants.FIELD_LENGTH.plus(DriveConstants.BUMPER_LARGEST_DIMENSION).in(Meters) || estimatedPose.getY() > FieldConstants.FIELD_WIDTH.plus(DriveConstants.BUMPER_LARGEST_DIMENSION).in(Meters)) {
+            estimatedPose = observation.visionPose;
+            return;
+        }
+
         // If the measurement is old enough to be outside the pose buffer's timespan, skip
         try {
             if (poseBuffer.getInternalBuffer().lastKey() - poseBufferSizeSeconds > observation.timestamp())
@@ -130,39 +138,40 @@ public class OdometryAndVision {
 
         // if (Constants.USE_MACKINAC || StateMachine.isShooting()) {
             // Calculate 3 x 3 vision matrix
-            // var r = new double[3];
-            // for (int i = 0; i < 3; ++i)
-            //     r[i] = observation.stdDevs().get(i, 0) * observation.stdDevs().get(i, 0);
-            // // Solve for closed form Kalman gain for continuous Kalman filter with A = 0
-            // // and C = I. See wpimath/algorithms.md.
-            // Matrix<N3, N3> visionK = new Matrix<>(Nat.N3(), Nat.N3());
-            // for (int row = 0; row < 3; ++row) {
-            //     double stdDev = qStdDevs.get(row, 0);
-            //     if (stdDev == 0.0) {
-            //         visionK.set(row, row, 0.0);
-            //     } else {
-            //         visionK.set(row, row, stdDev / (stdDev + Math.sqrt(stdDev * r[row])));
-            //     }
-            // }
-            // // difference between estimate and vision pose
-            // Transform2d transform = new Transform2d(estimateAtTime, observation.visionPose());
-            // // scale transform by visionK
-            // var kTimesTransform =
-            //     visionK.times(
-            //         VecBuilder.fill(
-            //         transform.getX(), transform.getY(), transform.getRotation().getRadians()));
-            // Transform2d scaledTransform =
-            //     new Transform2d(
-            //         kTimesTransform.get(0, 0),
-            //         kTimesTransform.get(1, 0),
-            //         Rotation2d.fromRadians(kTimesTransform.get(2, 0)));
+            var r = new double[3];
+            for (int i = 0; i < 3; ++i)
+                r[i] = observation.stdDevs().get(i, 0) * observation.stdDevs().get(i, 0);
 
-            // // Recalculate current estimate by applying scaled transform to old estimate
-            // // then replaying odometry data
-            // finalPose = estimateAtTime.plus(scaledTransform).plus(sampleToOdometryTransform);
-        // } else {
+            // Solve for closed form Kalman gain for continuous Kalman filter with A = 0
+            // and C = I. See wpimath/algorithms.md.
+            Matrix<N3, N3> visionK = new Matrix<>(Nat.N3(), Nat.N3());
+            for (int row = 0; row < 3; ++row) {
+                double stdDev = qStdDevs.get(row, 0);
+                if (stdDev == 0.0) {
+                    visionK.set(row, row, 0.0);
+                } else {
+                    visionK.set(row, row, stdDev / (stdDev + Math.sqrt(stdDev * r[row])));
+                }
+            }
+            // difference between estimate and vision pose
             Transform2d transform = new Transform2d(estimateAtTime, observation.visionPose());
-            finalPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
+            // scale transform by visionK
+            var kTimesTransform =
+                visionK.times(
+                    VecBuilder.fill(
+                    transform.getX(), transform.getY(), transform.getRotation().getRadians()));
+            Transform2d scaledTransform =
+                new Transform2d(
+                    kTimesTransform.get(0, 0),
+                    kTimesTransform.get(1, 0),
+                    Rotation2d.fromRadians(kTimesTransform.get(2, 0)));
+
+            // Recalculate current estimate by applying scaled transform to old estimate
+            // then replaying odometry data
+            finalPose = estimateAtTime.plus(scaledTransform).plus(sampleToOdometryTransform);
+        // } else {
+            // Transform2d transform = new Transform2d(estimateAtTime, observation.visionPose());
+            // finalPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
         // }
 
         // reject poses outside of field

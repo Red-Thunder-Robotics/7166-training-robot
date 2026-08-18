@@ -17,25 +17,12 @@ public final class SimulationCommands {
     public static class SimFuelCommand extends Command {
         private static ArrayList<Pair<Supplier<Pose3d>, Timer>> poseList = new ArrayList<>();
         public static void step() {
-            Logger.recordOutput("SimFuel", poseList
+            Logger.recordOutput("SimFuel/Poses", poseList
                 .stream()
                 .map(v -> v.getFirst().get())
                 .collect(Collectors.toList()).toArray(Pose3d[]::new));
 
-            boolean removedAny = true;
-            while (removedAny) {
-                removedAny = false;
-                for (var pair : poseList)
-                    if (pair.getSecond().hasElapsed(5d)) {
-                        poseList.remove(pair);
-                        removedAny = true;
-                        break;
-                    }
-            }
-            // below seems more efficient but it gave a concurrentmodification exception
-            // var iterator = poseList.stream().filter(v -> v.getSecond().hasElapsed(5d)).iterator();
-            // while (iterator.hasNext())
-            //     poseList.remove(iterator.next());
+            poseList.removeIf(pair -> pair.getSecond().hasElapsed(5d));
         }
 
         private final Timer m_timer = new Timer();

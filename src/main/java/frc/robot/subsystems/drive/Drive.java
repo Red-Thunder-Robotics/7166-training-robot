@@ -21,6 +21,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.controllers.PathFollowingController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
@@ -45,12 +46,14 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.Mode;
 import frc.robot.generated.TunerConstants;
+import frc.robot.modified.ModifiedAutoBuilder;
 import frc.robot.modified.ModifiedPPHolonomicDriveController;
 import frc.robot.state_machine.OdometryAndVision;
 import frc.robot.state_machine.StateMachine;
@@ -60,6 +63,9 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -79,24 +85,6 @@ public class Drive extends SubsystemBase {
               Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
-  // PathPlanner config constants
-  // private static final double ROBOT_MASS_KG = 62;
-  // private static final double ROBOT_MOI = 6.883; // about 8.76612158
-  // private static final double WHEEL_COF = 1.2;
-  // private static final RobotConfig PP_CONFIG =
-  //     new RobotConfig(
-  //         ROBOT_MASS_KG,
-  //         ROBOT_MOI,
-  //         new ModuleConfig(
-  //             TunerConstants.FrontLeft.WheelRadius,
-  //             // TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
-  //             5.2d,
-  //             WHEEL_COF,
-  //             DCMotor.getKrakenX60(1)
-  //                 .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
-  //             TunerConstants.FrontLeft.SlipCurrent,
-  //             1),
-  //         getModuleTranslations());
   private RobotConfig PP_CONFIG;
 
   static final Lock odometryLock = new ReentrantLock();
@@ -162,7 +150,7 @@ public class Drive extends SubsystemBase {
 
   public void configurePathPlanner() {
     // Configure AutoBuilder for PathPlanner
-    AutoBuilder.configure(
+    configureAutoBuilder(
       // this::getPose,
       StateMachine.odometryAndVision::getEstimatedPose,
       // this::setPose,
@@ -187,6 +175,20 @@ public class Drive extends SubsystemBase {
           Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
   }
+
+  private void configureAutoBuilder(
+        Supplier<Pose2d> poseSupplier,
+        Consumer<Pose2d> resetPose,
+        Supplier<ChassisSpeeds> robotRelativeSpeedsSupplier,
+        Consumer<ChassisSpeeds> output,
+        PathFollowingController controller,
+        RobotConfig robotConfig,
+        BooleanSupplier shouldFlipPath,
+        Subsystem... driveRequirements)
+    {
+      ModifiedAutoBuilder.configure(poseSupplier, resetPose, robotRelativeSpeedsSupplier, output, controller, robotConfig, shouldFlipPath, driveRequirements);
+      AutoBuilder.configure(poseSupplier, resetPose, robotRelativeSpeedsSupplier, output, controller, robotConfig, shouldFlipPath, driveRequirements);
+    }
 
   @Override
   public void periodic() {
@@ -268,18 +270,20 @@ public class Drive extends SubsystemBase {
     Logger.recordOutput("Odometry/SpeedsY", speeds.vyMetersPerSecond);
   }
 
+  @AutoLogOutput(key="Odometry/IsMoving")
   public boolean isMoving() {
     final var speeds = getChassisSpeeds();
     return Math.abs(speeds.vxMetersPerSecond) >= DriveConstants.IS_MOVING_THRESHOLD_METERS ||
       Math.abs(speeds.vyMetersPerSecond) >= DriveConstants.IS_MOVING_THRESHOLD_METERS;
   }
 
-  public boolean lowerDriveCurrentLimits() {
-    boolean success = false;
+  public void lowerDriveCurrentLimits() {
     for (final var module : modules)
-      success &= module.lowerDriveCurrentLimits();
-
-    return success;
+      module.lowerDriveCurrentLimits();
+  }
+  public void increaseDriveCurrentLimits() {
+    for (final var module : modules)
+      module.increaseDriveCurrentLimits();
   }
 
   /**
@@ -431,6 +435,16 @@ public class Drive extends SubsystemBase {
 
   public double getYawVelocityRadPerSec() {
     return gyroInputs.yawVelocityRadPerSec;
+  }
+
+  private double lastDriveGainP = 0d;
+  public void setDriveGainP(double gainP) {
+    if (gainP == lastDriveGainP)
+      return;
+    lastDriveGainP = gainP;
+    for (int i = 0; i < 4; i++) {
+      modules[i].setDriveGainP(gainP);
+    }
   }
 
   /** Returns an array of module translations. */

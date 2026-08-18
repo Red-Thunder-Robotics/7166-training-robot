@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
-import static frc.robot.subsystems.shooter.ShooterConstants.shouldIndexKickerVelocityThresholdSeconds;
 import static frc.robot.util.CommandUtil.*;
 
 import java.util.Optional;
@@ -24,14 +23,17 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import frc.robot.Constants;
 import frc.robot.Controls;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.Robot;
-import frc.robot.subsystems.climbermark1.ClimberSubsystem;
+import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.ground_intake.GroundIntakeSubsystem;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
@@ -134,15 +136,39 @@ public class StateMachine {
         withinJoystickRotationErrorThreshold = within;
     }
 
-    private static Timer kickerStartupTimer = new Timer();
+    // private static boolean indexerShooterStuff = false;
+    // public static boolean getIndexerShooterStuff() {
+    //     return indexerShooterStuff;
+    // }
+    // public static void setIndexerShooterStuff(boolean wants) {
+    //     indexerShooterStuff = wants;
+    // }
 
+    // private static boolean indexerQuickReverse = false;
+    // public static boolean getIndexerQuickReverse() {
+    //     return indexerQuickReverse;
+    // }
+    // public static void setIndexerQuickReverse(boolean wants) {
+    //     indexerQuickReverse = wants;
+    // }
+
+    private static boolean turretShouldIndexFlagCleared = false;
     public static boolean turretShouldIndex() {
         if (LiveConfig.getIsPit())
             return true;
-        return Constants.USE_TURRET ? TurretSubsystem.instance.shouldIndex() : Controls.lockWheelsButton.getAsBoolean() || withinJoystickRotationErrorThreshold;
+        final boolean allianceFeedGood = getLauncherTarget() == LauncherTarget.AllianceFeed ? isFacingAllianceZone() : false;
+        return Constants.USE_TURRET ? TurretSubsystem.instance.shouldIndex() : Controls.lockWheelsButton.getAsBoolean() || (withinJoystickRotationErrorThreshold || allianceFeedGood);
     }
     public static boolean shouldIndex() {
-        return turretShouldIndex() && ShooterSubsystem.instance.shouldIndex() && kickerStartupTimer.hasElapsed(shouldIndexKickerVelocityThresholdSeconds);
+        boolean turretShouldIndex = turretShouldIndex();
+        if (turretShouldIndex)
+            turretShouldIndexFlagCleared = true;
+
+        if (getLauncherTarget() != LauncherTarget.AllianceFeed)
+            turretShouldIndex = turretShouldIndexFlagCleared;
+
+        return (turretShouldIndex || Controls.forceTurretShouldIndex.getAsBoolean()) &&
+            ShooterSubsystem.instance.shouldIndex();
     }
 
     private static ShooterState shooterState = ShooterState.Idle;
@@ -151,35 +177,28 @@ public class StateMachine {
         return shooterState;
     }
     public static void setShooterState(ShooterState newShooterState) {
+        final var oldShooterState = shooterState;
         shooterState = newShooterState;
         ShooterSubsystem.instance.stateUpdate(newShooterState);
-        if (newShooterState == ShooterState.Shooting) {
-            kickerStartupTimer.reset();
-            kickerStartupTimer.start();
-        } else {
-            kickerStartupTimer.stop();
+        if (newShooterState == ShooterState.Shooting)
+            RobotEvent.OnShootingStart.trigger();
+        else if (oldShooterState != ShooterState.Shooting) {
+            RobotEvent.OnShootingEnd.trigger();
+            turretShouldIndexFlagCleared = false;
         }
     }
 
-    private static ClimberMark1State climberLeftState = ClimberMark1State.Idle;
+    private static ClimberState climberState = ClimberState.Idle;
 
-    public static ClimberMark1State getClimberLeftState() {
-        return climberLeftState;
+    public static ClimberState getClimberState() {
+        return climberState;
     }
-    public static void setClimberLeftState(ClimberMark1State newClimberState) {
-        climberLeftState = newClimberState;
-        ClimberSubsystem.instance.stateUpdateLeft(climberLeftState);
+    public static void setClimberState(ClimberState newClimberState) {
+        climberState = newClimberState;
+        ClimberSubsystem.instance.stateUpdate(climberState);
     }
 
-    private static ClimberMark1State climberRightState = ClimberMark1State.Idle;
-
-    public static ClimberMark1State getClimberRightState() {
-        return climberRightState;
-    }
-    public static void setClimberRightState(ClimberMark1State newClimberState) {
-        climberRightState = newClimberState;
-        ClimberSubsystem.instance.stateUpdateRight(climberRightState);
-    }
+    private static final Timer m_debugTimer1 = new Timer();
 
     public static final class RobotCommands {
         // intake
@@ -197,6 +216,12 @@ public class StateMachine {
         }
         public static Command retractIntakeOff() {
             return cmdName(setIntakeState(IntakeState.HomeOff), "IntakeHomeOff");
+        }
+        public static Command oscillateIntakeOff() {
+            return cmdName(setIntakeState(IntakeState.OscillateOff), "IntakeOscillatedOff");
+        }
+        public static Command oscillateIntakeOn() {
+            return cmdName(setIntakeState(IntakeState.OscillateOn), "IntakeOscillatedOn");
         }
 
         public static Command intakeDynamicOn() {
@@ -226,6 +251,19 @@ public class StateMachine {
                 deployIntakeOff(),
                 Commands.none(),
                 () -> intakeState.isDeployed()), "IntakeDeployedToOffConditional");
+        }
+
+        public static Command intakeOscillateToOnConditional() {
+            return cmdName(Commands.either(
+                oscillateIntakeOn(),
+                Commands.none(),
+                () -> intakeState.isOscillate()), "IntakeOscillateToOnConditional");
+        }
+        public static Command intakeOscillateToOffConditional() {
+            return cmdName(Commands.either(
+                oscillateIntakeOff(),
+                Commands.none(),
+                () -> intakeState.isOscillate()), "IntakeOscillateToOffConditional");
         }
 
         // turret
@@ -265,13 +303,17 @@ public class StateMachine {
 
         // shooter + turret
         public static Command engageShooterHub() {
-            return cmdName(setLauncherTargetHubTracking()
-                .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
+            // return cmdName(setLauncherTargetHubTracking()
+            return cmdName(Commands.runOnce(() -> {
+                m_debugTimer1.restart();
+            })
+                .andThen(setLauncherTargetHubTracking())
+                // .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
                 .andThen(setShooterShooting()), "EngageShooterHub");
         }
         public static Command engageShooterAllianceFeed() {
             return cmdName(setLauncherTargetAllianceFeed()
-                .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
+                // .andThen(Commands.waitUntil(StateMachine::turretShouldIndex))
                 .andThen(setShooterShooting()), "EngageShooterAllianceFeed");
         }
         public static Command disengageShooter() {
@@ -279,59 +321,21 @@ public class StateMachine {
                 .alongWith(setShooterIdle()), "DisengageShooter");
         }
 
-        // climber mark1
-        public static Command setClimberBothState(ClimberMark1State climberState) {
+        // climber
+        public static Command setClimberState(ClimberState climberState) {
             return ClimberSubsystem.instance.runOnce(
                 () -> {
-                    StateMachine.setClimberLeftState(climberState);
-                    StateMachine.setClimberRightState(climberState);
+                    StateMachine.setClimberState(climberState);
                 }
             );
         }
-        public static Command setClimberLeftState(ClimberMark1State climberState) {
-            return ClimberSubsystem.instance.runOnce(
-                () -> StateMachine.setClimberLeftState(climberState)
-            );
-        }
-        public static Command setClimberRightState(ClimberMark1State climberState) {
-            return ClimberSubsystem.instance.runOnce(
-                () -> StateMachine.setClimberRightState(climberState)
-            );
-        }
 
-        public static Command climberLeftHome() {
-            return cmdName(setClimberLeftState(ClimberMark1State.Home), "ClimberLeftHome");
+        public static Command climberHome() {
+            return cmdName(setClimberState(ClimberState.Home), "ClimberHome");
         }
-        public static Command climberLeftDeployed() {
-            return cmdName(setClimberLeftState(ClimberMark1State.Deployed), "ClimberLeftDeployed");
+        public static Command climberDeployed() {
+            return cmdName(setClimberState(ClimberState.Deployed), "ClimberDeployed");
         }
-
-        public static Command climberRightHome() {
-            return cmdName(setClimberRightState(ClimberMark1State.Home), "ClimberRightHome");
-        }
-        public static Command climberRightDeployed() {
-            return cmdName(setClimberRightState(ClimberMark1State.Deployed), "ClimberRightDeployed");
-        }
-
-        // climber mark2
-        // public static Command setClimberState(ClimberMark2State climberState) {
-        //     return ClimberSubsystem.instance.runOnce(
-        //         () -> StateMachine.setClimberState(climberState)
-        //     );
-        // }
-
-        // public static Command climberStateIncrease() {
-        //     return withName(Commands.defer(
-        //         () -> setClimberState(getClimberState().getNext()),
-        //         Set.of(ClimberSubsystem.instance), "ClimberStateIncrease")
-        //     );
-        // }
-        // public static Command climberStateDecrease() {
-        //     return withName(Commands.defer(
-        //         () -> setClimberState(getClimberState().getPrevious()),
-        //         Set.of(ClimberSubsystem.instance), "ClimberStateDecrease")
-        //     );
-        // }
 
         // general
         public static Command generalReversing() {
@@ -344,14 +348,14 @@ public class StateMachine {
                 .alongWith(intakeDynamicOff()), "GeneralReversingIdle");
         }
 
-        private static boolean hasAutoClimbRan = false;
-        public static boolean getHasAutoClimbRan() {
-            return hasAutoClimbRan;
-        }
-
-        // FIXME: auto climb behavior
-        public static Command autoClimb() {
-            return cmdName(Commands.runOnce(() -> hasAutoClimbRan = true), "AutoClimb");
+        public static Command zeroMechanisms(boolean skipDrive, InterruptionBehavior interruptionBehavior) {
+            return cmdName(Commands.parallel(
+                ShooterSubsystem.instance.zeroMechanisms(skipDrive),
+                GroundIntakeSubsystem.instance.zeroMechanisms(skipDrive)
+                // GroundIntakeSubsystem.instance.zeroMechanisms(true)
+            )
+                .withInterruptBehavior(interruptionBehavior)
+                .ignoringDisable(true), "ZeroMechanisms");
         }
     }
 
@@ -410,12 +414,16 @@ public class StateMachine {
 
     // https://github.com/hammerheads5000/2026Rebuilt/blob/b32c384e337b1a89d3d651c05696c9366a105504/src/main/java/frc/robot/Constants.java#L398
     // see 5000-License.md
-    public static final Translation3d allianceFeedLeft = new Translation3d(
-        Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
-    public static final Translation3d allianceFeedCenter =
-        new Translation3d(Inches.of(90), FieldConstants.FIELD_WIDTH.div(2), Inches.zero());
-    public static final Translation3d allianceFeedRight = new Translation3d(
-        Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).minus(Inches.of(85)), Inches.zero());
+    // public static final Translation3d allianceFeedLeft = new Translation3d(
+    //     Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).plus(Inches.of(85)), Inches.zero());
+    // public static final Translation3d allianceFeedCenter =
+    //     new Translation3d(Inches.of(90), FieldConstants.FIELD_WIDTH.div(2), Inches.zero());
+    // public static final Translation3d allianceFeedRight = new Translation3d(
+    //     Inches.of(90), FieldConstants.FIELD_WIDTH.div(2).minus(Inches.of(85)), Inches.zero());
+
+    // public static final Translation3d getAllianceFeedPose() {
+    //     return allianceFlip(isRobotOnAllianceLeft() ? allianceFeedLeft : allianceFeedRight);
+    // }
 
     public static final OdometryAndVision odometryAndVision = new OdometryAndVision();
 
@@ -428,6 +436,25 @@ public class StateMachine {
             return y.lte(threshold);
         else
             return y.gt(threshold);
+    }
+
+    public static boolean isRobotFar() {
+        final var x = odometryAndVision.getEstimatedPose()
+                .getMeasureX();
+
+        final double redNumerator = 1d;
+        final double denominator = 4d;
+
+        if (ALLIANCE == Alliance.Red)
+            return x.lte(FieldConstants.FIELD_LENGTH.times(redNumerator / denominator));
+        else
+            return x.gte(FieldConstants.FIELD_LENGTH.times((denominator - redNumerator) / denominator));
+    }
+
+    public static boolean isFacingAllianceZone() {
+        final var targetRotation = ALLIANCE == Alliance.Red ? Rotation2d.kZero : Rotation2d.k180deg;
+        final var offset = odometryAndVision.getRotation().minus(targetRotation).getDegrees();
+        return Math.abs(offset) <= DriveConstants.IS_FACING_ALLIANCE_ZONE_THRESHOLD;
     }
 
     public static boolean wantsToShoot() {
@@ -461,6 +488,19 @@ public class StateMachine {
             turboTimer::isRunning);
     }
 
+    static {
+        SmartDashboard.putNumber("DebugTimer1", -1d);
+    }
+    public static void indexingProcessStart() {
+        m_debugTimer1.stop();
+        SmartDashboard.putNumber("DebugTimer1", m_debugTimer1.get());
+    }
+
+    private static double hubDistanceMeters = 4d;
+    public static double getHubDistanceMeters() {
+        return hubDistanceMeters;
+    }
+
     private static boolean needsToUpdateRobot = true;
     @SuppressWarnings("unused") // for useTurret
     public static synchronized void periodic(Robot robot) {
@@ -469,9 +509,7 @@ public class StateMachine {
         Logger.recordOutput("StateMachine/IntakeState", intakeState);
         Logger.recordOutput("StateMachine/LauncherTarget", launcherTarget);
         Logger.recordOutput("StateMachine/ShooterState", shooterState);
-        // Logger.recordOutput("StateMachine/ClimberState", climberState);
-        Logger.recordOutput("StateMachine/ClimberLeftState", climberLeftState);
-        Logger.recordOutput("StateMachine/ClimberRightState", climberRightState);
+        Logger.recordOutput("StateMachine/ClimberState", climberState);
 
         Logger.recordOutput("StateMachine/TurboMeter", turboTimer.get());
 
@@ -505,13 +543,13 @@ public class StateMachine {
             //     VisionSubsystem.RelativeReefLocation.postUpdate(m_visionSubsystem);
         }
 
-        if (Constants.USE_TURRET && TurretSubsystem.instance.getManualEnabled())
+        if (Constants.USE_TURRET ? TurretSubsystem.instance.getManualEnabled() : false)
             setLauncherTargetPose(Optional.empty());
         else {
             setLauncherTargetPose(
                 switch (StateMachine.getLauncherTarget()) {
                     case HubTracking -> Optional.of(hubPose);
-                    case AllianceFeed -> Optional.of(allianceFlip(isRobotOnAllianceLeft() ? allianceFeedLeft : allianceFeedRight));
+                    // case AllianceFeed -> Optional.of(getAllianceFeedPose());
                     default -> Optional.empty();
                 }
             );
@@ -519,31 +557,37 @@ public class StateMachine {
 
         // set generalRobotState
         {
-            GeneralRobotState newGeneralRobotState = GeneralRobotState.Idle;
             final boolean isFiring = IndexerSubsystem.instance.getIsFeeding();
 
             switch (launcherTarget) {
                 case HubTracking:
-                    newGeneralRobotState = isFiring ? GeneralRobotState.HubTrackingFiring : GeneralRobotState.HubTracking;
+                    generalRobotState = isFiring ? GeneralRobotState.HubTrackingFiring : GeneralRobotState.HubTracking;
                     break;
                 case AllianceFeed:
-                    newGeneralRobotState = isFiring ? GeneralRobotState.AllianceFeedFiring : GeneralRobotState.AllianceFeed;
+                    generalRobotState = isFiring ? GeneralRobotState.AllianceFeedFiring : GeneralRobotState.AllianceFeed;
                     break;
                 default:
+                    generalRobotState = GeneralRobotState.Idle;
                     break;
             }
 
-            generalRobotState = newGeneralRobotState;
-
-            LightEmittingDiodesSubsystem.instance.stateUpdate(newGeneralRobotState);
+            LightEmittingDiodesSubsystem.instance.stateUpdate(generalRobotState);
 
             Logger.recordOutput("StateMachine/GeneralRobotState", generalRobotState);
         }
+
+        hubDistanceMeters = ShooterSubsystem.getDistanceToTarget(odometryAndVision.getEstimatedPose(), getHubPose()).in(Meters);
+        Logger.recordOutput("Shooter/HubDistanceMeters", hubDistanceMeters);
 
         Logger.recordOutput("StateMachine/LauncherTargetPose", new Pose3d(launcherTargetPose.orElse(new Translation3d()), new Rotation3d()));
 
         Logger.recordOutput("StateMachine/ShouldIndex", shouldIndex());
         Logger.recordOutput("StateMachine/TurretShouldIndex", turretShouldIndex());
+        Logger.recordOutput("StateMachine/TurretShouldIndexFlag", turretShouldIndexFlagCleared);
+        Logger.recordOutput("StateMachine/WithinJoystickRotationErrorThreshold", withinJoystickRotationErrorThreshold);
+        Logger.recordOutput("StateMachine/IsRobotOnAllianceLeft", isRobotOnAllianceLeft());
+        Logger.recordOutput("StateMachine/IsRobotFar", isRobotFar());
+        Logger.recordOutput("StateMachine/IsRobotFacingAllianceZone", isFacingAllianceZone());
 
         HubActiveState.periodic();
 
