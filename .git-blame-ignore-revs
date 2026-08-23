@@ -1,0 +1,5 @@
+# Commits to skip when running git blame.
+# Add the SHA of any commit that only reformats code.
+
+# Apply Spotless Formatting, 2026-08-22, 67 files
+e7d31eb58af5ba453f6c2ad8a8d50c4f728143f8
