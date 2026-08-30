@@ -144,6 +144,7 @@ gradle-app.setting
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
+gradlew
 
 # Cache of project
 .gradletasknamecache
@@ -171,6 +172,8 @@ out/
 # Simulation GUI and other tools window save file
 networktables.json
 simgui*.json
+# ...except the keyboard map. 
+!simgui-ds.json
 *-window.json
 
 # Simulation data log directory
