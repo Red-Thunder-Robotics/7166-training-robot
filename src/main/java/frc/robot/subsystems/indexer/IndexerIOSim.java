@@ -25,7 +25,7 @@ public final class IndexerIOSim implements IndexerIO {
     public void updateInputs(IndexerIOInputs inputs) {
         // TODO 3: three lines, copying the top roller block below.
         // Report the target, then move the current speed towards it by adding the PID output onto
-        // it, then report the result. 
+        // it, then report the result.
 
         inputs.topRollerTargetVelocityRPS = m_topRollerTargetVelocity;
         m_topRollerVelocity += m_topRollerPID.calculate(m_topRollerVelocity);

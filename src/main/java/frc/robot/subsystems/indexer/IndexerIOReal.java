@@ -15,7 +15,7 @@ import frc.robot.util.PhoenixUtil.MotorAction;
 
 public final class IndexerIOReal implements IndexerIO {
     // TODO 1: the motor.
-    // One private final TalonFX. Its constructor takes the CAN id and the name of the bus the device is on. 
+    // One private final TalonFX. Its constructor takes the CAN id and the name of the bus the device is on.
     // indexerMotorId comes from the static import at the top of the file
 
     private final TalonFX m_topRollerMotor = new TalonFX(topRollerMotorId, Constants.CANBUS);
@@ -32,7 +32,7 @@ public final class IndexerIOReal implements IndexerIO {
     private final StatusSignal<Current> m_lowerKickerCurrentSignal = m_lowerKickerMotor.getSupplyCurrent();
 
     // TODO 3: the control request.
-    // One MotionMagicVelocityVoltage, built at 0d, with .withEnableFOC(true). 
+    // One MotionMagicVelocityVoltage, built at 0d, with .withEnableFOC(true).
 
     private final MotionMagicVelocityVoltage m_topRollerVelocityRequest =
             new MotionMagicVelocityVoltage(0d).withEnableFOC(true);
@@ -92,7 +92,7 @@ public final class IndexerIOReal implements IndexerIO {
 
         // TODO 5: add your two signals to this call, at the front of the list.
         // This tells the controller how often to broadcast those readings: 50 times a second, once
-        // per robot loop. D
+        // per robot loop.
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50d,
@@ -113,7 +113,7 @@ public final class IndexerIOReal implements IndexerIO {
                 m_lowerKickerVelocitySignal,
                 m_lowerKickerCurrentSignal);
 
-        // TODO 6, second half: fill in the three indexer fields. 
+        // TODO 6, second half: fill in the three indexer fields.
         //   indexerTargetVelocityRPS  PhoenixUtil.getRequestVelocity(<motor>.getAppliedControl())
         //   indexerVelocityRPS        the velocity signal's getValueAsDouble()
         //   indexerCurrentAmps        the current signal's getValueAsDouble()
@@ -136,7 +136,7 @@ public final class IndexerIOReal implements IndexerIO {
     @Override
     public void indexerStop() {
         // TODO 8: one line. Stop commanding the motor at all, rather than commanding zero.
-        // topRollerStop below is the same line. 
+        // topRollerStop below is the same line.
     }
 
     @Override
