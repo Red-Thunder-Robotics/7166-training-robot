@@ -6,8 +6,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 public final class IndexerIOSim implements IndexerIO {
-    // TODO 1: two doubles for the indexer, the target and the current speed, both starting at
-    // 0d. The top roller pair below is the same two lines.
+    private double m_indexerTargetVelocity = 0d;
+    private double m_indexerVelocity = 0d;
 
     private double m_topRollerTargetVelocity = 0d;
     private double m_topRollerVelocity = 0d;
@@ -15,7 +15,7 @@ public final class IndexerIOSim implements IndexerIO {
     private double m_lowerKickerTargetVelocity = 0d;
     private double m_lowerKickerVelocity = 0d;
 
-    // TODO 2: one PIDController for the indexer, same gains as the two below.
+    private final PIDController m_indexerPID = new PIDController(0.5d, 0d, 0d);
     private final PIDController m_topRollerPID = new PIDController(0.5d, 0d, 0d);
     private final PIDController m_lowerKickerPID = new PIDController(0.5d, 0d, 0d);
 
@@ -23,9 +23,9 @@ public final class IndexerIOSim implements IndexerIO {
 
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
-        // TODO 3: three lines, copying the top roller block below.
-        // Report the target, then move the current speed towards it by adding the PID output onto
-        // it, then report the result.
+        inputs.indexerTargetVelocityRPS = m_indexerTargetVelocity;
+        m_indexerVelocity += m_indexerPID.calculate(m_indexerVelocity);
+        inputs.indexerVelocityRPS = m_indexerVelocity;
 
         inputs.topRollerTargetVelocityRPS = m_topRollerTargetVelocity;
         m_topRollerVelocity += m_topRollerPID.calculate(m_topRollerVelocity);
@@ -38,14 +38,13 @@ public final class IndexerIOSim implements IndexerIO {
 
     @Override
     public void indexerVelocity(AngularVelocity velocity) {
-        // TODO 4: two lines. Store the velocity in rotations per second, and give the same number
-        // to the PID controller as its setpoint. topRollerVelocity below is the same two lines.
+        m_indexerTargetVelocity = velocity.in(RotationsPerSecond);
+        m_indexerPID.setSetpoint(m_indexerTargetVelocity);
     }
 
     @Override
     public void indexerStop() {
-        // TODO 5: one line. In simulation, stopping is commanding zero, because there is no
-        // motor controller here to fall back to a neutral mode. topRollerStop below is the same.
+        indexerVelocity(RotationsPerSecond.of(0d));
     }
 
     @Override
