@@ -1,6 +1,7 @@
 package frc.robot.subsystems.indexer;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static frc.robot.subsystems.indexer.IndexerConstants.indexerCurrentLimit;
 import static frc.robot.subsystems.indexer.IndexerConstants.indexerMotorReduction;
 
 import edu.wpi.first.math.MathUtil;
@@ -15,7 +16,7 @@ import org.littletonrobotics.junction.Logger;
 
 public final class IndexerIOSim implements IndexerIO {
     private static final DCMotor GEARBOX = DCMotor.getKrakenX60Foc(1);
-    private static final double MOI = 0.001;
+    private static final double MOI = 0.003;
 
     private final DCMotorSim m_indexerSim =
             new DCMotorSim(LinearSystemId.createDCMotorSystem(GEARBOX, MOI, indexerMotorReduction), GEARBOX);
@@ -48,11 +49,19 @@ public final class IndexerIOSim implements IndexerIO {
         if (DriverStation.isDisabled()) {
             volts = 0.0;
         }
+
+        // The Talon will not pass more current than we configured, so this should not either.
+        double motorSpeed = m_indexerSim.getAngularVelocityRadPerSec() * indexerMotorReduction;
+        volts = MathUtil.clamp(
+                volts,
+                GEARBOX.getVoltage(GEARBOX.getTorque(-indexerCurrentLimit), motorSpeed),
+                GEARBOX.getVoltage(GEARBOX.getTorque(indexerCurrentLimit), motorSpeed));
+
         m_indexerSim.setInputVoltage(volts);
         m_indexerSim.update(0.02);
 
         inputs.indexerVelocityRPS = m_indexerSim.getAngularVelocityRPM() / 60.0;
-        inputs.indexerCurrentAmps = m_indexerSim.getCurrentDrawAmps();
+        inputs.indexerCurrentAmps = Math.abs(GEARBOX.getCurrent(motorSpeed, volts));
 
         inputs.topRollerTargetVelocityRPS = m_topRollerTargetVelocity;
         m_topRollerVelocity += m_topRollerPID.calculate(m_topRollerVelocity);
