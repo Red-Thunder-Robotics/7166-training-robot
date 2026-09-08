@@ -1,7 +1,6 @@
 package frc.robot.subsystems.indexer;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static frc.robot.subsystems.indexer.IndexerConstants.indexerCurrentLimit;
 import static frc.robot.subsystems.indexer.IndexerConstants.indexerMotorReduction;
 
 import edu.wpi.first.math.MathUtil;
@@ -50,18 +49,11 @@ public final class IndexerIOSim implements IndexerIO {
             volts = 0.0;
         }
 
-        // The Talon will not pass more current than we configured, so this should not either.
-        double motorSpeed = m_indexerSim.getAngularVelocityRadPerSec() * indexerMotorReduction;
-        volts = MathUtil.clamp(
-                volts,
-                GEARBOX.getVoltage(GEARBOX.getTorque(-indexerCurrentLimit), motorSpeed),
-                GEARBOX.getVoltage(GEARBOX.getTorque(indexerCurrentLimit), motorSpeed));
-
         m_indexerSim.setInputVoltage(volts);
         m_indexerSim.update(0.02);
 
         inputs.indexerVelocityRPS = m_indexerSim.getAngularVelocityRPM() / 60.0;
-        inputs.indexerCurrentAmps = Math.abs(GEARBOX.getCurrent(motorSpeed, volts));
+        inputs.indexerCurrentAmps = Math.abs(m_indexerSim.getCurrentDrawAmps());
 
         inputs.topRollerTargetVelocityRPS = m_topRollerTargetVelocity;
         m_topRollerVelocity += m_topRollerPID.calculate(m_topRollerVelocity);
