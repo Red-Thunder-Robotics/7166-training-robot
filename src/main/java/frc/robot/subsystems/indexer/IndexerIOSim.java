@@ -2,12 +2,25 @@ package frc.robot.subsystems.indexer;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 public final class IndexerIOSim implements IndexerIO {
     // TODO 1: the plant. The motor curve for one Kraken X60 with FOC
     // Use LinearSystemId.createDCMotorSystem(gearbox, moi, gearing). 
+
+    private static final DCMotor GEARBOX = DCMotor.getKrakenX60Foc(1);
+    private static final double MOI = 0.003;
+    private DCMotorSim indexerSim = new DCMotorSim(
+    LinearSystemId.createDCMotorSystem(GEARBOX, MOI, IndexerConstants.indexerMotorReduction), GEARBOX);
 
     private double m_indexerTargetVelocity = 0d;
 
@@ -23,6 +36,9 @@ public final class IndexerIOSim implements IndexerIO {
     private final PIDController m_topRollerPID = new PIDController(0.5d, 0d, 0d);
     private final PIDController m_lowerKickerPID = new PIDController(0.5d, 0d, 0d);
 
+    private final PIDController indexerPID = new PIDController(0.05d, 0d, 0d);
+    private final SimpleMotorFeedforward m_indexerFF = new SimpleMotorFeedforward(0d, 0.248d);
+
     public IndexerIOSim() {}
 
     @Override
@@ -36,9 +52,21 @@ public final class IndexerIOSim implements IndexerIO {
         // Set it to zero while DriverStation.isDisabled(),
         // Hand it to the plant with setInputVoltage, then step the plant with update(0.02).
 
+        double RPS = indexerSim.getAngularVelocityRPM() / 60;
+        double ff = m_indexerFF.calculate(m_indexerTargetVelocity);
+        double fb = indexerPID.calculate(RPS, m_indexerTargetVelocity);
+        double volts = MathUtil.clamp(ff+fb, -12, 12);
+        if (DriverStation.isDisabled()) {volts = 0;}
+
+
+        indexerSim.setInputVoltage(volts);
+        indexerSim.update(0.2);
         // TODO 4: two readings off the plant. 
         // The speed goes in inputs.indexerVelocityRPS and the current in inputs.indexerCurrentAmps. 
         // Watch the units: getAngularVelocityRPM returns rotations per minute and the field is rotations per second.
+
+        inputs.indexerVelocityRPS = RPS;
+        inputs.indexerCurrentAmps = Math.abs(indexerSim.getCurrentDrawAmps());
 
         inputs.topRollerTargetVelocityRPS = m_topRollerTargetVelocity;
         m_topRollerVelocity += m_topRollerPID.calculate(m_topRollerVelocity);
@@ -51,6 +79,8 @@ public final class IndexerIOSim implements IndexerIO {
         // TODO 5: Publish the error, target minus measurement, with
         // Logger.recordOutput under the key "Indexer/VelocityErrorRPS".
 
+        Logger.recordOutput("Indexer/VelocityErrorRPS", m_indexerTargetVelocity - RPS);
+
     }
 
     @Override
@@ -58,6 +88,9 @@ public final class IndexerIOSim implements IndexerIO {
         // Used to call m_indexerPID.setSetpoint on the next line as well. The controller you
         // write in TODO 2 takes its setpoint as the second argument of calculate, so storing the
         // target is all this method has to do. 
+
+        indexerPID.setSetpoint(m_indexerTargetVelocity);
+
         m_indexerTargetVelocity = velocity.in(RotationsPerSecond);
     }
 
