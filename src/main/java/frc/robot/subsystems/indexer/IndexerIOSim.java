@@ -2,12 +2,26 @@ package frc.robot.subsystems.indexer;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import org.littletonrobotics.junction.Logger;
 
 public final class IndexerIOSim implements IndexerIO {
-    // TODO 1: two doubles for the indexer, the target and the current speed, both starting at
-    // 0d. The top roller pair below is the same two lines.
+    // TODO 1: the plant. The motor curve for one Kraken X60 with FOC
+    // Use LinearSystemId.createDCMotorSystem(gearbox, moi, gearing).
+
+    private static final DCMotor GEARBOX = DCMotor.getKrakenX60Foc(1);
+    private static final double MOI = 0.003;
+    private DCMotorSim indexerSim = new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(GEARBOX, MOI, IndexerConstants.indexerMotorReduction), GEARBOX);
+
+    private double m_indexerTargetVelocity = 0d;
 
     private double m_topRollerTargetVelocity = 0d;
     private double m_topRollerVelocity = 0d;
@@ -15,17 +29,44 @@ public final class IndexerIOSim implements IndexerIO {
     private double m_lowerKickerTargetVelocity = 0d;
     private double m_lowerKickerVelocity = 0d;
 
-    // TODO 2: one PIDController for the indexer, same gains as the two below.
+    // TODO 2: the stand-in controller.
+    // A PIDController for the correction and a SimpleMotorFeedforward for the guess.
+
     private final PIDController m_topRollerPID = new PIDController(0.5d, 0d, 0d);
     private final PIDController m_lowerKickerPID = new PIDController(0.5d, 0d, 0d);
+
+    private final PIDController indexerPID = new PIDController(0.05d, 0d, 0d);
+    private final SimpleMotorFeedforward m_indexerFF = new SimpleMotorFeedforward(0d, 0.248d);
 
     public IndexerIOSim() {}
 
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
-        // TODO 3: three lines, copying the top roller block below.
-        // Report the target, then move the current speed towards it by adding the PID output onto
-        // it, then report the result.
+        inputs.indexerTargetVelocityRPS = m_indexerTargetVelocity;
+
+        // TODO 3: run one loop of the model.
+        // Read the speed off the plant
+        // Ask the  feedforward for its guess and the PID for its correction, add the two.
+        // Clamp the total to -12 and +12 with MathUtil.clamp.
+        // Set it to zero while DriverStation.isDisabled(),
+        // Hand it to the plant with setInputVoltage, then step the plant with update(0.02).
+
+        double RPS = indexerSim.getAngularVelocityRPM() / 60;
+        double ff = m_indexerFF.calculate(m_indexerTargetVelocity);
+        double fb = indexerPID.calculate(RPS, m_indexerTargetVelocity);
+        double volts = MathUtil.clamp(ff + fb, -12, 12);
+        if (DriverStation.isDisabled()) {
+            volts = 0;
+        }
+
+        indexerSim.setInputVoltage(volts);
+        indexerSim.update(0.2);
+        // TODO 4: two readings off the plant.
+        // The speed goes in inputs.indexerVelocityRPS and the current in inputs.indexerCurrentAmps.
+        // Watch the units: getAngularVelocityRPM returns rotations per minute and the field is rotations per second.
+
+        inputs.indexerVelocityRPS = RPS;
+        inputs.indexerCurrentAmps = Math.abs(indexerSim.getCurrentDrawAmps());
 
         inputs.topRollerTargetVelocityRPS = m_topRollerTargetVelocity;
         m_topRollerVelocity += m_topRollerPID.calculate(m_topRollerVelocity);
@@ -34,18 +75,27 @@ public final class IndexerIOSim implements IndexerIO {
         inputs.lowerKickerTargetVelocityRPS = m_lowerKickerTargetVelocity;
         m_lowerKickerVelocity += m_lowerKickerPID.calculate(m_lowerKickerVelocity);
         inputs.lowerKickerVelocityRPS = m_lowerKickerVelocity;
+
+        // TODO 5: Publish the error, target minus measurement, with
+        // Logger.recordOutput under the key "Indexer/VelocityErrorRPS".
+
+        Logger.recordOutput("Indexer/VelocityErrorRPS", m_indexerTargetVelocity - RPS);
     }
 
     @Override
     public void indexerVelocity(AngularVelocity velocity) {
-        // TODO 4: two lines. Store the velocity in rotations per second, and give the same number
-        // to the PID controller as its setpoint. topRollerVelocity below is the same two lines.
+        // Used to call m_indexerPID.setSetpoint on the next line as well. The controller you
+        // write in TODO 2 takes its setpoint as the second argument of calculate, so storing the
+        // target is all this method has to do.
+
+        indexerPID.setSetpoint(m_indexerTargetVelocity);
+
+        m_indexerTargetVelocity = velocity.in(RotationsPerSecond);
     }
 
     @Override
     public void indexerStop() {
-        // TODO 5: one line. In simulation, stopping is commanding zero, because there is no
-        // motor controller here to fall back to a neutral mode. topRollerStop below is the same.
+        indexerVelocity(RotationsPerSecond.of(0d));
     }
 
     @Override
