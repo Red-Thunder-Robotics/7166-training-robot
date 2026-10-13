@@ -15,13 +15,14 @@ import frc.robot.util.PhoenixUtil.MotorAction;
 
 public final class IndexerIOReal implements IndexerIO {
     // TODO 1: the motor.
-    // One private final TalonFX. Its constructor takes the CAN id and the name of the bus the device is on.
-    // indexerMotorId comes from the static import at the top of the file
-
+    private final TalonFX m_indexerMotor = new TalonFX(indexerMotorId, Constants.CANBUS);
     private final TalonFX m_topRollerMotor = new TalonFX(topRollerMotorId, Constants.CANBUS);
     private final TalonFX m_lowerKickerMotor = new TalonFX(lowerKickerMotorId, Constants.CANBUS);
-
+    // One private final TalonFX. Its constructor takes the CAN id and the name of the bus the device is on.
+    // indexerMotorId comes from the static import at the top of the file
     // TODO 2: the two status signals, velocity and supply current.
+    private final StatusSignal<AngularVelocity> m_indexerVelocitySignal = m_indexerMotor.getVelocity();
+    private final StatusSignal<Current> m_indexerCurrentSignal = m_indexerMotor.getSupplyCurrent();
     // Copy the shape of the four below. getVelocity() does not read the motor; it gives you a
     // handle on the newest copy the library already holds, so you ask for it once here and keep it.
 
@@ -32,6 +33,8 @@ public final class IndexerIOReal implements IndexerIO {
     private final StatusSignal<Current> m_lowerKickerCurrentSignal = m_lowerKickerMotor.getSupplyCurrent();
 
     // TODO 3: the control request.
+   private final MotionMagicVelocityVoltage m_indexerVelocityRequest =
+            new MotionMagicVelocityVoltage(0d).withEnableFOC(true);
     // One MotionMagicVelocityVoltage, built at 0d, with .withEnableFOC(true).
 
     private final MotionMagicVelocityVoltage m_topRollerVelocityRequest =
@@ -40,6 +43,19 @@ public final class IndexerIOReal implements IndexerIO {
             new MotionMagicVelocityVoltage(0d).withEnableFOC(true);
 
     public IndexerIOReal() {
+        var indexerConfig = new TalonFXConfiguration();
+        indexerConfig.MotorOutput.NeutralMode = indexerNeutralMode;
+        indexerConfig.MotorOutput.Inverted = indexerInverted;
+        //
+        indexerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        indexerConfig.CurrentLimits.SupplyCurrentLimit = indexerCurrentLimit;
+        //
+        indexerConfig.Feedback.SensorToMechanismRatio = indexerMotorReduction;
+        //
+        indexerConfig.Slot0.kP = indexerPidP;
+        indexerConfig.Slot0.kV = indexerPidV;
+        indexerConfig.MotionMagic.MotionMagicAcceleration = indexerTargetAcceleration;
+
         // TODO 4: the configuration.
         // Make a TalonFXConfiguration for the indexer roller and set eight things on it. The top
         // roller block directly below is the same eight in the same order.
@@ -53,18 +69,18 @@ public final class IndexerIOReal implements IndexerIO {
         //   MotionMagic.MotionMagicAcceleration     indexerTargetAcceleration
         // Every value is already in IndexerConstants. You are not choosing numbers.
 
-        var topRollerConfig = new TalonFXConfiguration();
-        topRollerConfig.MotorOutput.NeutralMode = topRollerNeutralMode;
-        topRollerConfig.MotorOutput.Inverted = topRollerInverted;
+        var TopRoller = new TalonFXConfiguration();
+        TopRoller.MotorOutput.NeutralMode = topRollerNeutralMode;
+        TopRoller.MotorOutput.Inverted = topRollerInverted;
         //
-        topRollerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        topRollerConfig.CurrentLimits.SupplyCurrentLimit = topRollerCurrentLimit;
+        TopRoller.CurrentLimits.SupplyCurrentLimitEnable = true;
+        TopRoller.CurrentLimits.SupplyCurrentLimit = topRollerCurrentLimit;
         //
-        topRollerConfig.Feedback.SensorToMechanismRatio = topRollerReduction;
+        TopRoller.Feedback.SensorToMechanismRatio = topRollerReduction;
         //
-        topRollerConfig.Slot0.kP = topRollerPidP;
-        topRollerConfig.Slot0.kV = topRollerPidV;
-        topRollerConfig.MotionMagic.MotionMagicAcceleration = topRollerTargetAcceleration;
+        TopRoller.Slot0.kP = topRollerPidP;
+        TopRoller.Slot0.kV = topRollerPidV;
+        TopRoller.MotionMagic.MotionMagicAcceleration = topRollerTargetAcceleration;
 
         var lowerKickerConfig = new TalonFXConfiguration();
         lowerKickerConfig.MotorOutput.NeutralMode = lowerKickerNeutralMode;
@@ -76,31 +92,38 @@ public final class IndexerIOReal implements IndexerIO {
         lowerKickerConfig.Slot0.kP = indexerPidP;
         lowerKickerConfig.Slot0.kV = indexerPidV;
         lowerKickerConfig.MotionMagic.MotionMagicAcceleration = indexerTargetAcceleration;
+        MotorAction.configureMotor("Indexer Roller", m_indexerMotor, indexerConfig)
+                .run();
+        MotorAction.configureMotor("Indexer Top Roller", m_topRollerMotor, TopRoller)
+                .run();
+        MotorAction.configureMotor("Lower Kicker", m_lowerKickerMotor, lowerKickerConfig)
+                .run();
 
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                50d,
+                m_indexerVelocitySignal,
+                m_indexerCurrentSignal,
+                m_topRollerVelocitySignal,
+                m_topRollerCurrentSignal,
+                m_lowerKickerVelocitySignal,
+                m_lowerKickerCurrentSignal);
+    }
         // PhoenixUtil.tryUntilOk(5, () -> m_indexerMotor.getConfigurator().apply(indexerConfig));
-        // PhoenixUtil.tryUntilOk(5, () -> m_topRollerMotor.getConfigurator().apply(topRollerConfig));
+        // PhoenixUtil.tryUntilOk(5, () -> m_topRollerMotor.getConfigurator().apply(TopRoller));
         // PhoenixUtil.tryUntilOk(5, () -> m_lowerKickerMotor.getConfigurator().apply(lowerKickerConfig));
 
         // TODO 4, second half: send the configuration you just built.
         // MotorAction.configureMotor("Indexer Roller", <motor>, <config>).run();
         // run() waits a quarter second for the controller to acknowledge, and retries five times.
 
-        MotorAction.configureMotor("Indexer Top Roller", m_topRollerMotor, topRollerConfig)
-                .run();
-        MotorAction.configureMotor("Lower Kicker", m_lowerKickerMotor, lowerKickerConfig)
-                .run();
-
+        
         // TODO 5: add your two signals to this call, at the front of the list.
+    
         // This tells the controller how often to broadcast those readings: 50 times a second, once
         // per robot loop.
 
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                50d,
-                m_topRollerVelocitySignal,
-                m_topRollerCurrentSignal,
-                m_lowerKickerVelocitySignal,
-                m_lowerKickerCurrentSignal);
-    }
+    
+    
 
     @Override
     public void updateInputs(IndexerIOInputs inputs) {
@@ -111,6 +134,8 @@ public final class IndexerIOReal implements IndexerIO {
                 m_topRollerVelocitySignal,
                 m_topRollerCurrentSignal,
                 m_lowerKickerVelocitySignal,
+                m_indexerVelocitySignal,
+                m_indexerCurrentSignal,
                 m_lowerKickerCurrentSignal);
 
         // TODO 6, second half: fill in the three indexer fields.
@@ -125,18 +150,24 @@ public final class IndexerIOReal implements IndexerIO {
         inputs.lowerKickerTargetVelocityRPS = PhoenixUtil.getRequestVelocity(m_lowerKickerMotor.getAppliedControl());
         inputs.lowerKickerVelocityRPS = m_lowerKickerVelocitySignal.getValueAsDouble();
         inputs.lowerKickerCurrentAmps = m_lowerKickerCurrentSignal.getValueAsDouble();
+
+        inputs.indexerTargetVelocityRPS = PhoenixUtil.getRequestVelocity(m_indexerMotor.getAppliedControl());
+        inputs.indexerVelocityRPS = m_indexerVelocitySignal.getValueAsDouble();
+        inputs.indexerCurrentAmps = m_indexerCurrentSignal.getValueAsDouble();
     }
 
     @Override
     public void indexerVelocity(AngularVelocity velocity) {
         // TODO 7: one line. Send the request from TODO 3 with this velocity on it. topRollerVelocity
         // below is the same line. That sends a target, not a voltage; the controller picks the volts.
+        m_topRollerMotor.setControl(m_topRollerVelocityRequest.withVelocity(velocity));
     }
 
     @Override
     public void indexerStop() {
         // TODO 8: one line. Stop commanding the motor at all, rather than commanding zero.
         // topRollerStop below is the same line.
+        m_topRollerMotor.disable();
     }
 
     @Override
