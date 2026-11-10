@@ -1,16 +1,19 @@
 package frc.robot.subsystems.ground_intake;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static frc.robot.subsystems.ground_intake.GroundIntakeConstants.*;
-import static frc.robot.util.ConversionUtil.mechanismPositionToAngle;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 
 public final class GroundIntakeIOSim implements GroundIntakeIO {
-    private double m_targetActuatorPosition = actuatorPositionHome;
-    private double m_actuatorPosition = m_targetActuatorPosition;
+    // private double m_targetActuatorPositionAngle = distanceToMechanismPosition(actuatorPositionHome,
+    // actuatorMotorPitchCircumference);
+    private Distance m_targetActuatorPosition = actuatorPositionHome;
+    private Distance m_actuatorPosition = m_targetActuatorPosition;
 
     private double m_rollerVelocityRPS = 0d;
 
@@ -20,25 +23,32 @@ public final class GroundIntakeIOSim implements GroundIntakeIO {
 
     @Override
     public void updateInputs(GroundIntakeIOInputs inputs) {
-        m_actuatorPosition += m_actuatorPositionPID.calculate(m_actuatorPosition);
 
-        final double targetActuatorPosition = m_targetActuatorPosition;
+        double step = m_actuatorPositionPID.calculate(m_actuatorPosition.in(Inches));
+        double maxStep = actuatorMaxVelocity * actuatorMotorPitchCircumference.in(Inches) * 0.02;
+        m_actuatorPosition = m_actuatorPosition.plus(Inches.of(MathUtil.clamp(step, -maxStep, maxStep)));
 
-        inputs.targetActuatorPositionRotations = targetActuatorPosition;
-        inputs.targetActuatorPositionDegrees =
-                mechanismPositionToAngle(targetActuatorPosition).in(Degrees);
+        final Distance targetActuatorPosition = m_targetActuatorPosition;
 
-        final double position = m_actuatorPosition;
-        inputs.actuatorPositionRotations = position;
-        inputs.actuatorPositionDegrees = mechanismPositionToAngle(position).in(Degrees);
+        // inputs.targetActuatorPositionRotations = targetActuatorPosition;
+        // inputs.targetActuatorPositionDegrees = mechanismPositionToAngle(targetActuatorPosition).in(Degrees);
+
+        final double position = m_actuatorPosition.in(Inches);
+        // inputs.actuatorPositionRotations = position;
+        // inputs.actuatorPositionDegrees = mechanismPositionToAngle(position).in(Degrees);
+        inputs.actuatorPositionInches = position;
+        inputs.targetActuatorPositionInches = targetActuatorPosition.in(Inches);
 
         inputs.rightRollerMotorVelocityRPS = m_rollerVelocityRPS;
+        inputs.leftRollerMotorVelocityRPS = m_rollerVelocityRPS;
+        inputs.rollerMotorsVelocityRPS = (inputs.leftRollerMotorVelocityRPS + inputs.rightRollerMotorVelocityRPS) / 2;
+        inputs.rollerMotorTargetAtShaft = inputs.rollerMotorsVelocityRPS * rollerMotorReduction;
     }
 
     @Override
-    public void setActuatorPosition(double position) {
+    public void setActuatorPosition(Distance position) {
         m_targetActuatorPosition = position;
-        m_actuatorPositionPID.setSetpoint(position);
+        m_actuatorPositionPID.setSetpoint(position.in(Inches));
     }
 
     @Override

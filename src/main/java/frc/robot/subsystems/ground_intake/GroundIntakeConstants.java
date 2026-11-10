@@ -1,7 +1,7 @@
 package frc.robot.subsystems.ground_intake;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.ConversionUtil.*;
@@ -15,11 +15,13 @@ import edu.wpi.first.units.measure.Distance;
 
 public final class GroundIntakeConstants {
     public static final int rightRollerMotorId = 23;
-    public static final int rollerCurrentLimit = 25; // 45
-    public static final int rollerCurrentLimitAuto = 40; // 30
-    public static final double rollerMotorReduction = (18d / 12d);
+    public static final int rollerCurrentLimit = 45; // 25 45
+    public static final int rollerCurrentLimitAuto = 60; // 30
+    public static final double rollerLowerCurrentLimitTime = 0.5; // seconds
+    public static final int RollerLowerSupplyCurrent = 35;
+    public static final double rollerMotorReduction = (30d / 12d); // 18/12d    12/30
     public static final NeutralModeValue rollerNeutralMode = NeutralModeValue.Coast;
-    public static final InvertedValue rightRollerInverted = InvertedValue.CounterClockwise_Positive;
+    public static final InvertedValue rightRollerInverted = InvertedValue.Clockwise_Positive;
 
     public static final int leftRollerMotorId = 12;
     public static final MotorAlignmentValue leftRollerMotorAlignment = MotorAlignmentValue.Opposed;
@@ -29,31 +31,47 @@ public final class GroundIntakeConstants {
     public static final boolean rollerOutputUsesVelocityControl = true;
 
     public static final AngularVelocity rollerOutputVelocityMinimum = RPM.of(2000d);
-    public static final AngularVelocity rollerOutputVelocity = RPM.of(3850d); // 3500; 5800
-    public static final AngularVelocity rollerOutputVelocityAuto = RPM.of(3850d); // 4500; 5000; 5500; 5000; 5800
+    public static final AngularVelocity rollerOutputVelocity = RPM.of(2400d); // 3500; 5800   3850d current
+    public static final AngularVelocity rollerHomeVelocity = RPM.of(200d); // 3500; 5800   3850d current
+    public static final AngularVelocity rollerOutputVelocityAuto = RPM.of(5000d); // 3850 4500; 5000; 5500; 5000; 5800
     public static final AngularVelocity rollerOutputVelocityReverse = rollerOutputVelocity.unaryMinus();
-    public static final AngularVelocity rollerOutputVelocityHalfway = RPM.of(500d);
+    public static final AngularVelocity rollerOutputVelocityHalfway = RPM.of(200d);
     public static final Current rollerOutputCurrent = Amps.of(25d);
     public static final Current rollerOutputCurrentReverse = rollerOutputCurrent.unaryMinus();
 
-    public static final double rollerPidP = 0.75d;
-    public static final double rollerPidV = 12d / (5800d / 60d);
+    public static final double rollerPidP = 0.15d; // 0.75
+    public static final double rollerPidV = 12d / (5800d / 60d / rollerMotorReduction); // 12d / (5800d / 60d)
+    public static final double rollerPidS = 0.7;
     public static final double rollerTargetAcceleration = 266d;
 
-    public static final int actuatorMotorId = 13;
-    public static final int actuatorCurrentLimit = 30;
-    public static final double actuatorMotorReduction = (50d / 10d) * (60d / 14d) * (54d / 22d);
-    public static final NeutralModeValue actuatorNeutralMode = NeutralModeValue.Brake;
-    public static final InvertedValue actuatorInverted = InvertedValue.CounterClockwise_Positive;
-    public static final double actuatorPositionHome = angleToMechanismPosition(Degrees.of(-92d)); // -101
-    public static final double actuatorPositionDeployed = angleToMechanismPosition(Degrees.of(0d));
-    public static final double actuatorPositionOscillate = actuatorPositionHome / 2d;
+    // while shooting, how long the intake stays out before going in to push fuel
+    public static final double pushFrequencySeconds = 0.5d;
+    public static final double pushFrequencySecondsAuto = 0.3d; // shorter in auto so fuel is pushed in sooner
 
-    public static final double actuatorPidP = 200d; // 40
+    public static final int actuatorMotorId = 13;
+    public static final int actuatorCurrentLimit = 9; // 5 25  30
+    public static final int rollerStatorCurrentLimit = 150; // 60 30   *80*
+    public static final double actuatorMotorReduction = 42d / 10d; // (50d / 10d) * (60d / 14d) * (54d / 22d);
+    public static final Distance actuatorMotorPitchCircumference = Inches.of(1 * Math.PI);
+    public static final NeutralModeValue actuatorNeutralMode = NeutralModeValue.Coast; // brake
+    public static final InvertedValue actuatorInverted = InvertedValue.Clockwise_Positive;
+    public static final Distance actuatorPositionTrueHome = Inches.of(0);
+    public static final Distance actuatorPositionHome = Inches.of(
+            5); // 0 //Second number is how much it moves in in a straight line for one turn of the output shaft (the
+    // pinion or pulley that drives it, after the gearbox). For a rack and pinion it's pi * the pinion's
+    // pitch diameter   -101
+    public static final Distance actuatorPositionDeployed =
+            Inches.of(11.8); // 0.25 meters 12 12.1 <- Should use //First number is position    12.1
+    public static final Distance actuatorPositionOscillate =
+            actuatorPositionHome.plus(actuatorPositionDeployed).div(2);
+
+    public static final double actuatorPidP = 20d; // 20d 40 200d
+    public static final double actuatorPidS = 1;
     // public static final double actuatorTargetAcceleration = 50d;
-    public static final double actuatorTargetAcceleration = 20d;
-    public static final double actuatorMaxVelocity = 0.5d; // 5
+    public static final double actuatorTargetAcceleration = 60d;
+    public static final double actuatorMaxVelocity =
+            18; // 0.5d 5 Rotations per second on the output shaft 3.14 inches at a time
 
     public static final double actuatorZeroDutyCycle = -0.065d;
-    public static final double actuatorZeroVelocityThresholdRPS = 0.00002d;
+    public static final double actuatorZeroVelocityThresholdRPS = 0.05d;
 }

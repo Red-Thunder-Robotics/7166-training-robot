@@ -1,6 +1,8 @@
 package frc.robot.subsystems.ground_intake;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inch;
+import static edu.wpi.first.units.Units.Inches;
 import static frc.robot.subsystems.ground_intake.GroundIntakeConstants.*;
 import static frc.robot.util.ConversionUtil.*;
 
@@ -17,6 +19,7 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants;
 import frc.robot.state_machine.RobotEvent;
 import frc.robot.util.PhoenixUtil;
@@ -27,7 +30,7 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
     private final TalonFX m_leftRollerMotor = new TalonFX(leftRollerMotorId, Constants.CANBUS);
     private final TalonFX m_actuatorMotor = new TalonFX(actuatorMotorId, Constants.CANBUS);
 
-    private double m_actuatorTargetPosition = actuatorPositionHome;
+    private Distance m_actuatorTargetPosition = actuatorPositionTrueHome;
 
     private final StatusSignal<AngularVelocity> m_rightRollerVelocitySignal = m_rightRollerMotor.getVelocity();
     private final StatusSignal<Current> m_rightRollerCurrentSignal = m_rightRollerMotor.getSupplyCurrent();
@@ -39,8 +42,9 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
     private final StatusSignal<AngularVelocity> m_actuatorVelocitySignal = m_actuatorMotor.getVelocity();
     private final StatusSignal<Current> m_actuatorCurrentSignal = m_actuatorMotor.getSupplyCurrent();
 
-    private final MotionMagicVoltage m_actuatorPositionRequest =
-            new MotionMagicVoltage(m_actuatorTargetPosition).withEnableFOC(true);
+    private final MotionMagicVoltage m_actuatorPositionRequest = new MotionMagicVoltage(
+                    distanceToMechanismPosition(m_actuatorTargetPosition, actuatorMotorPitchCircumference))
+            .withEnableFOC(true);
     // private final DutyCycleOut m_rollerDutyCycleRequest = new DutyCycleOut(0d);
     private final MotionMagicVelocityVoltage m_rollerVelocityRequest =
             new MotionMagicVelocityVoltage(0d).withEnableFOC(true);
@@ -54,11 +58,15 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
         rollerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         rollerConfig.CurrentLimits.SupplyCurrentLimit = rollerCurrentLimit;
+        rollerConfig.CurrentLimits.SupplyCurrentLowerLimit = RollerLowerSupplyCurrent;
+        rollerConfig.CurrentLimits.SupplyCurrentLowerTime = rollerLowerCurrentLimitTime;
+        rollerConfig.CurrentLimits.StatorCurrentLimit = rollerStatorCurrentLimit;
 
         rollerConfig.Feedback.SensorToMechanismRatio = rollerMotorReduction;
 
         rollerConfig.Slot0.kP = rollerPidP;
         rollerConfig.Slot0.kV = rollerPidV;
+        rollerConfig.Slot0.kS = rollerPidS;
         rollerConfig.MotionMagic.MotionMagicAcceleration = rollerTargetAcceleration;
 
         var actuatorConfig = new TalonFXConfiguration();
@@ -72,6 +80,7 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
 
         actuatorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         actuatorConfig.Slot0.kP = actuatorPidP;
+        actuatorConfig.Slot0.kS = actuatorPidS;
 
         actuatorConfig.MotionMagic.MotionMagicAcceleration = actuatorTargetAcceleration;
         actuatorConfig.MotionMagic.MotionMagicCruiseVelocity = actuatorMaxVelocity;
@@ -96,7 +105,10 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
                 m_actuatorCurrentSignal);
 
         // PhoenixUtil.tryUntilOk(5, () -> m_actuatorMotor.setPosition(m_actuatorTargetPosition));
-        MotorAction.setMotorPosition("Intake Acuator", m_actuatorMotor, m_actuatorTargetPosition)
+        MotorAction.setMotorPosition(
+                        "Intake Acuator",
+                        m_actuatorMotor,
+                        distanceToMechanismPosition(m_actuatorTargetPosition, actuatorMotorPitchCircumference))
                 .run();
 
         m_leftRollerMotor.setControl(new Follower(rightRollerMotorId, leftRollerMotorAlignment));
@@ -116,24 +128,32 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
                 m_actuatorVelocitySignal,
                 m_actuatorCurrentSignal);
 
-        final double actuatorTargetPosition = m_actuatorTargetPosition;
+        final Distance actuatorTargetPosition = m_actuatorTargetPosition;
 
         inputs.isDeployed = actuatorTargetPosition == actuatorPositionDeployed;
 
-        inputs.targetActuatorPositionRotations = m_actuatorTargetPosition;
-        inputs.targetActuatorPositionDegrees =
-                mechanismPositionToAngle(m_actuatorTargetPosition).in(Degrees);
+        // inputs.targetActuatorPositionRotations = m_actuatorTargetPosition;
+        // inputs.targetActuatorPositionDegrees = mechanismPositionToAngle(m_actuatorTargetPosition).in(Degrees);
 
         final double actuatorPositionRotations = m_actuatorPositionSignal.getValueAsDouble();
+
+        inputs.actuatorPositionInches = mechanismPositionToDistance(
+                        actuatorPositionRotations, actuatorMotorPitchCircumference)
+                .in(Inch);
+        inputs.targetActuatorPositionInches = actuatorTargetPosition.in(Inches);
+
         inputs.actuatorPositionRotations = actuatorPositionRotations;
         inputs.actuatorPositionDegrees =
                 mechanismPositionToAngle(actuatorPositionRotations).in(Degrees);
         inputs.actuatorMotorCurrentAmps = m_actuatorCurrentSignal.getValueAsDouble();
+        inputs.acutuatorStatorCurrent = m_actuatorMotor.getStatorCurrent().getValueAsDouble();
 
         inputs.rollerTargetVelocityRPS = PhoenixUtil.getRequestVelocity(m_rightRollerMotor.getAppliedControl());
         final double rightRollerCurrentAmps = m_rightRollerCurrentSignal.getValueAsDouble();
         final double leftRollerCurrentAmps = m_leftRollerCurrentSignal.getValueAsDouble();
         inputs.rollerTotalCurrentAmps = rightRollerCurrentAmps + leftRollerCurrentAmps;
+        inputs.roghtRollerMotorStatorCurrent =
+                m_rightRollerMotor.getStatorCurrent().getValueAsDouble();
 
         inputs.rightRollerMotorDutyCycle = PhoenixUtil.getRequestDutyCycle(m_rightRollerMotor.getAppliedControl());
         inputs.rightRollerMotorVelocityRPS = m_rightRollerVelocitySignal.getValueAsDouble();
@@ -142,6 +162,9 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
         inputs.leftRollerMotorDutyCycle = PhoenixUtil.getRequestDutyCycle(m_leftRollerMotor.getAppliedControl());
         inputs.leftRollerMotorVelocityRPS = m_leftRollerVelocitySignal.getValueAsDouble();
         inputs.leftRollerMotorCurrentAmps = leftRollerCurrentAmps;
+
+        inputs.rollerMotorsVelocityRPS = (inputs.leftRollerMotorVelocityRPS + inputs.rightRollerMotorVelocityRPS) / 2;
+        inputs.rollerMotorTargetAtShaft = inputs.rollerTargetVelocityRPS / rollerMotorReduction;
     }
 
     @Override
@@ -151,9 +174,10 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
     }
 
     @Override
-    public void setActuatorPosition(double position) {
+    public void setActuatorPosition(Distance position) {
         m_actuatorTargetPosition = position;
-        m_actuatorMotor.setControl(m_actuatorPositionRequest.withPosition(position));
+        m_actuatorMotor.setControl(m_actuatorPositionRequest.withPosition(
+                distanceToMechanismPosition(position, actuatorMotorPitchCircumference)));
     }
 
     @Override
@@ -184,7 +208,10 @@ public final class GroundIntakeIOReal implements GroundIntakeIO {
     @Override
     public void actuatorZero() {
         // PhoenixUtil.tryUntilOk(5, () -> m_actuatorMotor.setPosition(actuatorPositionHome));
-        MotorAction.setMotorPosition("Shooter actuator", m_actuatorMotor, actuatorPositionHome)
+        MotorAction.setMotorPosition(
+                        "Shooter actuator",
+                        m_actuatorMotor,
+                        distanceToMechanismPosition(actuatorPositionTrueHome, actuatorMotorPitchCircumference))
                 .run();
     }
 

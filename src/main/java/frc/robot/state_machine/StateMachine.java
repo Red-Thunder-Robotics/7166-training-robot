@@ -109,9 +109,18 @@ public class StateMachine {
     }
 
     public static void setIntakeState(IntakeState newIntakeState) {
-        var old = intakeState;
         intakeState = newIntakeState;
-        GroundIntakeSubsystem.instance.stateUpdate(intakeState, old);
+        // Compatibility boundary: callers request behavior; the intake owns execution.
+        GroundIntakeSubsystem.instance.setWantedState(
+                switch (intakeState) {
+                    case HomeOff -> GroundIntakeSubsystem.WantedState.HomeOff;
+                    case HomeReverse -> GroundIntakeSubsystem.WantedState.HomeReverse;
+                    case DeployedOff -> GroundIntakeSubsystem.WantedState.DeployedOff;
+                    case DeployedOn -> GroundIntakeSubsystem.WantedState.DeployedOn;
+                    case DeployedReverse -> GroundIntakeSubsystem.WantedState.DeployedReverse;
+                    case OscillateOff -> GroundIntakeSubsystem.WantedState.OscillateOff;
+                    case OscillateOn -> GroundIntakeSubsystem.WantedState.OscillateOn;
+                });
         // IndexerSubsystem.instance.intakeStateUpdate(intakeState);
     }
 
@@ -157,7 +166,7 @@ public class StateMachine {
     private static boolean turretShouldIndexFlagCleared = false;
 
     public static boolean turretShouldIndex() {
-        if (LiveConfig.getIsPit()) return true;
+        if (LiveConfig.getIsPit() || getLauncherTarget() == LauncherTarget.AllianceFeed) return true;
         final boolean allianceFeedGood =
                 getLauncherTarget() == LauncherTarget.AllianceFeed ? isFacingAllianceZone() : false;
         return Constants.USE_TURRET
