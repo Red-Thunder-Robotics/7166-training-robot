@@ -32,7 +32,7 @@ public final class IndexerSubsystem extends SubsystemBase {
     private final IndexerIO m_io;
     private final IndexerIOInputsAutoLogged m_inputs = new IndexerIOInputsAutoLogged();
     private static WantedState m_wantedState = WantedState.Idle;
-    private static RealState m_RealState = RealState.Idle;
+    private static RealState m_RealState = RealState.Disabled;
 
     private boolean m_isFeeding;
 
@@ -78,7 +78,11 @@ public final class IndexerSubsystem extends SubsystemBase {
         //     m_io.indexerVelocity(indexerOutputVelocity);
         //     m_io.topRollerVelocity(topRollerVelocity);
         // }
-
+        switch (StateMachine.getShooterState()) {
+            case Idle -> m_wantedState = WantedState.Idle;
+            case Reversing -> m_wantedState = WantedState.Reverse;
+            case Shooting -> m_wantedState = WantedState.Shooting;
+        }
         if (DriverStation.isDisabled()) {
             // Clear requests so enabling cannot restart a previously running roller.
             StateMachine.setShooterState(ShooterState.Idle);
@@ -86,13 +90,13 @@ public final class IndexerSubsystem extends SubsystemBase {
         } else {
             m_RealState = determineRealState();
         }
-
         applyOutputs();
         Logger.recordOutput("Indexer/WantedState", m_wantedState);
         Logger.recordOutput("Indexer/SystemState", m_RealState);
     }
 
     private RealState determineRealState() {
+
         return switch (m_wantedState) {
             case Idle -> RealState.Idle;
             case Reverse -> RealState.Reverse;
@@ -112,7 +116,11 @@ public final class IndexerSubsystem extends SubsystemBase {
                 m_io.indexerStop();
                 m_io.lowerKickerStop();
             }
-            case Idle -> setIdle();
+            case Idle -> {
+                m_io.topRollerStop();
+                m_io.indexerStop();
+                m_io.lowerKickerStop();
+            }
             case Shooting -> {
                 if (StateMachine.shouldIndex()) {
                     m_isFeeding = true;
