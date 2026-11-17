@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
+import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.Idle;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -33,12 +34,23 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public final class ShooterSubsystem extends SubsystemBase {
-    public static enum WantedState {
-        Idle, Reverse, Shooting, Zeroing
+    public enum WantedState {
+        Idle,
+        Reverse,
+        Shooting,
+        Zeroing
     }
-    public static enum RealState {
-        Idle, Reverse, Zeroing, Clearing, SpinningUp, Feeding, Disabled
+
+    public enum RealState {
+        Idle,
+        Reverse,
+        Zeroing,
+        Clearing,
+        SpinningUp,
+        Feeding,
+        Disabled
     }
+
     public static ShooterSubsystem instance = null;
 
     private static RealState m_realState = RealState.Idle;
@@ -72,6 +84,7 @@ public final class ShooterSubsystem extends SubsystemBase {
     public static WantedState getWantedState() {
         return m_wantedState;
     }
+
     public static RealState getRealState() {
         return m_realState;
     }
@@ -92,53 +105,61 @@ public final class ShooterSubsystem extends SubsystemBase {
             hoodStow();
         }
 
-        final boolean launcherTuning = LiveConfig.getLauncherTuning();
-        m_launcherTuning = launcherTuning;
-        switch (StateMachine.getShooterState()) {
-            case Idle:
-                if (launcherTuning) {
-                    m_io.hoodAngle(Degrees.of(LiveConfig.getLauncherTuningAngle()));
-                    m_io.flywheelVelocity(RPM.of(LiveConfig.getLauncherTuningRPM()));
-                    m_io.upperKickerVelocity(upperKickerVelocity);
-                } else {
-                    m_io.flywheelStop();
-                    m_io.upperKickerStop();
-                }
-                break;
-            case Shooting:
-                if (!launcherTuning) {
-                    if (StateMachine.getLauncherTarget() == LauncherTarget.AllianceFeed) {
-                        setParams(StateMachine.isRobotFar() ? allianceFeedParamsFar : allianceFeedParamsNeutralZone);
-                    } else {
-                        var targetPose = StateMachine.getLauncherTargetPose();
-                        InterpolationShooterParams params = null;
+        // final boolean launcherTuning = LiveConfig.getLauncherTuning();
+        // m_launcherTuning = launcherTuning;
+        // switch (StateMachine.getShooterState()) {
+        //     case Idle:
+        //         if (launcherTuning) {
+        //             m_io.hoodAngle(Degrees.of(LiveConfig.getLauncherTuningAngle()));
+        //             m_io.flywheelVelocity(RPM.of(LiveConfig.getLauncherTuningRPM()));
+        //             m_io.upperKickerVelocity(upperKickerVelocity);
+        //         } else {
+        //             m_io.flywheelStop();
+        //             m_io.upperKickerStop();
+        //         }
+        //         break;
+        //     case Shooting:
+        //         if (!launcherTuning) {
+        //             if (StateMachine.getLauncherTarget() == LauncherTarget.AllianceFeed) {
+        //                 setParams(StateMachine.isRobotFar() ? allianceFeedParamsFar : allianceFeedParamsNeutralZone);
+        //             } else {
+        //                 var targetPose = StateMachine.getLauncherTargetPose();
+        //                 InterpolationShooterParams params = null;
 
-                        if (Controls.visionFail1.getAsBoolean()) params = paramMap.map.get(3.249d);
-                        // if (LiveConfig.getIsPit())
-                        else if (LiveConfig.getVisionFail()) params = hubCenterParams;
-                        else if (targetPose.isPresent()) {
-                            // if (StateMachine.getLauncherTargetPoseIsHub())
-                            //     paramsOptional =
-                            // LauncherLocationParam.getFromRobot(StateMachine.odometryAndVision.getEstimatedPose().getTranslation())
-                            //         .map((value) -> value.m_params);
-                            // else
+        //                 if (Controls.visionFail1.getAsBoolean()) params = paramMap.map.get(3.249d);
+        //                 // if (LiveConfig.getIsPit())
+        //                 else if (LiveConfig.getVisionFail()) params = hubCenterParams;
+        //                 else if (targetPose.isPresent()) {
+        //                     // if (StateMachine.getLauncherTargetPoseIsHub())
+        //                     //     paramsOptional =
+        //                     //
+        // LauncherLocationParam.getFromRobot(StateMachine.odometryAndVision.getEstimatedPose().getTranslation())
+        //                     //         .map((value) -> value.m_params);
+        //                     // else
 
-                            params = calculateParams(targetPose.get());
-                        }
-                        if (params != null) setParams(params);
-                    }
-                }
-                // if (shouldIndex())
-                //     m_io.upperKickerVelocity(upperKickerVelocity);
-                if (IndexerSubsystem.instance.getReverseIsDone()) m_io.upperKickerVelocity(upperKickerVelocity);
-                break;
-            case Reversing:
-                // m_io.flywheelVelocity(flywheelVelocityReverse);
-                m_io.upperKickerVelocity(upperKickerVelocityReverse);
-                break;
+        //                     params = calculateParams(targetPose.get());
+        //                 }
+        //                 if (params != null) setParams(params);
+        //             }
+        //         }
+        //         // if (shouldIndex())
+        //         //     m_io.upperKickerVelocity(upperKickerVelocity);
+        //         if (IndexerSubsystem.instance.getReverseIsDone()) m_io.upperKickerVelocity(upperKickerVelocity);
+        //         break;
+        //     case Reversing:
+        //         // m_io.flywheelVelocity(flywheelVelocityReverse);
+        //         m_io.upperKickerVelocity(upperKickerVelocityReverse);
+        //         break;
+        // }
+        switch (StateMachine.shooterState) {
+            case Idle -> m_wantedState = WantedState.Idle;
+            case Shooting -> m_wantedState = WantedState.Shooting;
+            case Reversing -> m_wantedState = WantedState.Reverse;
         }
-
+        applyOutPuts();
+        determineRealState();
     }
+
     private void applyOutPuts() {
         switch (m_realState) {
             case Disabled -> {
@@ -161,7 +182,7 @@ public final class ShooterSubsystem extends SubsystemBase {
             case Reverse -> m_io.upperKickerVelocity(upperKickerVelocityReverse);
             case Clearing -> m_io.upperKickerVelocity(ShooterConstants.upperKickerVelocityReverse);
             case SpinningUp -> {
-                 if (!m_launcherTuning) {
+                if (!m_launcherTuning) {
                     if (StateMachine.getLauncherTarget() == LauncherTarget.AllianceFeed) {
                         setParams(StateMachine.isRobotFar() ? allianceFeedParamsFar : allianceFeedParamsNeutralZone);
                     } else {
@@ -186,49 +207,48 @@ public final class ShooterSubsystem extends SubsystemBase {
             }
             case Feeding -> {
                 ShouldIndex = true;
-            } 
+            }
         }
     }
 
     private RealState determineRealState() {
-    return switch (m_wantedState) {
-        case Idle -> RealState.Idle;
-        case Reverse -> RealState.Reverse;
-        case Zeroing -> RealState.Zeroing;
-        case Shooting -> switch (m_realState) {
-            // Clearing: wait for the indexer to finish backing up
-            case Clearing -> clearingDone() ? RealState.SpinningUp : RealState.Clearing;
-            // SpinningUp: wait until the shooter is at speed
-            case SpinningUp -> readyToFeed(1.0) ? RealState.Feeding : RealState.SpinningUp;
-            // Feeding: keep going unless we are clearly not ready (looser margin)
-            case Feeding -> readyToFeed(2.0) ? RealState.Feeding : RealState.SpinningUp;
-            // Idle, Reverse, Zeroing, Disabled: start the sequence
-            default -> RealState.Clearing;
+        return switch (m_wantedState) {
+            case Idle -> RealState.Idle;
+            case Reverse -> RealState.Reverse;
+            case Zeroing -> RealState.Zeroing;
+            case Shooting -> switch (m_realState) {
+                    // Clearing: wait for the indexer to finish backing up
+                case Clearing -> clearingDone() ? RealState.SpinningUp : RealState.Clearing;
+                    // SpinningUp: wait until the shooter is at speed
+                case SpinningUp -> readyToFeed(1.0) ? RealState.Feeding : RealState.SpinningUp;
+                    // Feeding: keep going unless we are clearly not ready (looser margin)
+                case Feeding -> readyToFeed(2.0) ? RealState.Feeding : RealState.SpinningUp;
+                    // Idle, Reverse, Zeroing, Disabled: start the sequence
+                default -> RealState.Clearing;
+            };
         };
-    };
-}
+    }
 
-private boolean clearingDone() {
-    return IndexerSubsystem.instance.getReverseIsDone(); // same check your old code used
-}
+    private boolean clearingDone() {
+        return IndexerSubsystem.instance.getReverseIsDone(); // same check your old code used
+    }
 
-// Pure check: no side effects, so it is safe to call every loop
-private boolean readyToFeed(double marginMultiplier) {
-    final double flywheelTarget = m_inputs.flywheelTargetVelocityRPS;
-    final double kickerTarget = m_inputs.upperKickerTargetVelocityRPS;
-    if (flywheelTarget == 0d || kickerTarget == 0d) return false;
+    // Pure check: no side effects, so it is safe to call every loop
+    private boolean readyToFeed(double marginMultiplier) {
+        final double flywheelTarget = m_inputs.flywheelTargetVelocityRPS;
+        final double kickerTarget = m_inputs.upperKickerTargetVelocityRPS;
+        if (flywheelTarget == 0d || kickerTarget == 0d) return false;
 
-    final double flywheelThreshold = StateMachine.getLauncherTarget() == LauncherTarget.AllianceFeed
-            ? shouldIndexFlywheelVelocityAllianceFeedThresholdRPS
-            : shouldIndexFlywheelVelocityThresholdRPS;
+        final double flywheelThreshold = StateMachine.getLauncherTarget() == LauncherTarget.AllianceFeed
+                ? shouldIndexFlywheelVelocityAllianceFeedThresholdRPS
+                : shouldIndexFlywheelVelocityThresholdRPS;
 
-    final boolean flywheel = Math.abs(flywheelTarget - m_inputs.flywheelMotorTopLeftVelocityRPS)
-            <= flywheelThreshold * marginMultiplier;
-    final boolean kicker = Math.abs(kickerTarget - m_inputs.upperKickerMotorVelocityRPS)
-            <= shouldIndexKickerVelocityThresholdRPS * marginMultiplier;
-    return flywheel && kicker && IndexerSubsystem.instance.getIsPastThreshold();
-}
-
+        final boolean flywheel = Math.abs(flywheelTarget - m_inputs.flywheelMotorTopLeftVelocityRPS)
+                <= flywheelThreshold * marginMultiplier;
+        final boolean kicker = Math.abs(kickerTarget - m_inputs.upperKickerMotorVelocityRPS)
+                <= shouldIndexKickerVelocityThresholdRPS * marginMultiplier;
+        return flywheel && kicker && IndexerSubsystem.instance.getIsPastThreshold();
+    }
 
     public Command zeroMechanisms(boolean skipDrive) {
         return skipDrive

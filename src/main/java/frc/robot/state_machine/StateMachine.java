@@ -181,11 +181,10 @@ public class StateMachine {
 
         if (getLauncherTarget() != LauncherTarget.AllianceFeed) turretShouldIndex = turretShouldIndexFlagCleared;
 
-        return (turretShouldIndex || Controls.forceTurretShouldIndex.getAsBoolean())
-                && ShooterSubsystem.ShouldIndex;
+        return (turretShouldIndex || Controls.forceTurretShouldIndex.getAsBoolean()) && ShooterSubsystem.ShouldIndex;
     }
 
-    private static ShooterState shooterState = ShooterState.Idle;
+    public static ShooterState shooterState = ShooterState.Idle;
 
     public static ShooterState getShooterState() {
         return shooterState;
